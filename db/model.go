@@ -1,0 +1,39 @@
+package db
+
+import "time"
+
+type Channel struct {
+	Name string
+	Lang string
+}
+
+type User struct {
+	Health string         `json:"health"`
+	Stats  map[string]int `json:"stats"`
+}
+
+type LegionState struct {
+	HitCount int `json:"hitCount"`
+}
+
+type ChannelState struct {
+	Channel     string           `json:"channel"`
+	Killer      string           `json:"killer"`
+	KillerState any              `json:"state"`
+	Date        time.Time        `json:"date"`
+	Stats       map[string]int   `json:"stats"`
+	UserMap     map[string]*User `json:"userMap"`
+	Settings    Settings         `json:"settings"`
+}
+
+type Settings struct {
+	Disabled bool   `json:"disabled"`
+	Language string `json:"language"`
+}
+
+type Message struct {
+	Channel  string
+	Username string
+	IsMod    bool
+	Text     string
+}

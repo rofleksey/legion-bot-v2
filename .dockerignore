@@ -1,0 +1,13 @@
+.idea/
+/data
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+legion-bot-v2
+**/node_modules
+scripts
+config.yaml

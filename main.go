@@ -1,0 +1,133 @@
+package main
+
+import (
+	_ "embed"
+	"fmt"
+	"github.com/robfig/cron/v3"
+	"legion-bot-v2/api"
+	"legion-bot-v2/bot"
+	"legion-bot-v2/chat"
+	"legion-bot-v2/config"
+	"legion-bot-v2/db"
+	"legion-bot-v2/i18n"
+	"legion-bot-v2/killer"
+	"legion-bot-v2/killer/legion"
+	"legion-bot-v2/producer"
+	"legion-bot-v2/timers"
+	"legion-bot-v2/util"
+	"log"
+	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
+)
+
+// TODO:
+// site
+// greetings
+// ai
+// come only after a set amount of time after the stream start
+// !spin
+// !flashlight
+// pinhead
+// myers
+// !clip
+// !perk
+// !addon
+// voting
+// flashlight blind
+// chase clip with autoupload
+// scoreboard autosave
+// other streamers notification
+// !chatgpt
+// match timestamps
+// dead hard notification
+// ds notification
+// !insult
+// changelog
+// changelog notification
+// help page (!killer)
+// current addons help (!addons) (!perks)
+// chatbot ai
+// monitor profile messages
+// monitor stats changes
+// notes about players
+// steam related checks
+// fmp/dbdtools checks discord
+// played before
+
+//go:embed banner.txt
+var banner string
+
+func main() {
+	fmt.Fprintln(os.Stderr, banner)
+
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Config error: %v", err)
+	}
+
+	slog.Info("Starting service...")
+
+	c := cron.New()
+	if _, err := c.AddFunc(util.DailyRestartCron, func() {
+		log.Println("Executing daily restart")
+		os.Exit(1)
+	}); err != nil {
+		log.Fatalf("Failed to schedule daily restart: %v", err)
+	}
+	c.Start()
+
+	//chatActions := chat.NewTwitchActions(ircClient, helixClient)
+	chatActions := chat.ConsoleActions{}
+
+	database, err := db.NewDatabase("data/database.db")
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	defer database.Close()
+
+	timerManager := timers.NewManager()
+
+	localiser, err := i18n.NewLocaliser()
+	if err != nil {
+		log.Fatalf("Failed to initialize i18n: %v", err)
+	}
+
+	killerMap := map[string]killer.Killer{
+		"legion": legion.New(database, chatActions, timerManager, localiser),
+	}
+
+	botInstance := bot.NewBot(database, chatActions, timerManager, localiser, killerMap)
+	botInstance.Init()
+
+	chatProducer, err := producer.NewTwitchProducer(cfg, botInstance)
+	if err != nil {
+		log.Fatalf("Failed to initialize chat producer: %v", err)
+	}
+
+	chatProducer.AddChannel("dbdleague")
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+	go func() {
+		<-sig
+		chatProducer.Stop()
+	}()
+
+	slog.Info("Starting server...")
+	server := api.NewServer(cfg, database)
+	go func() {
+		if err := server.Run(); err != nil {
+			slog.Error("Server error",
+				slog.Any("error", err),
+			)
+			os.Exit(1)
+		}
+	}()
+
+	slog.Info("Connecting to twitch...")
+	if err = chatProducer.Run(); err != nil {
+		log.Fatalf("Chat listener failed: %v", err)
+	}
+}
