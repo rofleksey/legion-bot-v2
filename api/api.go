@@ -11,6 +11,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -27,9 +28,11 @@ type Server struct {
 }
 
 type TwitchUser struct {
-	ID          string `json:"id"`
-	Login       string `json:"login"`
-	DisplayName string `json:"display_name"`
+	ID              string `json:"id"`
+	Login           string `json:"login"`
+	DisplayName     string `json:"display_name"`
+	ProfileImageURL string `json:"profile_image_url"`
+	Email           string `json:"email"`
 }
 
 type JWTClaims struct {
@@ -107,7 +110,15 @@ func (s *Server) handleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := s.oauth2Config.Client(r.Context(), token)
-	resp, err := client.Get("https://api.twitch.tv/helix/users")
+	req, err := http.NewRequest(http.MethodGet, "https://api.twitch.tv/helix/users", nil)
+	if err != nil {
+		http.Error(w, "Failed to get user info: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	req.Header.Set("Client-ID", s.cfg.Auth.ClientID)
+
+	resp, err := client.Do(req)
 	if err != nil {
 		http.Error(w, "Failed to get user info: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -135,10 +146,15 @@ func (s *Server) handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"token": jwtToken,
-		"user":  user,
-	})
+	clientRedirectUrl := url.URL{
+		Path: "/",
+		RawQuery: url.Values{
+			"token": []string{jwtToken},
+			"state": []string{state},
+		}.Encode(),
+	}
+
+	http.Redirect(w, r, clientRedirectUrl.String(), http.StatusFound)
 }
 
 func (s *Server) createJWTToken(user TwitchUser) (string, error) {
@@ -152,7 +168,7 @@ func (s *Server) createJWTToken(user TwitchUser) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(s.cfg.Auth.JwtSecret)
+	return token.SignedString([]byte(s.cfg.Auth.JwtSecret))
 }
 
 func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
@@ -227,7 +243,7 @@ func (s *Server) authenticateRequest(r *http.Request) (*JWTClaims, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return s.cfg.Auth.JwtSecret, nil
+		return []byte(s.cfg.Auth.JwtSecret), nil
 	})
 
 	if err != nil {
