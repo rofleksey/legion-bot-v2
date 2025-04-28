@@ -17,20 +17,7 @@ import (
 var _ killer.Killer = (*Legion)(nil)
 
 const (
-	BodyBlockSuccessChance = 0.2
-	DeepWoundTimeout       = time.Minute
-	FatalHit               = 5
-	FrenzyTimeout          = 3 * time.Minute
-	FrenzyTimerName        = "!!frenzy!!"
-	HitChance              = 0.96
-	HookBanTime            = time.Minute
-	LockerGrabChance       = 0.3
-	LockerStunChance       = 0.25
-	MinTimeout             = 5 * time.Second
-	PalletStunChance       = 0.18
-	ReactChance            = 0.3
-	RecoverTime            = 30 * time.Second
-	SlugBanTime            = 30 * time.Second
+	FrenzyTimerName = "!!frenzy!!"
 )
 
 type Legion struct {
@@ -53,6 +40,7 @@ func New(db db.DB, actions chat.Actions, timers timers.Timers, localiser i18n.Lo
 
 func (l *Legion) handleCommands(userMsg db.Message) bool {
 	chanState := l.GetState(userMsg.Channel)
+	legionSettings := chanState.Settings.Killers.Legion
 	lang := chanState.Settings.Language
 	now := time.Now()
 	user := chanState.UserMap[userMsg.Username]
@@ -73,7 +61,7 @@ func (l *Legion) handleCommands(userMsg db.Message) bool {
 			return true
 		}
 
-		if rand.Float64() > PalletStunChance {
+		if rand.Float64() > legionSettings.PalletStunChance {
 			msg := l.GetLocalString(lang, "pallet_failed", map[string]string{"USERNAME": userMsg.Username})
 			l.SendMessage(userMsg.Channel, msg)
 
@@ -129,11 +117,11 @@ func (l *Legion) handleCommands(userMsg db.Message) bool {
 			return true
 		}
 
-		if rand.Float64() > LockerStunChance {
+		if rand.Float64() > legionSettings.LockerStunChance {
 			msg := l.GetLocalString(lang, "locker_failed", map[string]string{"USERNAME": userMsg.Username})
 			l.SendMessage(userMsg.Channel, msg)
 
-			if rand.Float64() > LockerGrabChance {
+			if rand.Float64() > legionSettings.LockerGrabChance {
 				l.handleHit(userMsg.Channel, userMsg.Username)
 				return true
 			}
@@ -149,7 +137,7 @@ func (l *Legion) handleCommands(userMsg db.Message) bool {
 
 			l.StopTimer(userMsg.Channel, FrenzyTimerName)
 			l.StopTimer(userMsg.Channel, userMsg.Username)
-			l.TimeoutUser(userMsg.Channel, userMsg.Username, HookBanTime, "")
+			l.TimeoutUser(userMsg.Channel, userMsg.Username, legionSettings.HookBanTime, "")
 
 			msg = l.GetLocalString(lang, "locker_grab", map[string]string{"USERNAME": userMsg.Username})
 			l.SendMessage(userMsg.Channel, msg)
@@ -182,6 +170,7 @@ func (l *Legion) Start(userMsg db.Message) {
 
 func (l *Legion) HandleMessage(userMsg db.Message) {
 	chanState := l.GetState(userMsg.Channel)
+	legionSettings := chanState.Settings.Killers.Legion
 	lang := chanState.Settings.Language
 	now := time.Now()
 
@@ -192,11 +181,11 @@ func (l *Legion) HandleMessage(userMsg db.Message) {
 	user := chanState.UserMap[userMsg.Username]
 	diff := now.Sub(chanState.Date)
 
-	if diff < MinTimeout {
+	if diff < legionSettings.MinTimeout {
 		return
 	}
 
-	if rand.Float64() > ReactChance {
+	if rand.Float64() > legionSettings.ReactChance {
 		return
 	}
 
@@ -225,9 +214,10 @@ func (l *Legion) startFrenzyTimer(channel string) {
 	l.StopTimer(channel, FrenzyTimerName)
 
 	chanState := l.GetState(channel)
+	legionSettings := chanState.Settings.Killers.Legion
 	lang := chanState.Settings.Language
 
-	l.StartTimer(channel, FrenzyTimerName, FrenzyTimeout, func() {
+	l.StartTimer(channel, FrenzyTimerName, legionSettings.FrenzyTimeout, func() {
 		l.UpdateState(channel, func(chanState *db.ChannelState) {
 			chanState.Killer = ""
 			chanState.KillerState = nil
@@ -273,9 +263,10 @@ func (l *Legion) startRecoverTimer(channel, username string) {
 	l.StopTimer(channel, username)
 
 	chanState := l.GetState(channel)
+	legionSettings := chanState.Settings.Killers.Legion
 	lang := chanState.Settings.Language
 
-	l.StartTimer(channel, username, RecoverTime, func() {
+	l.StartTimer(channel, username, legionSettings.RecoverTime, func() {
 		l.UpdateState(channel, func(chanState *db.ChannelState) {
 			chanState.UserMap[username].Health = "injured"
 		})
@@ -289,9 +280,10 @@ func (l *Legion) startDeadTimer(channel, username string) {
 	l.StopTimer(channel, username)
 
 	chanState := l.GetState(channel)
+	legionSettings := chanState.Settings.Killers.Legion
 	lang := chanState.Settings.Language
 
-	l.StartTimer(channel, username, DeepWoundTimeout, func() {
+	l.StartTimer(channel, username, legionSettings.DeepWoundTimeout, func() {
 		l.UpdateState(channel, func(chanState *db.ChannelState) {
 			chanState.Stats["bleedOuts"]++
 
@@ -299,7 +291,7 @@ func (l *Legion) startDeadTimer(channel, username string) {
 			chanState.Stats["bleedOuts"]++
 		})
 
-		l.TimeoutUser(channel, username, SlugBanTime, "")
+		l.TimeoutUser(channel, username, legionSettings.SlugBanTime, "")
 
 		msg := l.GetLocalString(lang, "on_dead", map[string]string{"USERNAME": username})
 		l.SendMessage(channel, msg)
@@ -310,6 +302,7 @@ func (l *Legion) startDeadTimer(channel, username string) {
 
 func (l *Legion) handleHit(channel, username string) {
 	chanState := l.GetState(channel)
+	legionSettings := chanState.Settings.Killers.Legion
 	lang := chanState.Settings.Language
 	now := time.Now()
 
@@ -329,7 +322,7 @@ func (l *Legion) handleHit(channel, username string) {
 		})
 	}
 
-	if rand.Float64() > HitChance {
+	if rand.Float64() > legionSettings.HitChance {
 		l.UpdateState(channel, func(chanState *db.ChannelState) {
 			chanState.Killer = ""
 			chanState.KillerState = nil
@@ -345,7 +338,7 @@ func (l *Legion) handleHit(channel, username string) {
 		return
 	}
 
-	if legionState.HitCount == FatalHit {
+	if legionState.HitCount == legionSettings.FatalHit {
 		l.UpdateState(channel, func(chanState *db.ChannelState) {
 			chanState.Killer = ""
 			chanState.KillerState = nil
@@ -357,7 +350,7 @@ func (l *Legion) handleHit(channel, username string) {
 
 		l.StopTimer(channel, FrenzyTimerName)
 		l.StopTimer(channel, username)
-		l.TimeoutUser(channel, username, HookBanTime, "")
+		l.TimeoutUser(channel, username, legionSettings.HookBanTime, "")
 
 		msg := l.GetLocalString(lang, "on_frenzy_hit_dead", map[string]string{"USERNAME": username})
 		l.SendMessage(channel, msg)
@@ -366,7 +359,7 @@ func (l *Legion) handleHit(channel, username string) {
 	}
 
 	if user.Health == "deep_wound" {
-		if rand.Float64() > BodyBlockSuccessChance {
+		if rand.Float64() > legionSettings.BodyBlockSuccessChance {
 			msg := l.GetLocalString(lang, "body_block_fail", map[string]string{"USERNAME": username})
 			l.SendMessage(channel, msg)
 
@@ -403,7 +396,7 @@ func (l *Legion) handleHit(channel, username string) {
 	l.startDeadTimer(channel, username)
 	l.startFrenzyTimer(channel)
 
-	if legionState.HitCount == FatalHit-1 {
+	if legionState.HitCount == legionSettings.FatalHit-1 {
 		msg := l.GetLocalString(lang, "on_frenzy_hit_prefinal", map[string]string{"USERNAME": username})
 		l.SendMessage(channel, msg)
 	} else {

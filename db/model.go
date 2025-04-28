@@ -26,11 +26,6 @@ type ChannelState struct {
 	Settings    Settings         `json:"settings"`
 }
 
-type Settings struct {
-	Disabled bool   `json:"disabled"`
-	Language string `json:"language"`
-}
-
 type Message struct {
 	Channel  string
 	Username string

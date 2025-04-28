@@ -38,8 +38,14 @@ onBeforeMount(() => {
 
 <style scoped>
 .language-switcher {
-  display: flex;
+  display: none;
   gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .language-switcher {
+    display: flex;
+  }
 }
 
 .language-switcher button {

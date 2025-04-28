@@ -56,4 +56,10 @@ async function loginWithTwitch() {
   align-items: center;
   gap: 5px;
 }
+
+@media (max-width: 768px) {
+  .user-info span {
+    display: none;
+  }
+}
 </style>

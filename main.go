@@ -76,11 +76,14 @@ func main() {
 		slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
 			Level: slog.LevelDebug,
 		}),
-		slogtelegram.Option{
+	}
+
+	if os.Getenv("ENVIRONMENT") == "production" {
+		logHandlers = append(logHandlers, slogtelegram.Option{
 			Level:    slog.LevelInfo,
 			Token:    cfg.Telegram.Token,
 			Username: cfg.Telegram.ChatID,
-		}.NewTelegramHandler(),
+		}.NewTelegramHandler())
 	}
 
 	multiHandler := slogmulti.Fanout(logHandlers...)
@@ -111,6 +114,7 @@ func main() {
 	if os.Getenv("ENVIRONMENT") == "production" {
 		chatActions = chat.NewTwitchActions(ircClient, helixClient)
 	} else {
+		slog.Debug("!!! Using debug chat actions")
 		chatActions = chat.ConsoleActions{}
 	}
 

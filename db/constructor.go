@@ -23,10 +23,7 @@ func NewChannelState(channel string) ChannelState {
 			"stuns":     0,
 			"bodyBlock": 0,
 		},
-		UserMap: make(map[string]*User),
-		Settings: Settings{
-			Disabled: false,
-			Language: "en",
-		},
+		UserMap:  make(map[string]*User),
+		Settings: DefaultSettings(),
 	}
 }

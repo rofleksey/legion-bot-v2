@@ -14,10 +14,6 @@ import (
 	"time"
 )
 
-const (
-	DelayBetweenKillers = 2 * time.Hour
-)
-
 type Bot struct {
 	db.DB
 	chat.Actions
@@ -51,6 +47,18 @@ func (b *Bot) Init() {
 				chanState.Killer = ""
 				chanState.KillerState = nil
 				chanState.Date = time.Now()
+			})
+		}
+
+		if chanState.Settings.Killers.General == nil {
+			b.UpdateState(chanState.Channel, func(chanState *db.ChannelState) {
+				chanState.Settings.Killers.General = db.DefaultGeneralKillerSettings()
+			})
+		}
+
+		if chanState.Settings.Killers.Legion == nil {
+			b.UpdateState(chanState.Channel, func(chanState *db.ChannelState) {
+				chanState.Settings.Killers.Legion = db.DefaultLegionSettings()
 			})
 		}
 
@@ -230,6 +238,7 @@ func (b *Bot) HandleCommands(userMsg db.Message) bool {
 
 func (b *Bot) HandleMessage(userMsg db.Message) {
 	chanState := b.GetState(userMsg.Channel)
+	generalKillerSettings := chanState.Settings.Killers.General
 
 	if chanState.Settings.Disabled {
 		return
@@ -250,7 +259,7 @@ func (b *Bot) HandleMessage(userMsg db.Message) {
 	diff := time.Now().Sub(chanState.Date)
 
 	if chanState.Killer == "" {
-		if diff <= DelayBetweenKillers {
+		if diff <= generalKillerSettings.DelayBetweenKillers {
 			return
 		}
 
