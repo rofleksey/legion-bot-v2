@@ -2,7 +2,7 @@
   <button class="login-btn" @click="loginWithTwitch" v-if="!user">
     {{ t('twitch_login') }}
   </button>
-  <div v-else class="user-info">
+  <div v-else class="user-info" @click="router.push('/settings')">
     <img :src="user.profileImageUrl" class="user-avatar" width="32" height="32" style="border-radius: 50%;">
     <span>{{ user.displayName }}</span>
   </div>
@@ -13,8 +13,10 @@ import {useI18n} from 'vue-i18n'
 import {useUserStore} from "@/stores/user";
 import {computed} from "vue";
 import axios from "axios";
+import {useRouter} from "vue-router";
 
 const { t } = useI18n()
+const router = useRouter()
 
 const userStore = useUserStore()
 const user = computed(() => userStore.user)

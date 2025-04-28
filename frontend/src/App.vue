@@ -10,6 +10,7 @@ import AppBackground from "@/components/AppBackground.vue";
   <AppBackground />
   <RouterView />
   <AppFooter />
+  <NotificationContainer />
 </template>
 
 <style scoped>

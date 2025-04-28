@@ -27,6 +27,15 @@ type Legion struct {
 	i18n.Localiser
 }
 
+func (l *Legion) Name() string {
+	return "legion"
+}
+
+func (l *Legion) Enabled(channel string) bool {
+	chanState := l.GetState(channel)
+	return chanState.Settings.Killers.Legion.Enabled
+}
+
 func New(db db.DB, actions chat.Actions, timers timers.Timers, localiser i18n.Localiser) *Legion {
 	leg := &Legion{
 		DB:        db,
@@ -181,7 +190,7 @@ func (l *Legion) HandleMessage(userMsg db.Message) {
 	user := chanState.UserMap[userMsg.Username]
 	diff := now.Sub(chanState.Date)
 
-	if diff < legionSettings.MinTimeout {
+	if diff < legionSettings.MinDelayBetweenHits {
 		return
 	}
 
@@ -266,7 +275,7 @@ func (l *Legion) startRecoverTimer(channel, username string) {
 	legionSettings := chanState.Settings.Killers.Legion
 	lang := chanState.Settings.Language
 
-	l.StartTimer(channel, username, legionSettings.RecoverTime, func() {
+	l.StartTimer(channel, username, legionSettings.BleedOutBanTime, func() {
 		l.UpdateState(channel, func(chanState *db.ChannelState) {
 			chanState.UserMap[username].Health = "injured"
 		})
@@ -291,7 +300,7 @@ func (l *Legion) startDeadTimer(channel, username string) {
 			chanState.Stats["bleedOuts"]++
 		})
 
-		l.TimeoutUser(channel, username, legionSettings.SlugBanTime, "")
+		l.TimeoutUser(channel, username, legionSettings.BleedOutBanTime, "")
 
 		msg := l.GetLocalString(lang, "on_dead", map[string]string{"USERNAME": username})
 		l.SendMessage(channel, msg)

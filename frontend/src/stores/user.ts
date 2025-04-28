@@ -2,11 +2,14 @@ import {ref} from 'vue'
 import {defineStore} from 'pinia'
 import type {User} from "@/lib/types.ts";
 import axios from 'axios'
+import {useNotifications} from "@/services/notifications.ts";
 
 const localStorageTokenKey = 'legionbot-token'
 const localStorageUserKey = 'legionbot-user'
 
 export const useUserStore = defineStore('user', () => {
+  const notifications = useNotifications()
+
   const localTokenStr = localStorage.getItem(localStorageTokenKey)
   const token = ref<string | null>(localTokenStr || null);
 
@@ -20,8 +23,8 @@ export const useUserStore = defineStore('user', () => {
 
       localStorage.setItem(localStorageTokenKey, newToken)
       localStorage.setItem(localStorageUserKey, JSON.stringify(newUser))
-    }).catch((e) => {
-      console.error(e)
+    }).catch(() => {
+      notifications.error('Failed to validate token', 'Login again to continue')
       logout()
     }).finally(() => {
       window.history.replaceState({}, '', window.location.pathname);
@@ -45,13 +48,14 @@ export const useUserStore = defineStore('user', () => {
     token.value = null
     localStorage.removeItem(localStorageUserKey)
     localStorage.removeItem(localStorageTokenKey)
+    notifications.warning('Logged out')
   }
 
   if (token.value) {
     validateToken(token.value).then((user) => {
       console.log(user)
-    }).catch((e) => {
-      console.error(e)
+    }).catch(() => {
+      notifications.error('Failed to validate token', 'Login again to continue')
       logout()
     })
   }

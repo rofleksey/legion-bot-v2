@@ -263,10 +263,16 @@ func (b *Bot) HandleMessage(userMsg db.Message) {
 			return
 		}
 
-		killerList := pie.Keys(b.killerMap)
-		killerName := killerList[rand.Intn(len(killerList))]
+		killerList := pie.Filter(pie.Values(b.killerMap), func(k killer.Killer) bool {
+			return k.Enabled(userMsg.Channel)
+		})
 
-		b.killerMap[killerName].Start(userMsg)
+		if len(killerList) == 0 {
+			return
+		}
+
+		nextKiller := killerList[rand.Intn(len(killerList))]
+		b.killerMap[nextKiller.Name()].Start(userMsg)
 		return
 	}
 

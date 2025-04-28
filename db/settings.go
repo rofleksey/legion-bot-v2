@@ -25,7 +25,7 @@ func DefaultSettings() Settings {
 }
 
 type GeneralKillerSettings struct {
-	DelayBetweenKillers time.Duration `json:"delayBetweenKilers"`
+	DelayBetweenKillers time.Duration `json:"delayBetweenKillers"`
 }
 
 func DefaultGeneralKillerSettings() *GeneralKillerSettings {
@@ -35,6 +35,7 @@ func DefaultGeneralKillerSettings() *GeneralKillerSettings {
 }
 
 type LegionSettings struct {
+	Enabled                bool          `json:"enabled"`
 	BodyBlockSuccessChance float64       `json:"bodyBlockSuccessChance"`
 	DeepWoundTimeout       time.Duration `json:"deepWoundTimeout"`
 	FatalHit               int           `json:"fatalHit"`
@@ -43,15 +44,15 @@ type LegionSettings struct {
 	HookBanTime            time.Duration `json:"hookBanTime"`
 	LockerGrabChance       float64       `json:"lockerGrabChance"`
 	LockerStunChance       float64       `json:"lockerStunChance"`
-	MinTimeout             time.Duration `json:"minTimeout"`
+	MinDelayBetweenHits    time.Duration `json:"minDelayBetweenHits"`
 	PalletStunChance       float64       `json:"palletStunChance"`
 	ReactChance            float64       `json:"reactChance"`
-	RecoverTime            time.Duration `json:"recoverTime"`
-	SlugBanTime            time.Duration `json:"slugBanTime"`
+	BleedOutBanTime        time.Duration `json:"bleedOutBanTime"`
 }
 
 func DefaultLegionSettings() *LegionSettings {
 	return &LegionSettings{
+		Enabled:                true,
 		BodyBlockSuccessChance: 0.2,
 		DeepWoundTimeout:       time.Minute,
 		FatalHit:               5,
@@ -60,10 +61,9 @@ func DefaultLegionSettings() *LegionSettings {
 		HookBanTime:            time.Minute,
 		LockerGrabChance:       0.3,
 		LockerStunChance:       0.25,
-		MinTimeout:             5 * time.Second,
+		MinDelayBetweenHits:    5 * time.Second,
 		PalletStunChance:       0.18,
 		ReactChance:            0.3,
-		RecoverTime:            30 * time.Second,
-		SlugBanTime:            30 * time.Second,
+		BleedOutBanTime:        30 * time.Second,
 	}
 }

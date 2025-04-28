@@ -3,7 +3,7 @@
     <h1>{{ t('app_title') }}</h1>
     <p>{{ t('app_description') }}</p>
     <div class="cta-buttons">
-      <button class="primary-btn" @click="loginWithTwitch">{{ t('get_started') }}</button>
+      <button class="primary-btn" @click="onStart">{{ t('get_started') }}</button>
       <button class="secondary-btn">{{ t('learn_more') }}</button>
     </div>
   </section>
@@ -57,16 +57,19 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, onUnmounted, ref} from "vue";
-import {useRoute} from "vue-router";
+import {computed, onMounted, onUnmounted, ref} from "vue";
+import {useRouter} from "vue-router";
 import {useUserStore} from "@/stores/user.ts";
 import axios from "axios";
 import {useI18n} from "vue-i18n";
+import {useNotifications} from "@/services/notifications.ts";
 
 const {t} = useI18n()
+const notifications = useNotifications()
+const router = useRouter()
 
-const route = useRoute();
 const userStore = useUserStore();
+const user = computed(() => userStore.user);
 
 const featuresVisible = ref(Array(6).fill(false));
 
@@ -80,16 +83,23 @@ function handleScroll() {
   });
 }
 
+function onStart() {
+  if (user.value) {
+    router.push('/settings')
+  } else {
+    loginWithTwitch().catch((e) => {
+      notifications.error('Twitch loging error', e?.toString?.() ?? '');
+    })
+  }
+}
+
 async function loginWithTwitch() {
-  try {
-    const response = await axios.get('/api/auth/login');
-    if (response.data?.authUrl) {
-      localStorage.setItem('twitch_auth_state', response.data.state);
-      window.location.href = response.data.authUrl;
-    }
-  } catch (error) {
-    console.error('Error during Twitch login:', error);
-    // Consider adding user feedback here
+  const response = await axios.get('/api/auth/login');
+  if (response.data?.authUrl) {
+    localStorage.setItem('twitch_auth_state', response.data.state);
+    window.location.href = response.data.authUrl;
+  } else {
+    notifications.error('No auth URL');
   }
 }
 
@@ -104,7 +114,7 @@ onMounted(() => {
       localStorage.removeItem('twitch_auth_state');
       userStore.login(token)
     } else {
-      console.error('State mismatch - possible CSRF attack');
+      notifications.error('State mismatch');
     }
   }
 

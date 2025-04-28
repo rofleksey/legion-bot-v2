@@ -5,6 +5,8 @@ import (
 )
 
 type Killer interface {
+	Name() string
+	Enabled(channel string) bool
 	Start(userMsg db.Message)
 	HandleMessage(userMsg db.Message)
 }
