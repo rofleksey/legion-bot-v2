@@ -26,6 +26,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 // TODO:
@@ -98,6 +99,7 @@ func main() {
 	c := cron.New()
 	if _, err := c.AddFunc(util.DailyRestartCron, func() {
 		log.Println("Executing daily restart")
+		time.Sleep(time.Second * 1)
 		os.Exit(1)
 	}); err != nil {
 		log.Fatalf("Failed to schedule daily restart: %v", err)
@@ -175,6 +177,8 @@ func main() {
 			slog.Error("Server error",
 				slog.Any("error", err),
 			)
+
+			time.Sleep(time.Second)
 			os.Exit(1)
 		}
 	}()
