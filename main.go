@@ -97,8 +97,22 @@ func main() {
 	}
 	c.Start()
 
-	//chatActions := chat.NewTwitchActions(ircClient, helixClient)
-	chatActions := chat.ConsoleActions{}
+	accessToken, err := util.FetchTwitchAccessToken(cfg.Chat.RefreshToken)
+	if err != nil {
+		log.Fatalf("Failed to get Twitch access token: %v", err)
+	}
+
+	ircClient, helixClient, err := util.InitTwitchClients(cfg.Chat.ClientID, accessToken)
+	if err != nil {
+		log.Fatalf("Failed to init twitch clients: %v", err)
+	}
+
+	var chatActions chat.Actions
+	if os.Getenv("ENVIRONMENT") == "production" {
+		chatActions = chat.NewTwitchActions(ircClient, helixClient)
+	} else {
+		chatActions = chat.ConsoleActions{}
+	}
 
 	database, err := db.NewDatabase("data/database.db")
 	if err != nil {
@@ -120,12 +134,10 @@ func main() {
 	botInstance := bot.NewBot(database, chatActions, timerManager, localiser, killerMap)
 	botInstance.Init()
 
-	chatProducer, err := producer.NewTwitchProducer(cfg, database, botInstance)
-	if err != nil {
-		log.Fatalf("Failed to initialize chat producer: %v", err)
+	chatProducer := producer.NewTwitchProducer(ircClient, helixClient, database, botInstance)
+	if os.Getenv("ENVIRONMENT") != "production" {
+		chatProducer.AddChannel("souzasoul")
 	}
-
-	chatProducer.AddChannel("dbdleague")
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)

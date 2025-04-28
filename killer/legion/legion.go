@@ -403,7 +403,7 @@ func (l *Legion) handleHit(channel, username string) {
 	l.startDeadTimer(channel, username)
 	l.startFrenzyTimer(channel)
 
-	if legionState.HitCount == FatalHit {
+	if legionState.HitCount == FatalHit-1 {
 		msg := l.GetLocalString(lang, "on_frenzy_hit_prefinal", map[string]string{"USERNAME": username})
 		l.SendMessage(channel, msg)
 	} else {
