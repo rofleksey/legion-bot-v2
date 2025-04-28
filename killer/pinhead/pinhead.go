@@ -2,6 +2,7 @@ package pinhead
 
 import (
 	"fmt"
+	"github.com/elliotchance/pie/v2"
 	"github.com/mitchellh/mapstructure"
 	"legion-bot-v2/chat"
 	"legion-bot-v2/db"
@@ -9,7 +10,9 @@ import (
 	"legion-bot-v2/i18n"
 	"legion-bot-v2/killer"
 	"legion-bot-v2/timers"
+	"legion-bot-v2/util"
 	"log/slog"
+	"math/rand/v2"
 	"strings"
 	"time"
 )
@@ -104,14 +107,25 @@ func (p *Pinhead) startBoxTimer(channel string) {
 	p.StopTimer(channel, BoxTimerName)
 
 	chanState := p.GetState(channel)
-	doctorSettings := chanState.Settings.Killers.Doctor
+	pinheadSettings := chanState.Settings.Killers.Pinhead
 	lang := chanState.Settings.Language
 
-	p.StartTimer(channel, BoxTimerName, doctorSettings.Timeout, func() {
+	p.StartTimer(channel, BoxTimerName, pinheadSettings.Timeout, func() {
 		viewerList := p.GetViewerList(channel)
+		viewerList = pie.Filter(viewerList, func(s string) bool {
+			return s != util.BotUsername && s != util.BotOwner && s != channel
+		})
+
+		rand.Shuffle(len(viewerList), func(i, j int) {
+			viewerList[i], viewerList[j] = viewerList[j], viewerList[i]
+		})
 
 		p.UpdateState(channel, func(chanState *db.ChannelState) {
-			for _, viewer := range viewerList {
+			for index, viewer := range viewerList {
+				if index == pinheadSettings.VictimCount {
+					break
+				}
+
 				chanState.Stats["hits"]++
 				chanState.UserMap[viewer].Health = "deep_wound"
 				chanState.UserMap[viewer].Stats["hits"]++
@@ -260,8 +274,8 @@ func (p *Pinhead) handleCommands(userMsg db.Message) bool {
 			p.SendMessage(userMsg.Channel, msg)
 
 			return true
-		case GuessResultIncorrect:
-			msg := p.GetLocalString(lang, "pinhead_incorrect", map[string]string{"QUESTION": question, "USERNAME": userMsg.Username})
+		case GuessResultInvalid:
+			msg := p.GetLocalString(lang, "pinhead_invalid", map[string]string{"QUESTION": question, "USERNAME": userMsg.Username})
 			p.SendMessage(userMsg.Channel, msg)
 
 			return true

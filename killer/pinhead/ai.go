@@ -42,7 +42,7 @@ func (p *Pinhead) GenerateWord(channel string) (GenerateWordResult, error) {
 		return GenerateWordResult{}, fmt.Errorf("word generation prompt failed: %w", err)
 	}
 
-	re := regexp.MustCompile(`(?i)^RESULT\s+(\w+)\s+(\w+)$`)
+	re := regexp.MustCompile(`(?i)^RESULT\s+(\S+)\s+(\S+)$`)
 
 	matches := re.FindStringSubmatch(strings.TrimSpace(result))
 	if len(matches) != 3 {
@@ -61,11 +61,11 @@ func (p *Pinhead) GenerateWord(channel string) (GenerateWordResult, error) {
 type GuessResult string
 
 var (
-	GuessResultYes       = GuessResult("yes")
-	GuessResultNo        = GuessResult("no")
-	GuessResultOK        = GuessResult("ok")
-	GuessResultMaybe     = GuessResult("maybe")
-	GuessResultIncorrect = GuessResult("incorrect")
+	GuessResultYes     = GuessResult("yes")
+	GuessResultNo      = GuessResult("no")
+	GuessResultOK      = GuessResult("ok")
+	GuessResultMaybe   = GuessResult("maybe")
+	GuessResultInvalid = GuessResult("invalid")
 )
 
 func (p *Pinhead) GuessWord(lang, word, question string) (GuessResult, error) {
@@ -79,7 +79,7 @@ func (p *Pinhead) GuessWord(lang, word, question string) (GuessResult, error) {
 		Text:       question,
 	})
 	if err != nil {
-		return GuessResultIncorrect, fmt.Errorf("guessing prompt failed: %w", err)
+		return GuessResultInvalid, fmt.Errorf("guessing prompt failed: %w", err)
 	}
 
 	result = strings.Join(strings.Fields(strings.ToLower(strings.TrimSpace(result))), " ")
@@ -89,13 +89,13 @@ func (p *Pinhead) GuessWord(lang, word, question string) (GuessResult, error) {
 		return GuessResultOK, nil
 	case "ans y":
 		return GuessResultYes, nil
-	case "ans no":
+	case "ans n":
 		return GuessResultNo, nil
 	case "maybe":
 		return GuessResultMaybe, nil
-	case "incorrect":
-		return GuessResultIncorrect, nil
+	case "invalid":
+		return GuessResultInvalid, nil
 	default:
-		return GuessResultIncorrect, fmt.Errorf("invalid guess result %s", result)
+		return GuessResultInvalid, fmt.Errorf("invalid guess result %s", result)
 	}
 }
