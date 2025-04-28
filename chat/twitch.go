@@ -1,10 +1,8 @@
 package chat
 
 import (
-	"context"
 	"github.com/gempir/go-twitch-irc/v4"
 	"github.com/nicklaw5/helix/v2"
-	"golang.org/x/sync/semaphore"
 	"legion-bot-v2/util"
 	"log/slog"
 	"sync"
@@ -16,7 +14,7 @@ var _ Actions = (*TwitchActions)(nil)
 type TwitchActions struct {
 	ircClient   *twitch.Client
 	helixClient *helix.Client
-	queues      map[string]*semaphore.Weighted
+	queues      map[string]*util.TaskQueue
 	mu          sync.Mutex
 }
 
@@ -24,55 +22,33 @@ func NewTwitchActions(ircClient *twitch.Client, helixClient *helix.Client) *Twit
 	return &TwitchActions{
 		ircClient:   ircClient,
 		helixClient: helixClient,
-		queues:      make(map[string]*semaphore.Weighted),
+		queues:      make(map[string]*util.TaskQueue),
 	}
 }
 
-func (t *TwitchActions) getQueue(channel string) *semaphore.Weighted {
+func (t *TwitchActions) getQueue(channel string) *util.TaskQueue {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
 	if _, exists := t.queues[channel]; !exists {
-		t.queues[channel] = semaphore.NewWeighted(1)
+		t.queues[channel] = util.NewTaskQueue(1, 1, 1)
 	}
 	return t.queues[channel]
 }
 
 func (t *TwitchActions) SendMessage(channel, text string) {
-	queue := t.getQueue(channel)
-
-	go func() {
-		if err := queue.Acquire(context.Background(), 1); err != nil {
-			slog.Error("Failed to acquire semaphore",
-				slog.String("channel", channel),
-				slog.Any("error", err),
-			)
-			return
-		}
-		defer queue.Release(1)
-
+	t.getQueue(channel).Enqueue(func() {
 		slog.Info("<<<",
 			slog.String("channel", channel),
 			slog.String("text", text),
 		)
 
 		t.ircClient.Say(channel, text)
-	}()
+	})
 }
 
 func (t *TwitchActions) TimeoutUser(channel, username string, duration time.Duration, reason string) {
-	queue := t.getQueue(channel)
-
-	go func() {
-		if err := queue.Acquire(context.Background(), 1); err != nil {
-			slog.Error("Failed to acquire semaphore",
-				slog.String("channel", channel),
-				slog.Any("error", err),
-			)
-			return
-		}
-		defer queue.Release(1)
-
+	t.getQueue(channel).Enqueue(func() {
 		slog.Info("User has been timeout",
 			slog.String("channel", channel),
 			slog.String("username", username),
@@ -104,7 +80,6 @@ func (t *TwitchActions) TimeoutUser(channel, username string, duration time.Dura
 		}
 		channelUser := channelResp.Data.Users[0]
 
-		// Get user to ban ID
 		userResp, err := t.helixClient.GetUsers(&helix.UsersParams{
 			Logins: []string{username},
 		})
@@ -117,11 +92,8 @@ func (t *TwitchActions) TimeoutUser(channel, username string, duration time.Dura
 		}
 		banUser := userResp.Data.Users[0]
 
-		// Set the user access token for the bot (assuming you've previously authenticated)
-		// Note: You'll need to handle OAuth properly in your application
 		t.helixClient.SetUserAccessToken(botUser.ID)
 
-		// Perform the ban
 		banResp, err := t.helixClient.BanUser(&helix.BanUserParams{
 			BroadcasterID: channelUser.ID,
 			ModeratorId:   botUser.ID,
@@ -145,28 +117,16 @@ func (t *TwitchActions) TimeoutUser(channel, username string, duration time.Dura
 				slog.Any("error", err),
 			)
 		}
-	}()
+	})
 }
 
 func (t *TwitchActions) UnbanUser(channel, username string) {
-	queue := t.getQueue(channel)
-
-	go func() {
-		if err := queue.Acquire(context.Background(), 1); err != nil {
-			slog.Error("Failed to acquire semaphore",
-				slog.String("channel", channel),
-				slog.Any("error", err),
-			)
-			return
-		}
-		defer queue.Release(1)
-
+	t.getQueue(channel).Enqueue(func() {
 		slog.Info("User has been unbanned",
 			slog.String("channel", channel),
 			slog.String("username", username),
 		)
 
-		// Get bot user ID
 		botResp, err := t.helixClient.GetUsers(&helix.UsersParams{
 			Logins: []string{util.BotUsername},
 		})
@@ -179,7 +139,6 @@ func (t *TwitchActions) UnbanUser(channel, username string) {
 		}
 		botUser := botResp.Data.Users[0]
 
-		// Get channel user ID
 		channelResp, err := t.helixClient.GetUsers(&helix.UsersParams{
 			Logins: []string{channel},
 		})
@@ -192,7 +151,6 @@ func (t *TwitchActions) UnbanUser(channel, username string) {
 		}
 		channelUser := channelResp.Data.Users[0]
 
-		// Get user to unban ID
 		userResp, err := t.helixClient.GetUsers(&helix.UsersParams{
 			Logins: []string{username},
 		})
@@ -205,10 +163,8 @@ func (t *TwitchActions) UnbanUser(channel, username string) {
 		}
 		banUser := userResp.Data.Users[0]
 
-		// Set the user access token for the bot
 		t.helixClient.SetUserAccessToken(botUser.ID)
 
-		// Perform the unban
 		unbanResp, err := t.helixClient.UnbanUser(&helix.UnbanUserParams{
 			BroadcasterID: channelUser.ID,
 			ModeratorID:   botUser.ID,
@@ -228,5 +184,5 @@ func (t *TwitchActions) UnbanUser(channel, username string) {
 				slog.Any("error", err),
 			)
 		}
-	}()
+	})
 }
