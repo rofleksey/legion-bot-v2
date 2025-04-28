@@ -182,7 +182,7 @@ func (b *Bot) HandleCommands(userMsg db.Message) bool {
 		}
 
 		if user.Health == "hooked" || user.Health == "dead" {
-			msg := b.GetLocalString(lang, "cant_heal_rn", map[string]string{"USERNAME": otherUsername})
+			msg := b.GetLocalString(lang, "cant_do_rn", map[string]string{"USERNAME": otherUsername})
 			b.SendMessage(userMsg.Channel, msg)
 			return true
 		}

@@ -87,6 +87,7 @@ type GhostFaceSettings struct {
 	HookBanTime         time.Duration `json:"hookBanTime"`
 	MinDelayBetweenHits time.Duration `json:"minDelayBetweenHits"`
 	ReactChance         float64       `json:"reactChance"`
+	RevealChance        float64       `json:"revealChance"`
 	Timeout             time.Duration `json:"timeout"`
 }
 
@@ -97,6 +98,7 @@ func DefaultGhostFaceSettings() *GhostFaceSettings {
 		HookBanTime:         time.Minute,
 		MinDelayBetweenHits: 2 * time.Second,
 		ReactChance:         0.75,
+		RevealChance:        0.4,
 		Timeout:             5 * time.Minute,
 	}
 }

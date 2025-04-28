@@ -27,7 +27,7 @@ const sourceArr: Source[] = [
   }
 ]
 
-const source = sourceArr[Math.round(Math.random() * sourceArr.length)]
+const source = sourceArr[Math.floor(Math.random() * sourceArr.length)]
 </script>
 
 <style scoped>

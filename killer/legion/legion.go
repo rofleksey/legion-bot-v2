@@ -77,7 +77,7 @@ func (l *Legion) handleCommands(userMsg db.Message) bool {
 
 	case strings.HasPrefix(userMsg.Text, "!pallet"):
 		if user.Health == "hooked" || user.Health == "dead" {
-			msg := l.GetLocalString(lang, "cant_pallet_rn", map[string]string{"USERNAME": userMsg.Username})
+			msg := l.GetLocalString(lang, "cant_do_rn", map[string]string{"USERNAME": userMsg.Username})
 			l.SendMessage(userMsg.Channel, msg)
 
 			return true
@@ -114,7 +114,7 @@ func (l *Legion) handleCommands(userMsg db.Message) bool {
 
 	case strings.HasPrefix(userMsg.Text, "!tbag"):
 		if user.Health == "hooked" || user.Health == "dead" {
-			msg := l.GetLocalString(lang, "cant_tbag_rn", map[string]string{"USERNAME": userMsg.Username})
+			msg := l.GetLocalString(lang, "cant_do_rn", map[string]string{"USERNAME": userMsg.Username})
 			l.SendMessage(userMsg.Channel, msg)
 			return true
 		}
@@ -134,7 +134,7 @@ func (l *Legion) handleCommands(userMsg db.Message) bool {
 
 	case strings.HasPrefix(userMsg.Text, "!locker"):
 		if user.Health == "hooked" || user.Health == "dead" {
-			msg := l.GetLocalString(lang, "cant_locker_rn", map[string]string{"USERNAME": userMsg.Username})
+			msg := l.GetLocalString(lang, "cant_do_rn", map[string]string{"USERNAME": userMsg.Username})
 			l.SendMessage(userMsg.Channel, msg)
 
 			return true

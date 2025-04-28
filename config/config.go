@@ -27,6 +27,13 @@ type Config struct {
 		Token  string `yaml:"token" validate:"required"`
 		ChatID string `yaml:"chatId" validate:"required"`
 	}
+
+	Yandex struct {
+		ServiceAccountID string `yaml:"serviceAccountId" validate:"required"`
+		FolderID         string `yaml:"folderId" validate:"required"`
+		KeyID            string `yaml:"keyId" validate:"required"`
+		Key              string `yaml:"key" validate:"required"`
+	}
 }
 
 func Load() (*Config, error) {

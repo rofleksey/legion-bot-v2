@@ -162,6 +162,7 @@ func (g *GhostFace) HandleMessage(userMsg db.Message) {
 
 func (g *GhostFace) handleCommands(userMsg db.Message) bool {
 	chanState := g.GetState(userMsg.Channel)
+	gfSettings := chanState.Settings.Killers.GhostFace
 	lang := chanState.Settings.Language
 	user := chanState.UserMap[userMsg.Username]
 
@@ -173,7 +174,7 @@ func (g *GhostFace) handleCommands(userMsg db.Message) bool {
 
 	case strings.HasPrefix(userMsg.Text, "!tbag"):
 		if user.Health == "hooked" || user.Health == "dead" {
-			msg := g.GetLocalString(lang, "cant_tbag_rn", map[string]string{"USERNAME": userMsg.Username})
+			msg := g.GetLocalString(lang, "cant_do_rn", map[string]string{"USERNAME": userMsg.Username})
 			g.SendMessage(userMsg.Channel, msg)
 			return true
 		}
@@ -182,6 +183,63 @@ func (g *GhostFace) handleCommands(userMsg db.Message) bool {
 		g.SendMessage(userMsg.Channel, msg)
 
 		g.handleHit(userMsg.Channel, userMsg.Username)
+		return true
+
+	case strings.HasPrefix(userMsg.Text, "!reveal"):
+		if user.Health == "hooked" || user.Health == "dead" || user.Marked {
+			msg := g.GetLocalString(lang, "cant_do_rn", map[string]string{"USERNAME": userMsg.Username})
+			g.SendMessage(userMsg.Channel, msg)
+			return true
+		}
+
+		if rand.Float64() > gfSettings.RevealChance {
+			msg := g.GetLocalString(lang, "gf_reveal_fail", map[string]string{"USERNAME": userMsg.Username})
+			g.SendMessage(userMsg.Channel, msg)
+
+			g.handleHit(userMsg.Channel, userMsg.Username)
+			return true
+		}
+
+		msg := g.GetLocalString(lang, "gf_reveal", map[string]string{"USERNAME": userMsg.Username})
+		g.SendMessage(userMsg.Channel, msg)
+
+		g.handleHit(userMsg.Channel, userMsg.Username)
+
+		chanState := g.GetState(userMsg.Channel)
+		if chanState.Killer != "ghostface" {
+			return true
+		}
+
+		var gfState db.GhostFaceState
+		if err := mapstructure.Decode(chanState.KillerState, &gfState); err != nil {
+			slog.Error("Failed to decode killer state",
+				slog.String("channel", userMsg.Channel),
+				slog.Any("error", err),
+			)
+		}
+
+		g.UpdateState(userMsg.Channel, func(chanState *db.ChannelState) {
+			chanState.Killer = ""
+			chanState.KillerState = nil
+			chanState.Date = time.Now()
+			chanState.UserMap[userMsg.Username].Stats["stuns"]++
+			chanState.Stats["fail"]++
+
+			for u := range chanState.UserMap {
+				if !gfState.StalkedThisRound[u] {
+					chanState.UserMap[u].Marked = false
+				}
+			}
+		})
+
+		g.StopTimer(userMsg.Channel, StalkTimerName)
+
+		msg = g.GetLocalString(lang, "gf_revealed", map[string]string{"USERNAME": userMsg.Username})
+		g.SendMessage(userMsg.Channel, msg)
+
+		msg = g.GetLocalString(lang, "gf_go_away", map[string]string{"COUNT": fmt.Sprint(len(gfState.StalkedThisRound))})
+		g.SendMessage(userMsg.Channel, msg)
+
 		return true
 	}
 
