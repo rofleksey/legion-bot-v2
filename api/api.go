@@ -12,6 +12,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -25,6 +26,7 @@ type Server struct {
 	oauth2Config oauth2.Config
 	database     db.DB
 	stateCache   *ttlcache.Cache[string, struct{}]
+	mux          *http.ServeMux
 }
 
 type TwitchUser struct {
@@ -56,20 +58,73 @@ func NewServer(cfg *config.Config, database db.DB) *Server {
 		},
 		database:   database,
 		stateCache: stateCache,
+		mux:        http.NewServeMux(),
 	}
 
-	http.HandleFunc("/api/auth/login", server.handleLogin)
-	http.HandleFunc("/api/auth/callback", server.handleCallback)
-	http.HandleFunc("/api/settings", server.handleSettings)
-	http.HandleFunc("/api/validate", server.handleValidateToken)
-	http.Handle("/", http.FileServer(http.Dir("./static")))
+	server.mux.HandleFunc("/api/auth/login", server.handleLogin)
+	server.mux.HandleFunc("/api/auth/callback", server.handleCallback)
+	server.mux.HandleFunc("/api/settings", server.handleSettings)
+	server.mux.HandleFunc("/api/validate", server.handleValidateToken)
+	server.mux.HandleFunc("/api/stats/{channel}", server.handleChannelStats)
+	server.mux.HandleFunc("/api/stats/{channel}/{username}", server.handleUserStats)
+
+	server.mux.HandleFunc("/stats/{channel}", server.handleStatsPage)
+	server.mux.Handle("/", http.FileServer(http.Dir("./static")))
 
 	return &server
 }
 
 func (s *Server) Run() error {
 	slog.Info("Started server on port 8080")
-	return http.ListenAndServe(":8080", nil)
+	return http.ListenAndServe(":8080", languageMiddleware(s.mux))
+}
+
+func languageMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/api/") ||
+			strings.HasPrefix(r.URL.Path, "/ru") ||
+			strings.HasPrefix(r.URL.Path, "/en") {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		if cookie, err := r.Cookie("user_lang"); err == nil {
+			if cookie.Value == "ru" && !strings.HasPrefix(r.URL.Path, "/ru") {
+				http.Redirect(w, r, "/ru"+r.URL.Path, http.StatusFound)
+				return
+			}
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		if r.URL.Path == "/" {
+			acceptLang := r.Header.Get("Accept-Language")
+			if strings.Contains(acceptLang, "ru") {
+				http.Redirect(w, r, "/ru", http.StatusFound)
+				return
+			} else {
+				http.Redirect(w, r, "/en", http.StatusFound)
+				return
+			}
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *Server) handleStatsPage(w http.ResponseWriter, r *http.Request) {
+	channel := strings.TrimPrefix(r.URL.Path, "/stats/")
+	if channel == "" {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	if s.database.GetState(channel).Date.IsZero() {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	http.ServeFile(w, r, filepath.Join("static", "html", "stats.html"))
 }
 
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -226,6 +281,31 @@ func (s *Server) handleValidateToken(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(claims.TwitchUser)
+}
+
+func (s *Server) handleChannelStats(w http.ResponseWriter, r *http.Request) {
+	channel := r.PathValue("channel")
+
+	state := s.database.GetState(channel)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(state.Stats)
+}
+
+func (s *Server) handleUserStats(w http.ResponseWriter, r *http.Request) {
+	channel := r.PathValue("channel")
+	username := r.PathValue("username")
+
+	state := s.database.GetState(channel)
+
+	user := state.UserMap[username]
+	if user == nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(user.Stats)
 }
 
 func (s *Server) authenticateRequest(r *http.Request) (*JWTClaims, error) {

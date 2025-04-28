@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DBD Legion Bot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="/js/vue.js"></script>
+    <script src="/js/axios.js"></script>
+    <link rel="stylesheet" href="/css/index.css">
+</head>
+<body>
+<div id="app">
+    <!-- Blurred gameplay background -->
+    <div class="video-background">
+        <video autoplay muted loop>
+            <source src="/video/gameplay.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <!-- Header with login -->
+    <header>
+        <div class="logo">
+            DBD <span>Legion</span>Bot
+        </div>
+        <button class="login-btn" @click="loginWithTwitch" v-if="!user">
+            Login with Twitch
+        </button>
+        <div v-else class="user-info">
+            <img :src="user.profile_image_url" class="user-avatar" width="32" height="32" style="border-radius: 50%;">
+            <span>{{ user.display_name }}</span>
+        </div>
+    </header>
+
+    <!-- Hero section -->
+    <section class="hero">
+        <h1>Bring The Entity's Terror To Your Chat</h1>
+        <p>Legion Bot stalks your chat like a Dead by Daylight killer, striking unpredictably and timing out chatters on the fifth hit. Customize your killer, attack frequency, and AI responses for maximum suspense.</p>
+        <div class="cta-buttons">
+            <button class="primary-btn" @click="loginWithTwitch">Get Started</button>
+            <button class="secondary-btn">Learn More</button>
+        </div>
+    </section>
+
+    <!-- Features section -->
+    <section class="features">
+        <h2 class="section-title">Powerful Features</h2>
+        <div class="feature-grid">
+            <div class="feature-card scroll-animate" :class="{visible: featuresVisible[0]}" ref="feature1">
+                <div class="feature-icon">🤖</div>
+                <h3 class="feature-title">Killer AI Responses</h3>
+                <p class="feature-desc">Our AI generates creepy killer-themed responses when users mention the bot, enhancing the Dead by Daylight atmosphere.</p>
+            </div>
+
+            <div class="feature-card scroll-animate" :class="{visible: featuresVisible[1]}" ref="feature2">
+                <div class="feature-icon">🎮</div>
+                <h3 class="feature-title">Multiple Killers</h3>
+                <p class="feature-desc">Choose from different Dead by Daylight killers like Legion, Myers, and Ghost Face, each with unique stalking behaviors.</p>
+            </div>
+
+            <div class="feature-card scroll-animate" :class="{visible: featuresVisible[2]}" ref="feature3">
+                <div class="feature-icon">✨</div>
+                <h3 class="feature-title">Interactive Stalking</h3>
+                <p class="feature-desc">The bot appears periodically to "stab" chatters, with the 5th hit triggering a customizable timeout.</p>
+            </div>
+
+            <div class="feature-card scroll-animate" :class="{visible: featuresVisible[3]}" ref="feature4">
+                <div class="feature-icon">📊</div>
+                <h3 class="feature-title">Full Customization</h3>
+                <p class="feature-desc">Adjust attack frequency, timeout duration, killer selection, and other parameters to fit your stream's vibe.</p>
+            </div>
+
+            <div class="feature-card scroll-animate" :class="{visible: featuresVisible[4]}" ref="feature5">
+                <div class="feature-icon">🤝</div>
+                <h3 class="feature-title">Chat Engagement</h3>
+                <p class="feature-desc">Keeps chat active and entertained with unpredictable killer appearances and reactions between matches.</p>
+            </div>
+
+            <div class="feature-card scroll-animate" :class="{visible: featuresVisible[5]}" ref="feature6">
+                <div class="feature-icon">🔔</div>
+                <h3 class="feature-title">DbD Features</h3>
+                <p class="feature-desc">Special Dead by Daylight themed commands, stats tracking, and more killer features coming soon.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-links">
+            <a href="https://t.me/rofleksey" class="footer-link">Support</a>
+            <a href="#" class="footer-link">Privacy Policy</a>
+            <a href="#" class="footer-link">Terms of Service</a>
+        </div>
+        <p class="copyright">© 2024-2025 DBD Legion Bot</p>
+    </footer>
+</div>
+
+<script src="/js/index.js"></script>
+</body>
+</html>
