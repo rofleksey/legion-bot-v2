@@ -155,13 +155,13 @@ func main() {
 	botInstance := bot.NewBot(database, chatActions, timerManager, localiser, gptInstance, killerMap)
 	botInstance.Init()
 
-	//chatProducer := producer.NewTwitchProducer(ircClient, helixClient, database, botInstance)
-	//if os.Getenv("ENVIRONMENT") != "production" {
-	//	chatProducer.AddChannel("tru3ta1ent")
-	//}
+	chatProducer := producer.NewTwitchProducer(ircClient, helixClient, database, botInstance)
+	if os.Getenv("ENVIRONMENT") != "production" {
+		chatProducer.AddChannel("tru3ta1ent")
+	}
 
-	chatProducer := producer.NewConsoleProducer(botInstance)
-	chatProducer.AddChannel("rofleksey")
+	//chatProducer := producer.NewConsoleProducer(botInstance)
+	//chatProducer.AddChannel("rofleksey")
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
