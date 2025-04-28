@@ -213,7 +213,7 @@
               :label="t('settings.deep_wound_timeout')"
             />
             <AppDurationInput
-              v-model="settings.killers.legion.bleedOutBanTime"
+              v-model="settings.killers.pinhead.bleedOutBanTime"
               :label="t('settings.bleedout_ban_time')"
             />
             <AppDurationInput
