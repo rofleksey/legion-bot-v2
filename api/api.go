@@ -54,7 +54,7 @@ func NewServer(cfg *config.Config, database db.DB, chatProducer producer.Produce
 	fs := http.FileServer(http.Dir("./frontend/dist"))
 	cacheFS := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if util.IsStaticAsset(r.URL.Path) {
-			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+			w.Header().Set("Cache-Control", "public, max-age=31536000")
 		}
 		fs.ServeHTTP(w, r)
 	})
