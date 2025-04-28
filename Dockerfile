@@ -10,7 +10,7 @@ COPY ./frontend/ /opt/
 RUN npm i && npm run build
 
 FROM alpine
-ARG ENVIRONMENT=production
+ENV ENVIRONMENT=production
 WORKDIR /opt
 RUN apk update && apk add --no-cache curl ca-certificates
 COPY --from=builder /opt/legion-bot-v2 /opt/legion-bot-v2
