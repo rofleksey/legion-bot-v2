@@ -9,6 +9,7 @@ import (
 	"legion-bot-v2/i18n"
 	"legion-bot-v2/killer"
 	"legion-bot-v2/timers"
+	"legion-bot-v2/util"
 	"log/slog"
 	"math/rand"
 	"strings"
@@ -235,6 +236,21 @@ func (b *Bot) HandleCommands(userMsg db.Message) bool {
 
 		msg := b.GetLocalString(lang, "on_mend", map[string]string{"USERNAME": userMsg.Username})
 		b.SendMessage(userMsg.Channel, msg)
+
+		return true
+
+	case strings.Contains(userMsg.Text, "@"+util.BotUsername) || strings.Contains(userMsg.Text, "легион") || strings.Contains(userMsg.Text, "legion"):
+		responseText, err := b.GenericResponse(lang, userMsg.Text)
+		if err != nil {
+			slog.Error("Failed to generate a generic response",
+				slog.String("user", userMsg.Username),
+				slog.String("text", userMsg.Text),
+				slog.Any("error", err),
+			)
+			return true
+		}
+
+		b.SendMessage(userMsg.Channel, "@"+userMsg.Username+" "+responseText)
 
 		return true
 	}

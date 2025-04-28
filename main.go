@@ -29,6 +29,7 @@ import (
 )
 
 // TODO:
+// gallery of killers
 // documentation
 // privacy policy
 // terms
@@ -36,7 +37,6 @@ import (
 // ai
 // !spin
 // !flashlight
-// pinhead
 // myers
 // !clip
 // !perk
