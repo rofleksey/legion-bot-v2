@@ -67,6 +67,8 @@
               :min="1"
               :max="1000000"
               :label="t('settings.weight')"
+              show-help-icon
+              @help-click="Dialog.show(t('settings.weight_description'))"
             />
           </div>
           <div class="settings-grid">
@@ -135,6 +137,8 @@
               :min="1"
               :max="1000000"
               :label="t('settings.weight')"
+              show-help-icon
+              @help-click="Dialog.show(t('settings.weight_description'))"
             />
           </div>
           <div class="settings-grid">
@@ -170,6 +174,8 @@
               :min="1"
               :max="1000000"
               :label="t('settings.weight')"
+              show-help-icon
+              @help-click="Dialog.show(t('settings.weight_description'))"
             />
           </div>
           <div class="settings-grid">
@@ -201,6 +207,8 @@
               :min="1"
               :max="1000000"
               :label="t('settings.weight')"
+              show-help-icon
+              @help-click="Dialog.show(t('settings.weight_description'))"
             />
           </div>
           <div class="settings-grid">
@@ -249,6 +257,7 @@ import {useNotifications} from "@/services/notifications.ts";
 import {useI18n} from "vue-i18n";
 import AppQuotation from "@/components/AppQuotation.vue";
 import AppStringInput from "@/components/AppStringInput.vue";
+import {Dialog} from "@/services/dialog.ts";
 
 const {t} = useI18n()
 const notifications = useNotifications()
@@ -294,7 +303,7 @@ onMounted(fetchSettings);
 
 <style scoped>
 .settings-container {
-  max-width: 1200px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 24px;
 }
@@ -378,9 +387,13 @@ onMounted(fetchSettings);
 .settings-grid {
   transition: opacity 0.3s ease;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
   gap: 16px;
   margin-bottom: 32px;
+  justify-content: start;
+  justify-items: start;
+  align-items: center;
+  align-content: start;
 }
 
 .settings-grid.disabled {

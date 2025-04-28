@@ -65,5 +65,5 @@ func NewServer(cfg *config.Config, database db.DB, chatProducer producer.Produce
 
 func (s *Server) Run() error {
 	slog.Debug("Started server on port 8080")
-	return http.ListenAndServe(":8080", s.mux)
+	return http.ListenAndServe(":8080", recoveryMiddleware(s.mux))
 }

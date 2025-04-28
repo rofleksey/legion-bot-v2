@@ -226,7 +226,7 @@ function validateDuration(ns: number) {
 <style>
 .duration-input {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  max-width: 300px;
+  width: 275px;
 }
 
 .duration-input__label {

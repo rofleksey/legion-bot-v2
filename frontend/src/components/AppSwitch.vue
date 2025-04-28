@@ -38,7 +38,6 @@ function toggle() {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  width: 100%;
 }
 
 .toggle-label {

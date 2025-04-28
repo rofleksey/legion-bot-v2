@@ -173,8 +173,7 @@ onUnmounted(() => {
 /* Base styles */
 .dropdown-container {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  width: 100%;
-  max-width: 320px;
+  width: 275px;
 }
 
 .dropdown-label {

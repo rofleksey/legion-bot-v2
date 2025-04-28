@@ -155,7 +155,7 @@ function validateChance(value: number) {
 <style>
 .chance-input {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  max-width: 300px;
+  width: 275px;
 }
 
 .chance-input__label {

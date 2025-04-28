@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"log/slog"
 	"sync"
 
 	"golang.org/x/time/rate"
@@ -49,6 +50,14 @@ func (q *TaskQueue) dispatcher() {
 			if err := q.limiter.Wait(q.ctx); err != nil {
 				return
 			}
+
+			defer func() {
+				if err := recover(); err != nil {
+					slog.Error("Error dispatching task",
+						slog.Any("error", err),
+					)
+				}
+			}()
 
 			t()
 		}(task)

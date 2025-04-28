@@ -36,6 +36,15 @@ func NewTwitchProducer(
 
 func (p *TwitchProducer) Run() error {
 	p.ircClient.OnPrivateMessage(func(message twitch.PrivateMessage) {
+		defer func() {
+			if err := recover(); err != nil {
+				slog.Error("Error in Twitch Private Message:",
+					slog.Any("error", err),
+					slog.Any("text", message.Message),
+				)
+			}
+		}()
+
 		username := strings.ToLower(message.User.Name)
 		channel := strings.ReplaceAll(message.Channel, "#", "")
 		text := strings.TrimSpace(message.Message)
