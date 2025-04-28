@@ -28,6 +28,11 @@ type Legion struct {
 	i18n.Localiser
 }
 
+func (l *Legion) Weight(channel string) int {
+	chanState := l.GetState(channel)
+	return chanState.Settings.Killers.Legion.Weight
+}
+
 func (l *Legion) FixSettings(channel string) {
 	chanState := l.GetState(channel)
 	if chanState.Settings.Killers.Legion == nil {
@@ -366,7 +371,7 @@ func (l *Legion) handleHit(channel, username string) {
 		return
 	}
 
-	if legionState.HitCount == legionSettings.FatalHit {
+	if legionState.HitCount == legionSettings.FatalHit-1 {
 		l.UpdateState(channel, func(chanState *db.ChannelState) {
 			chanState.Killer = ""
 			chanState.KillerState = nil
@@ -412,7 +417,6 @@ func (l *Legion) handleHit(channel, username string) {
 	}
 
 	legionState.HitCount++
-
 	l.UpdateState(channel, func(chanState *db.ChannelState) {
 		chanState.KillerState = legionState
 		chanState.Stats["hits"]++

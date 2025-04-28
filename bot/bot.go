@@ -313,8 +313,8 @@ func (b *Bot) HandleMessage(userMsg db.Message) {
 			return
 		}
 
-		nextKiller := killerList[rand.Intn(len(killerList))]
-		b.killerMap[nextKiller.Name()].Start(userMsg)
+		nextKiller := selectKiller(killerList, userMsg.Channel)
+		nextKiller.Start(userMsg)
 		return
 	}
 
@@ -328,4 +328,23 @@ func (b *Bot) HandleMessage(userMsg db.Message) {
 	}
 
 	curKiller.HandleMessage(userMsg)
+}
+
+func selectKiller(arr []killer.Killer, channel string) killer.Killer {
+	totalWeight := 0
+	for _, k := range arr {
+		totalWeight += k.Weight(channel)
+	}
+
+	r := rand.Intn(totalWeight)
+
+	runningTotal := 0
+	for _, k := range arr {
+		runningTotal += k.Weight(channel)
+		if r < runningTotal {
+			return k
+		}
+	}
+
+	return arr[0]
 }

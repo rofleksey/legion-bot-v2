@@ -148,7 +148,7 @@ func main() {
 
 	chatProducer := producer.NewTwitchProducer(ircClient, helixClient, database, botInstance)
 	if os.Getenv("ENVIRONMENT") != "production" {
-		chatProducer.AddChannel("galaxytm_")
+		chatProducer.AddChannel("tru3ta1ent")
 	}
 
 	sig := make(chan os.Signal, 1)

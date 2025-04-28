@@ -90,7 +90,7 @@ type GhostFaceSettings struct {
 
 func DefaultGhostFaceSettings() *GhostFaceSettings {
 	return &GhostFaceSettings{
-		Enabled:             true,
+		Enabled:             false,
 		Weight:              100,
 		HookBanTime:         time.Minute,
 		MinDelayBetweenHits: 5 * time.Second,

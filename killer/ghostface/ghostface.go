@@ -43,6 +43,11 @@ func (g *GhostFace) Name() string {
 	return "ghostface"
 }
 
+func (g *GhostFace) Weight(channel string) int {
+	chanState := g.GetState(channel)
+	return chanState.Settings.Killers.GhostFace.Weight
+}
+
 func (g *GhostFace) Enabled(channel string) bool {
 	chanState := g.GetState(channel)
 	return chanState.Settings.Killers.GhostFace.Enabled
