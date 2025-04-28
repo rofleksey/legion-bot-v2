@@ -1,7 +1,6 @@
 {
   "commands_legion": "Commands: !mend, !heal, !pallet, !locker, !tbag, !unhook, !hp. Stats: STATS",
   "start_legion": "The Legion is running towards the chat \uD83D\uDD2A (!killer)",
-  "on_recover": "@USERNAME used Unbreakable and is no longer slugged \uD83D\uDD2A",
   "on_dead": "@USERNAME didn't mend and got slugged \uD83D\uDC80 Gamer is now timed out \uD83D\uDC80",
   "on_heal": "@USERNAME has been healed",
   "on_mend": "@USERNAME has been mended",
@@ -22,8 +21,6 @@
   "on_frenzy_hit_prefinal": "The Legion hit @USERNAME \uD83D\uDD2A They need to mend or they receive timeout \uD83D\uDD2A The next hit will be fatal! \uD83D\uDD2A (!mend, !heal @USERNAME)",
   "on_frenzy_hit_dead": "The Legion has downed and hooked @USERNAME \uD83D\uDD2A Unhook this gamer! \uD83D\uDD2A (!unhook @USERNAME)",
   "on_frenzy_hit_deep_wound": "The Legion hit @USERNAME \uD83D\uDD2A But they were already deep wounded \uD83D\uDD2A The Legion has left in disgrace \uD83D\uDD2A",
-  "on_frenzy_ignored": "The Legion noticed @USERNAME but ran past them \uD83D\uDD2A Is The Legion playing favourites? \uD83D\uDD2A",
-  "body_block_fail": "@USERNAME tried to bodyblock The Legion but failed \uD83D\uDD2A",
   "cant_heal_self": "Can't heal self",
   "cant_unhook_self": "Can't unhook self",
   "cant_heal_rn": "Can't heal others right now",

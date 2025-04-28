@@ -235,8 +235,6 @@ func (l *Legion) HandleMessage(userMsg db.Message) {
 	}
 
 	if userMsg.Username == userMsg.Channel || userMsg.IsMod || strings.Contains(userMsg.Username, "bot") || userMsg.Username == util.BotOwner {
-		msg := l.GetLocalString(lang, "on_frenzy_ignored", map[string]string{"USERNAME": userMsg.Username})
-		l.SendMessage(userMsg.Channel, msg)
 		return
 	}
 
@@ -297,15 +295,11 @@ func (l *Legion) startRecoverTimer(channel, username string) {
 
 	chanState := l.GetState(channel)
 	legionSettings := chanState.Settings.Killers.Legion
-	lang := chanState.Settings.Language
 
 	l.StartTimer(channel, username, legionSettings.BleedOutBanTime, func() {
 		l.UpdateState(channel, func(chanState *db.ChannelState) {
 			chanState.UserMap[username].Health = "injured"
 		})
-
-		msg := l.GetLocalString(lang, "on_recover", map[string]string{"USERNAME": username})
-		l.SendMessage(channel, msg)
 	})
 }
 
@@ -393,9 +387,6 @@ func (l *Legion) handleHit(channel, username string) {
 
 	if user.Health == "deep_wound" {
 		if rand.Float64() > legionSettings.BodyBlockSuccessChance {
-			msg := l.GetLocalString(lang, "body_block_fail", map[string]string{"USERNAME": username})
-			l.SendMessage(channel, msg)
-
 			return
 		}
 

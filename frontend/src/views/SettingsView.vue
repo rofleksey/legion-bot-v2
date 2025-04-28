@@ -87,13 +87,13 @@
               v-model="settings.killers.legion.reactChance"
               :label="t('settings.react_chance')"
             />
-            <AppChanceInput
-              v-model="settings.killers.legion.hitChance"
-              :label="t('settings.hit_chance')"
-            />
             <AppDurationInput
               v-model="settings.killers.legion.minDelayBetweenHits"
               :label="t('settings.min_delay_between_hits')"
+            />
+            <AppChanceInput
+              v-model="settings.killers.legion.hitChance"
+              :label="t('settings.hit_chance')"
             />
             <AppDurationInput
               v-model="settings.killers.legion.hookBanTime"

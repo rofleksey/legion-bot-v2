@@ -1,7 +1,6 @@
 {
   "start_legion": "Легион начал бежать в сторону чата \uD83D\uDD2A (!killer)",
   "commands_legion": "Команды: !mend, !heal, !pallet, !locker, !tbag, !unhook, !hp. Стата: STATS",
-  "on_recover": "@USERNAME использовал стояк и встал самостоятельно \uD83D\uDD2A",
   "on_dead": "@USERNAME не подлатался вовремя и умер \uD83D\uDC80 Геймер получает таймаут \uD83D\uDC80",
   "on_heal": "@USERNAME вылечили",
   "on_mend": "@USERNAME подлатался",
@@ -22,8 +21,6 @@
   "on_frenzy_hit_prefinal": "Легион попал по @USERNAME \uD83D\uDD2A Ему нужно подлататься или он получит таймаут \uD83D\uDD2A Следующий хит будет фатальным! \uD83D\uDD2A (!mend, !heal @USERNAME)",
   "on_frenzy_hit_dead": "Легион убил @USERNAME и повесил его \uD83D\uDD2A Теперь геймер висит на хуке пока его не снимут \uD83E\uDE9D (!unhook @USERNAME)",
   "on_frenzy_hit_deep_wound": "Легион попал по @USERNAME \uD83D\uDD2A Но он был в глубокой ране \uD83D\uDD2A Легион уходит с позором \uD83D\uDD2A",
-  "on_frenzy_ignored": "Легион заметил @USERNAME но пробежал мимо \uD83D\uDD2A У Легиона есть любимчики? \uD83D\uDD2A",
-  "body_block_fail": "@USERNAME неуспешно попытался бодиблочить Легиона \uD83D\uDD2A",
   "cant_heal_self": "Нельзя лечить самого себя",
   "cant_unhook_self": "Нельзя снять с хука самого себя",
   "cant_heal_rn": "Вы не можете лечить других прямо сейчас",
