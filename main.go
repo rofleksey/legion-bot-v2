@@ -104,6 +104,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to get Twitch access token: %v", err)
 	}
+	if os.Getenv("ENVIRONMENT") != "production" {
+		slog.Debug("Got access token",
+			slog.String("token", accessToken),
+			slog.String("clientId", cfg.Chat.ClientID),
+		)
+	}
 
 	ircClient, helixClient, err := util.InitTwitchClients(cfg.Chat.ClientID, accessToken)
 	if err != nil {
@@ -115,7 +121,7 @@ func main() {
 		chatActions = chat.NewTwitchActions(ircClient, helixClient)
 	} else {
 		slog.Debug("!!! Using debug chat actions")
-		chatActions = chat.ConsoleActions{}
+		chatActions = &chat.ConsoleActions{}
 	}
 
 	database, err := db.NewDatabase("data/database.db")

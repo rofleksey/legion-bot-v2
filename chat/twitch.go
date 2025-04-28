@@ -5,6 +5,7 @@ import (
 	"github.com/nicklaw5/helix/v2"
 	"legion-bot-v2/util"
 	"log/slog"
+	"strings"
 	"sync"
 	"time"
 )
@@ -34,6 +35,56 @@ func (t *TwitchActions) getQueue(channel string) *util.TaskQueue {
 		t.queues[channel] = util.NewTaskQueue(1, 1, 1)
 	}
 	return t.queues[channel]
+}
+
+func (t *TwitchActions) GetStartTime(channel string) time.Time {
+	slog.Debug("Getting channel stream start time",
+		slog.String("channel", channel),
+	)
+
+	res, err := t.helixClient.GetStreams(&helix.StreamsParams{
+		UserLogins: []string{channel},
+	})
+	if err != nil {
+		slog.Error("Failed to get stream info",
+			slog.String("channel", channel),
+			slog.Any("error", err),
+		)
+		return time.Time{}
+	}
+
+	for _, s := range res.Data.Streams {
+		if strings.ToLower(s.UserLogin) == channel {
+			return s.StartedAt
+		}
+	}
+
+	return time.Time{}
+}
+
+func (t *TwitchActions) GetViewerCount(channel string) int {
+	slog.Debug("Getting channel stream viewer count",
+		slog.String("channel", channel),
+	)
+
+	res, err := t.helixClient.GetStreams(&helix.StreamsParams{
+		UserLogins: []string{channel},
+	})
+	if err != nil {
+		slog.Error("Failed to get stream info",
+			slog.String("channel", channel),
+			slog.Any("error", err),
+		)
+		return 0
+	}
+
+	for _, s := range res.Data.Streams {
+		if strings.ToLower(s.UserLogin) == channel {
+			return s.ViewerCount
+		}
+	}
+
+	return 0
 }
 
 func (t *TwitchActions) SendMessage(channel, text string) {

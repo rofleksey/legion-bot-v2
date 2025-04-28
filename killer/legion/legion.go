@@ -27,6 +27,15 @@ type Legion struct {
 	i18n.Localiser
 }
 
+func (l *Legion) FixSettings(channel string) {
+	chanState := l.GetState(channel)
+	if chanState.Settings.Killers.Legion == nil {
+		l.UpdateState(chanState.Channel, func(chanState *db.ChannelState) {
+			chanState.Settings.Killers.Legion = db.DefaultLegionSettings()
+		})
+	}
+}
+
 func (l *Legion) Name() string {
 	return "legion"
 }

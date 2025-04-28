@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"github.com/elliotchance/pie/v2"
+	"github.com/jellydator/ttlcache/v3"
 	"legion-bot-v2/chat"
 	"legion-bot-v2/db"
 	"legion-bot-v2/i18n"
@@ -19,7 +20,9 @@ type Bot struct {
 	chat.Actions
 	timers.Timers
 	i18n.Localiser
-	killerMap map[string]killer.Killer
+	killerMap      map[string]killer.Killer
+	streamStartMap *ttlcache.Cache[string, time.Time]
+	viewerCountMap *ttlcache.Cache[string, int]
 }
 
 func NewBot(
@@ -35,6 +38,13 @@ func NewBot(
 		Timers:    timers,
 		Localiser: localiser,
 		killerMap: killerMap,
+		streamStartMap: ttlcache.New[string, time.Time](
+			ttlcache.WithTTL[string, time.Time](30 * time.Minute),
+		),
+		viewerCountMap: ttlcache.New[string, int](
+			ttlcache.WithTTL[string, int](5*time.Minute),
+			ttlcache.WithDisableTouchOnHit[string, int](),
+		),
 	}
 
 	return bot
@@ -56,10 +66,8 @@ func (b *Bot) Init() {
 			})
 		}
 
-		if chanState.Settings.Killers.Legion == nil {
-			b.UpdateState(chanState.Channel, func(chanState *db.ChannelState) {
-				chanState.Settings.Killers.Legion = db.DefaultLegionSettings()
-			})
+		for _, k := range b.killerMap {
+			k.FixSettings(chanState.Channel)
 		}
 
 		for username, user := range chanState.UserMap {
@@ -236,12 +244,47 @@ func (b *Bot) HandleCommands(userMsg db.Message) bool {
 	return false
 }
 
+func (b *Bot) getCachedStreamStartTime(channel string) time.Time {
+	item := b.streamStartMap.Get(channel)
+	if item != nil {
+		return item.Value()
+	}
+
+	startTime := b.GetStartTime(channel)
+	if !startTime.IsZero() {
+		b.streamStartMap.Set(channel, startTime, ttlcache.DefaultTTL)
+	} else {
+		b.streamStartMap.Set(channel, startTime, 5*time.Minute)
+	}
+
+	return startTime
+}
+
+func (b *Bot) getCachedViewerCount(channel string) int {
+	item := b.viewerCountMap.Get(channel)
+	if item != nil {
+		return item.Value()
+	}
+
+	count := b.GetViewerCount(channel)
+	b.viewerCountMap.Set(channel, count, ttlcache.DefaultTTL)
+
+	return count
+}
+
 func (b *Bot) HandleMessage(userMsg db.Message) {
 	chanState := b.GetState(userMsg.Channel)
 	generalKillerSettings := chanState.Settings.Killers.General
 
 	if chanState.Settings.Disabled {
 		return
+	}
+
+	streamStartTime := b.getCachedStreamStartTime(userMsg.Channel)
+
+	var streamLength time.Duration
+	if !streamStartTime.IsZero() {
+		streamLength = time.Now().Sub(streamStartTime)
 	}
 
 	user, userExists := chanState.UserMap[userMsg.Username]
@@ -259,7 +302,7 @@ func (b *Bot) HandleMessage(userMsg db.Message) {
 	diff := time.Now().Sub(chanState.Date)
 
 	if chanState.Killer == "" {
-		if diff <= generalKillerSettings.DelayBetweenKillers {
+		if diff <= generalKillerSettings.DelayBetweenKillers || streamLength <= generalKillerSettings.DelayAtTheStreamStart {
 			return
 		}
 
@@ -268,6 +311,11 @@ func (b *Bot) HandleMessage(userMsg db.Message) {
 		})
 
 		if len(killerList) == 0 {
+			return
+		}
+
+		viewerCount := b.getCachedViewerCount(userMsg.Channel)
+		if viewerCount < generalKillerSettings.MinNumberOfViewers {
 			return
 		}
 
