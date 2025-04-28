@@ -1,0 +1,11 @@
+ffmpeg -ss 20 -i gameplay.webm \
+  -vf "scale=1280:-2,boxblur=10:5,hue=s=0.4,format=yuv420p" \
+  -c:v libx264 \
+  -profile:v main \
+  -preset veryslow \
+  -crf 22 \
+  -movflags +faststart \
+  -pix_fmt yuv420p \
+  -an \
+  -loop 1 -t 30 \
+  -y gameplay.mp4

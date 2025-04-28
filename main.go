@@ -26,12 +26,10 @@ import (
 
 // TODO:
 // documentation
-// site
 // privacy policy
 // terms
 // greetings
 // ai
-// come only after a set amount of time after the stream start
 // !spin
 // !flashlight
 // pinhead

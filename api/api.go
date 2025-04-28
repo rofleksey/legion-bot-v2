@@ -5,6 +5,7 @@ import (
 	"legion-bot-v2/config"
 	"legion-bot-v2/db"
 	"legion-bot-v2/producer"
+	"legion-bot-v2/util"
 	"log/slog"
 	"net/http"
 	"time"
@@ -50,7 +51,14 @@ func NewServer(cfg *config.Config, database db.DB, chatProducer producer.Produce
 	server.mux.HandleFunc("/api/stats/{channel}", server.handleChannelStats)
 	server.mux.HandleFunc("/api/stats/{channel}/{username}", server.handleUserStats)
 
-	server.mux.Handle("/", http.FileServer(http.Dir("./frontend/dist")))
+	fs := http.FileServer(http.Dir("./frontend/dist"))
+	cacheFS := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if util.IsStaticAsset(r.URL.Path) {
+			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		}
+		fs.ServeHTTP(w, r)
+	})
+	server.mux.Handle("/", cacheFS)
 
 	return &server
 }
