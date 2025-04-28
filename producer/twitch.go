@@ -56,6 +56,7 @@ func (p *TwitchProducer) Run() error {
 		)
 
 		p.botInstance.HandleMessage(db.Message{
+			ID:       message.ID,
 			Channel:  channel,
 			Username: username,
 			IsMod:    isMod,
@@ -69,6 +70,10 @@ func (p *TwitchProducer) Run() error {
 	if os.Getenv("ENVIRONMENT") == "production" {
 		states := p.database.GetAllStates()
 		for _, state := range states {
+			if state.Settings.Disabled {
+				continue
+			}
+
 			p.AddChannel(state.Channel)
 		}
 	}

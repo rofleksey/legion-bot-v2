@@ -24,6 +24,7 @@ type ChannelState struct {
 }
 
 type Message struct {
+	ID       string
 	Channel  string
 	Username string
 	IsMod    bool

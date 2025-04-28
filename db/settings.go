@@ -15,6 +15,7 @@ type KillersSettings struct {
 	General   *GeneralKillerSettings `json:"general"`
 	Legion    *LegionSettings        `json:"legion"`
 	GhostFace *GhostFaceSettings     `json:"ghostface"`
+	Doctor    *DoctorSettings        `json:"doctor"`
 }
 
 func DefaultSettings() Settings {
@@ -25,6 +26,7 @@ func DefaultSettings() Settings {
 			General:   DefaultGeneralKillerSettings(),
 			Legion:    DefaultLegionSettings(),
 			GhostFace: DefaultGhostFaceSettings(),
+			Doctor:    DefaultDoctorSettings(),
 		},
 	}
 }
@@ -90,11 +92,29 @@ type GhostFaceSettings struct {
 
 func DefaultGhostFaceSettings() *GhostFaceSettings {
 	return &GhostFaceSettings{
-		Enabled:             false,
+		Enabled:             os.Getenv("ENVIRONMENT") != "production",
 		Weight:              100,
 		HookBanTime:         time.Minute,
 		MinDelayBetweenHits: 2 * time.Second,
 		ReactChance:         0.75,
 		Timeout:             5 * time.Minute,
+	}
+}
+
+type DoctorSettings struct {
+	Enabled             bool          `json:"enabled"`
+	Weight              int           `json:"weight"`
+	MinDelayBetweenHits time.Duration `json:"minDelayBetweenHits"`
+	ReactChance         float64       `json:"reactChance"`
+	Timeout             time.Duration `json:"timeout"`
+}
+
+func DefaultDoctorSettings() *DoctorSettings {
+	return &DoctorSettings{
+		Enabled:             os.Getenv("ENVIRONMENT") != "production",
+		Weight:              100,
+		MinDelayBetweenHits: 10 * time.Second,
+		ReactChance:         0.75,
+		Timeout:             3 * time.Minute,
 	}
 }

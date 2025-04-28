@@ -13,8 +13,7 @@ import (
 	"legion-bot-v2/db"
 	"legion-bot-v2/i18n"
 	"legion-bot-v2/killer"
-	"legion-bot-v2/killer/ghostface"
-	"legion-bot-v2/killer/legion"
+	"legion-bot-v2/killer/doctor"
 	"legion-bot-v2/producer"
 	"legion-bot-v2/timers"
 	"legion-bot-v2/util"
@@ -139,8 +138,9 @@ func main() {
 	}
 
 	killerMap := map[string]killer.Killer{
-		"legion":    legion.New(database, chatActions, timerManager, localiser),
-		"ghostface": ghostface.New(database, chatActions, timerManager, localiser),
+		//"legion":    legion.New(database, chatActions, timerManager, localiser),
+		//"ghostface": ghostface.New(database, chatActions, timerManager, localiser),
+		"doctor": doctor.New(database, chatActions, timerManager, localiser),
 	}
 
 	botInstance := bot.NewBot(database, chatActions, timerManager, localiser, killerMap)
@@ -159,7 +159,7 @@ func main() {
 	}()
 
 	slog.Debug("Starting server...")
-	server := api.NewServer(cfg, database)
+	server := api.NewServer(cfg, database, chatProducer)
 	go func() {
 		if err := server.Run(); err != nil {
 			slog.Error("Server error",

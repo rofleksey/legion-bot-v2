@@ -138,15 +138,23 @@ func (s *Server) updateSettings(w http.ResponseWriter, r *http.Request) {
 		slog.String("login", claims.TwitchUser.Login),
 	)
 
+	oldSettings := s.database.GetState(claims.Login).Settings
+
 	var newSettings db.Settings
 	if err := json.NewDecoder(r.Body).Decode(&newSettings); err != nil {
 		http.Error(w, "Invalid settings data", http.StatusBadRequest)
 		return
 	}
 
-	s.database.UpdateState(claims.Login, func(state *db.ChannelState) {
+	s.database.UpdateState(claims.TwitchUser.Login, func(state *db.ChannelState) {
 		state.Settings = newSettings
 	})
+
+	if !oldSettings.Disabled && newSettings.Disabled {
+		s.chatProducer.RemoveChannel(claims.TwitchUser.Login)
+	} else if oldSettings.Disabled && !newSettings.Disabled {
+		s.chatProducer.AddChannel(claims.TwitchUser.Login)
+	}
 
 	w.WriteHeader(http.StatusOK)
 }

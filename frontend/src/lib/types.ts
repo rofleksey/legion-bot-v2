@@ -16,6 +16,7 @@ export interface KillersSettings {
   general: GeneralKillerSettings;
   legion: LegionSettings;
   ghostface: GhostFaceSettings;
+  doctor: DoctorSettings;
 }
 
 export interface GeneralKillerSettings {
@@ -45,6 +46,14 @@ export interface GhostFaceSettings {
   enabled: boolean;
   weight: number;
   hookBanTime: number;
+  reactChance: number;
+  minDelayBetweenHits: number;
+  timeout: number;
+}
+
+export interface DoctorSettings {
+  enabled: boolean;
+  weight: number;
   reactChance: number;
   minDelayBetweenHits: number;
   timeout: number;

@@ -4,6 +4,7 @@ import (
 	"github.com/jellydator/ttlcache/v3"
 	"legion-bot-v2/config"
 	"legion-bot-v2/db"
+	"legion-bot-v2/producer"
 	"log/slog"
 	"net/http"
 	"time"
@@ -16,11 +17,12 @@ type Server struct {
 	cfg          *config.Config
 	oauth2Config oauth2.Config
 	database     db.DB
+	chatProducer producer.Producer
 	stateCache   *ttlcache.Cache[string, struct{}]
 	mux          *http.ServeMux
 }
 
-func NewServer(cfg *config.Config, database db.DB) *Server {
+func NewServer(cfg *config.Config, database db.DB, chatProducer producer.Producer) *Server {
 	stateCache := ttlcache.New[string, struct{}](
 		ttlcache.WithTTL[string, struct{}](30 * time.Minute),
 	)
@@ -34,9 +36,10 @@ func NewServer(cfg *config.Config, database db.DB) *Server {
 			RedirectURL:  cfg.Auth.RedirectURL,
 			Scopes:       []string{"user:read:email"},
 		},
-		database:   database,
-		stateCache: stateCache,
-		mux:        http.NewServeMux(),
+		database:     database,
+		chatProducer: chatProducer,
+		stateCache:   stateCache,
+		mux:          http.NewServeMux(),
 	}
 
 	server.mux.HandleFunc("/api/auth/login", server.handleLogin)

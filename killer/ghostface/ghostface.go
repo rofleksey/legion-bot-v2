@@ -128,7 +128,6 @@ func (g *GhostFace) Start(userMsg db.Message) {
 func (g *GhostFace) HandleMessage(userMsg db.Message) {
 	chanState := g.GetState(userMsg.Channel)
 	gfSettings := chanState.Settings.Killers.GhostFace
-	lang := chanState.Settings.Language
 	now := time.Now()
 
 	if chanState.Settings.Disabled {
@@ -150,13 +149,7 @@ func (g *GhostFace) HandleMessage(userMsg db.Message) {
 		return
 	}
 
-	if user.Health == "hooked" {
-		msg := g.GetLocalString(lang, "gf_on_hook_camp", map[string]string{"USERNAME": userMsg.Username})
-		g.SendMessage(userMsg.Channel, msg)
-		return
-	}
-
-	if user.Health == "dead" {
+	if user.Health == "hooked" || user.Health == "dead" {
 		return
 	}
 
@@ -214,6 +207,7 @@ func (g *GhostFace) handleHit(channel, username string) {
 		user = db.NewUser()
 		g.UpdateState(channel, func(chanState *db.ChannelState) {
 			chanState.UserMap[username] = user
+			chanState.Date = now
 		})
 	}
 

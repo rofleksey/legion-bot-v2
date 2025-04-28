@@ -40,5 +40,8 @@
   "commands_gf": "Commands: !mend, !heal, !tbag, !unhook, !hp. Stats: STATS",
   "gf_go_away": "Ghost Face silently left \uD83D\uDC7B He managed to look at COUNT gamers \uD83D\uDC7B",
   "gf_tbag": "@USERNAME t-bagged and caught Ghost Face's attention \uD83D\uDC7B",
-  "gf_hit_dead": "The Legion has downed and hooked @USERNAME \uD83D\uDD2A Unhook this gamer! \uD83D\uDD2A (!unhook @USERNAME)"
+  "gf_hit_dead": "The Legion has downed and hooked @USERNAME \uD83D\uDD2A Unhook this gamer! \uD83D\uDD2A (!unhook @USERNAME)",
+  "start_doctor": "The Doctor has applied shock therapy \uD83E\uDDE0 (!killer)",
+  "commands_doctor": "Commands: !mend, !heal, !unhook, !hp. Stats: STATS",
+  "doctor_go_away": "Chat has successfully survived the shock therapy \uD83E\uDDE0"
 }

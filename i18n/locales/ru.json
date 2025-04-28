@@ -40,5 +40,8 @@
   "commands_gf": "Команды: !mend, !heal, !tbag, !unhook, !hp. Стата: STATS",
   "gf_go_away": "Крик молча ушел \uD83D\uDC7B Он успел немного посмотреть на COUNT геймеров \uD83D\uDC7B",
   "gf_tbag": "@USERNAME тибегнул и привлек внимание Крика \uD83D\uDC7B",
-  "gf_hit_dead": "Крик убил @USERNAME и повесил его \uD83D\uDC7B Теперь геймер висит на хуке пока его не снимут \uD83D\uDC7B (!unhook @USERNAME)"
+  "gf_hit_dead": "Крик убил @USERNAME и повесил его \uD83D\uDC7B Теперь геймер висит на хуке пока его не снимут \uD83D\uDC7B (!unhook @USERNAME)",
+  "start_doctor": "Доктор применил шоковую терапию \uD83E\uDDE0 (!killer)",
+  "commands_doctor": "Команды: !mend, !heal, !unhook, !hp. Стата: STATS",
+  "doctor_go_away": "Чат успешно пережил шоковую терапию \uD83E\uDDE0"
 }

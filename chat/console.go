@@ -10,6 +10,13 @@ var _ Actions = (*ConsoleActions)(nil)
 type ConsoleActions struct {
 }
 
+func (a *ConsoleActions) DeleteMessage(channel, id string) {
+	slog.Debug("Deleting chat message",
+		slog.String("channel", channel),
+		slog.String("message_id", id),
+	)
+}
+
 func (a *ConsoleActions) GetViewerCount(channel string) int {
 	slog.Debug("Getting channel stream viewer count",
 		slog.String("channel", channel),

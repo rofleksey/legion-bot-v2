@@ -37,6 +37,63 @@ func (t *TwitchActions) getQueue(channel string) *util.TaskQueue {
 	return t.queues[channel]
 }
 
+func (t *TwitchActions) DeleteMessage(channel, id string) {
+	t.getQueue(channel).Enqueue(func() {
+		slog.Info("Message has been deleted",
+			slog.String("channel", channel),
+			slog.String("message_id", id),
+		)
+
+		botResp, err := t.helixClient.GetUsers(&helix.UsersParams{
+			Logins: []string{util.BotUsername},
+		})
+		if err != nil || len(botResp.Data.Users) == 0 {
+			slog.Error("Error getting bot user",
+				slog.String("channel", channel),
+				slog.Any("error", err),
+			)
+			return
+		}
+		botUser := botResp.Data.Users[0]
+
+		channelResp, err := t.helixClient.GetUsers(&helix.UsersParams{
+			Logins: []string{channel},
+		})
+		if err != nil || len(channelResp.Data.Users) == 0 {
+			slog.Error("Error getting channel user",
+				slog.String("channel", channel),
+				slog.Any("error", err),
+			)
+			return
+		}
+		channelUser := channelResp.Data.Users[0]
+
+		t.helixClient.SetUserAccessToken(botUser.ID)
+
+		banResp, err := t.helixClient.DeleteChatMessage(&helix.DeleteChatMessageParams{
+			BroadcasterID: channelUser.ID,
+			ModeratorID:   botUser.ID,
+			MessageID:     id,
+		})
+		if err != nil {
+			slog.Error("Error deleting message",
+				slog.String("channel", channel),
+				slog.String("message_id", id),
+				slog.Any("error", err),
+			)
+			return
+		}
+
+		if banResp.StatusCode >= 400 {
+			slog.Error("Delete message API error",
+				slog.String("channel", channel),
+				slog.String("message_id", id),
+				slog.Any("error", err),
+			)
+		}
+	})
+}
+
 func (t *TwitchActions) GetStartTime(channel string) time.Time {
 	slog.Debug("Getting channel stream start time",
 		slog.String("channel", channel),
