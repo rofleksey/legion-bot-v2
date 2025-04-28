@@ -239,6 +239,12 @@ func (g *GhostFace) handleHit(channel, username string) {
 		chanState.UserMap[username].Marked = false
 		chanState.UserMap[username].Stats["hooks"]++
 		chanState.Stats["success"]++
+
+		for u := range chanState.UserMap {
+			if !gfState.StalkedThisRound[u] {
+				chanState.UserMap[u].Marked = false
+			}
+		}
 	})
 
 	g.StopTimer(channel, StalkTimerName)

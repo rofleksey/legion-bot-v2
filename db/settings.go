@@ -93,7 +93,7 @@ func DefaultGhostFaceSettings() *GhostFaceSettings {
 		Enabled:             false,
 		Weight:              100,
 		HookBanTime:         time.Minute,
-		MinDelayBetweenHits: 5 * time.Second,
+		MinDelayBetweenHits: 2 * time.Second,
 		ReactChance:         0.75,
 		Timeout:             5 * time.Minute,
 	}
