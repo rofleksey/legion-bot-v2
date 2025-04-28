@@ -35,7 +35,9 @@
     <!-- Основной блок -->
     <section class="hero">
         <h1>Вселите Ужас Сущности в Ваш Чат</h1>
-        <p>Легион Бот охотится за вашими зрителями как убийца из Dead by Daylight — нападает неожиданно, а после пятого удара отправляет нарушителей в таймаут. Настраивайте персонажа, частоту атак и ответы ИИ для максимального погружения.</p>
+        <p>Легион Бот охотится за вашими зрителями как убийца из Dead by Daylight — нападает неожиданно, а после пятого
+            удара отправляет нарушителей в таймаут. Настраивайте персонажа, частоту атак и ответы ИИ для максимального
+            погружения.</p>
         <div class="cta-buttons">
             <button class="primary-btn" @click="loginWithTwitch">Начать</button>
             <button class="secondary-btn">Подробнее</button>
@@ -44,42 +46,48 @@
 
     <!-- Возможности -->
     <section class="features">
-        <h2 class="section-title">Возможности бота</h2>
+        <h2 class="section-title">{{ t('powerful_features')}} </h2>
         <div class="feature-grid">
-            <div class="feature-card scroll-animate" :class="{visible: featuresVisible[0]}" ref="feature1">
+            <div class="feature-card scroll-animate" :class="{visible: featuresVisible[0]}"
+                 ref="feature1">
                 <div class="feature-icon">🤖</div>
-                <h3 class="feature-title">Ответы ИИ</h3>
-                <p class="feature-desc">ИИ генерирует пугающие ответы в стиле убийц, когда зрители упоминают бота, усиливая атмосферу Dead by Daylight.</p>
+                <h3 class="feature-title">{{ t('feature1_title') }}</h3>
+                <p class="feature-desc">{{ t('feature1_desc') }}</p>
             </div>
 
-            <div class="feature-card scroll-animate" :class="{visible: featuresVisible[1]}" ref="feature2">
+            <div class="feature-card scroll-animate" :class="{visible: featuresVisible[1]}"
+                 ref="feature2">
                 <div class="feature-icon">🎮</div>
-                <h3 class="feature-title">Разные убийцы</h3>
-                <p class="feature-desc">Несколько персонажей из Dead by Daylight: Легион, Тень, Крик — у каждого уникальная манера преследования.</p>
+                <h3 class="feature-title">{{ t('feature2_title') }}</h3>
+                <p class="feature-desc">{{ t('feature2_desc') }}</p>
             </div>
 
-            <div class="feature-card scroll-animate" :class="{visible: featuresVisible[2]}" ref="feature3">
+            <div class="feature-card scroll-animate" :class="{visible: featuresVisible[2]}"
+                 ref="feature3">
                 <div class="feature-icon">✨</div>
-                <h3 class="feature-title">Интерактивная охота</h3>
-                <p class="feature-desc">Бот периодически "атакует" зрителей, а после 5-го удара активирует настраиваемый таймаут.</p>
+                <h3 class="feature-title">{{ t('feature3_title') }}</h3>
+                <p class="feature-desc">{{ t('feature3_desc') }}</p>
             </div>
 
-            <div class="feature-card scroll-animate" :class="{visible: featuresVisible[3]}" ref="feature4">
+            <div class="feature-card scroll-animate" :class="{visible: featuresVisible[3]}"
+                 ref="feature4">
                 <div class="feature-icon">📊</div>
-                <h3 class="feature-title">Гибкие настройки</h3>
-                <p class="feature-desc">Регулируйте частоту атак, длительность таймаута, выбор убийцы и другие параметры под стиль вашего стрима.</p>
+                <h3 class="feature-title">{{ t('feature4_title') }}</h3>
+                <p class="feature-desc">{{ t('feature4_desc') }}</p>
             </div>
 
-            <div class="feature-card scroll-animate" :class="{visible: featuresVisible[4]}" ref="feature5">
+            <div class="feature-card scroll-animate" :class="{visible: featuresVisible[4]}"
+                 ref="feature5">
                 <div class="feature-icon">🤝</div>
-                <h3 class="feature-title">Вовлечение чата</h3>
-                <p class="feature-desc">Поддерживает активность чата неожиданными появлениями убийцы и реакциями между матчами.</p>
+                <h3 class="feature-title">{{ t('feature5_title') }}</h3>
+                <p class="feature-desc">{{ t('feature5_desc') }}</p>
             </div>
 
-            <div class="feature-card scroll-animate" :class="{visible: featuresVisible[5]}" ref="feature6">
+            <div class="feature-card scroll-animate" :class="{visible: featuresVisible[5]}"
+                 ref="feature6">
                 <div class="feature-icon">🔔</div>
-                <h3 class="feature-title">Особенности DBD</h3>
-                <p class="feature-desc">Уникальные тематические команды, статистика и новые функции убийц в разработке.</p>
+                <h3 class="feature-title">{{ t('feature6_title') }}</h3>
+                <p class="feature-desc">{{ t('feature6_desc') }}</p>
             </div>
         </div>
     </section>

@@ -1,0 +1,26 @@
+:root {
+  --primary: #9147ff;
+  --primary-dark: #772ce8;
+  --background: #0e0e10;
+  --card: #18181b;
+  --text: #ffffff;
+  --text-secondary: #adadb8;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  color: var(--text);
+  background-color: var(--background);
+  overflow-x: hidden;
+}
+
+#app {
+  position: relative;
+  min-height: 100vh;
+}

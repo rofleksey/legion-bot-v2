@@ -7,12 +7,13 @@ import (
 	"fmt"
 	"github.com/jellydator/ttlcache/v3"
 	"legion-bot-v2/config"
+	"legion-bot-v2/dao"
 	"legion-bot-v2/db"
+	"legion-bot-v2/util"
 	"log"
 	"log/slog"
 	"net/http"
 	"net/url"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -29,16 +30,8 @@ type Server struct {
 	mux          *http.ServeMux
 }
 
-type TwitchUser struct {
-	ID              string `json:"id"`
-	Login           string `json:"login"`
-	DisplayName     string `json:"display_name"`
-	ProfileImageURL string `json:"profile_image_url"`
-	Email           string `json:"email"`
-}
-
 type JWTClaims struct {
-	TwitchUser
+	dao.TwitchUser
 	jwt.RegisteredClaims
 }
 
@@ -65,66 +58,18 @@ func NewServer(cfg *config.Config, database db.DB) *Server {
 	server.mux.HandleFunc("/api/auth/callback", server.handleCallback)
 	server.mux.HandleFunc("/api/settings", server.handleSettings)
 	server.mux.HandleFunc("/api/validate", server.handleValidateToken)
+	server.mux.HandleFunc("/api/__import", server.handleImport)
 	server.mux.HandleFunc("/api/stats/{channel}", server.handleChannelStats)
 	server.mux.HandleFunc("/api/stats/{channel}/{username}", server.handleUserStats)
 
-	server.mux.HandleFunc("/stats/{channel}", server.handleStatsPage)
-	server.mux.Handle("/", http.FileServer(http.Dir("./static")))
+	server.mux.Handle("/", http.FileServer(http.Dir("./frontend/dist")))
 
 	return &server
 }
 
 func (s *Server) Run() error {
 	slog.Info("Started server on port 8080")
-	return http.ListenAndServe(":8080", languageMiddleware(s.mux))
-}
-
-func languageMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/api/") ||
-			strings.HasPrefix(r.URL.Path, "/ru") ||
-			strings.HasPrefix(r.URL.Path, "/en") {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		if cookie, err := r.Cookie("user_lang"); err == nil {
-			if cookie.Value == "ru" && !strings.HasPrefix(r.URL.Path, "/ru") {
-				http.Redirect(w, r, "/ru"+r.URL.Path, http.StatusFound)
-				return
-			}
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		if r.URL.Path == "/" {
-			acceptLang := r.Header.Get("Accept-Language")
-			if strings.Contains(acceptLang, "ru") {
-				http.Redirect(w, r, "/ru", http.StatusFound)
-				return
-			} else {
-				http.Redirect(w, r, "/en", http.StatusFound)
-				return
-			}
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
-func (s *Server) handleStatsPage(w http.ResponseWriter, r *http.Request) {
-	channel := strings.TrimPrefix(r.URL.Path, "/stats/")
-	if channel == "" {
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return
-	}
-
-	if s.database.GetState(channel).Date.IsZero() {
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return
-	}
-
-	http.ServeFile(w, r, filepath.Join("static", "html", "stats.html"))
+	return http.ListenAndServe(":8080", s.mux)
 }
 
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -181,7 +126,7 @@ func (s *Server) handleCallback(w http.ResponseWriter, r *http.Request) {
 	defer resp.Body.Close()
 
 	var result struct {
-		Data []TwitchUser `json:"data"`
+		Data []dao.TwitchUser `json:"data"`
 	}
 	if err = json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		http.Error(w, "Failed to decode user info: "+err.Error(), http.StatusInternalServerError)
@@ -212,7 +157,7 @@ func (s *Server) handleCallback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, clientRedirectUrl.String(), http.StatusFound)
 }
 
-func (s *Server) createJWTToken(user TwitchUser) (string, error) {
+func (s *Server) createJWTToken(user dao.TwitchUser) (string, error) {
 	claims := JWTClaims{
 		TwitchUser: user,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -224,6 +169,42 @@ func (s *Server) createJWTToken(user TwitchUser) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(s.cfg.Auth.JwtSecret))
+}
+
+func (s *Server) handleImport(w http.ResponseWriter, r *http.Request) {
+	claims, err := s.authenticateRequest(r)
+	if err != nil {
+		http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	if claims.Login != util.BotOwner {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	var req dao.ImportRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	for _, legion := range req.Legions {
+		if legion.Settings.Language == "" {
+			legion.Settings.Language = "ru"
+		}
+
+		s.database.UpdateState(legion.Channel, func(state *db.ChannelState) {
+			state.Channel = legion.Channel
+			state.Date = time.Unix(0, legion.Date*int64(time.Millisecond))
+			state.Stats = legion.Stats
+			state.UserMap = legion.UserMap
+			state.Settings = legion.Settings
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 }
 
 func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {

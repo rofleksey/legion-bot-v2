@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loading: true,
         error: false,
         channel: window.location.pathname.split('/stats/')[1] || '',
-        language: 'en',
+        language: this.detectLanguage(),
         translations: {
           en: {
             stats_title: 'Channel Statistics',
@@ -48,6 +48,14 @@ document.addEventListener('DOMContentLoaded', () => {
             this.error = true;
             this.loading = false;
           });
+      },
+      detectLanguage() {
+        const browserLang = navigator.language || navigator.userLanguage;
+        if (browserLang.startsWith('ru')) {
+          return 'ru';
+        }
+
+        return 'en';
       },
       translate(key) {
         return this.translations[this.language]?.[key] || this.translations['en'][key] || key;

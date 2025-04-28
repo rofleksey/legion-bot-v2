@@ -5,22 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DBD Legion Bot - Stats</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="index.css">
-    <link rel="stylesheet" href="stats.css">
+    <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="/css/stats.css">
     <script src="/js/vue.js"></script>
     <script src="/js/axios.js"></script>
 </head>
 <body>
 <div id="app">
+    <div class="video-background">
+        <video autoplay muted loop>
+            <source src="/video/gameplay.mp4" type="video/mp4">
+        </video>
+    </div>
+
     <header>
-        <div class="container header-content">
-            <div class="logo">
-                <span>DBD</span>Legion Bot
-            </div>
-            <div class="language-switcher">
-                <button @click="setLanguage('en')" :class="{ active: language === 'en' }">EN</button>
-                <button @click="setLanguage('ru')" :class="{ active: language === 'ru' }">RU</button>
-            </div>
+        <div class="logo">
+            DBD <span>Legion</span>Bot
+        </div>
+        <div class="language-switcher">
+            <button @click="setLanguage('en')" :class="{ active: language === 'en' }">EN</button>
+            <button @click="setLanguage('ru')" :class="{ active: language === 'ru' }">RU</button>
         </div>
     </header>
 
@@ -51,12 +55,15 @@
     </main>
 
     <footer>
-        <div class="container">
-            <p>DBD Legion Bot &copy; {{ new Date().getFullYear() }}</p>
+        <div class="footer-links">
+            <a href="https://t.me/rofleksey" class="footer-link">Support</a>
+            <a href="#" class="footer-link">Privacy Policy</a>
+            <a href="#" class="footer-link">Terms of Service</a>
         </div>
+        <p class="copyright">© 2024-2025 DBD Legion Bot</p>
     </footer>
 </div>
 
-<script src="stats.js"></script>
+<script src="/js/stats.js"></script>
 </body>
 </html>

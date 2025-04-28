@@ -71,7 +71,7 @@ func (b *Bot) HandleCommands(userMsg db.Message) bool {
 
 	switch {
 	case strings.HasPrefix(userMsg.Text, "!killer"):
-		msg := b.GetLocalString(lang, "commands", map[string]string{"STATS": fmt.Sprintf("https://leg.rofleksey.ru/%s", userMsg.Channel)})
+		msg := b.GetLocalString(lang, "commands", map[string]string{"STATS": fmt.Sprintf("https://leg.rofleksey.ru/#/stats/%s", userMsg.Channel)})
 		b.SendMessage(userMsg.Channel, msg)
 		return true
 
