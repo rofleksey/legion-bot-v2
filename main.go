@@ -69,6 +69,8 @@ var banner string
 func main() {
 	fmt.Fprintln(os.Stderr, banner)
 
+	os.MkdirAll("data", 0750)
+
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("Config error: %v", err)
