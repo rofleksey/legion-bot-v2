@@ -236,6 +236,7 @@ func (g *GhostFace) handleHit(channel, username string) {
 		chanState.KillerState = nil
 		chanState.Date = now
 		chanState.UserMap[username].Health = "hooked"
+		chanState.UserMap[username].Marked = false
 		chanState.UserMap[username].Stats["hooks"]++
 		chanState.Stats["success"]++
 	})
