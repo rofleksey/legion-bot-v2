@@ -20,10 +20,11 @@ var _ Producer = (*TwitchProducer)(nil)
 type TwitchProducer struct {
 	ircClient   *twitch.Client
 	helixClient *helix.Client
+	database    db.DB
 	botInstance *bot.Bot
 }
 
-func NewTwitchProducer(cfg *config.Config, botInstance *bot.Bot) (*TwitchProducer, error) {
+func NewTwitchProducer(cfg *config.Config, database db.DB, botInstance *bot.Bot) (*TwitchProducer, error) {
 	accessToken, err := getTwitchAccessToken(cfg.Chat.RefreshToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get Twitch access token: %w", err)
@@ -37,6 +38,7 @@ func NewTwitchProducer(cfg *config.Config, botInstance *bot.Bot) (*TwitchProduce
 	return &TwitchProducer{
 		ircClient:   ircClient,
 		helixClient: helixClient,
+		database:    database,
 		botInstance: botInstance,
 	}, nil
 }
@@ -55,7 +57,7 @@ func (p *TwitchProducer) Run() error {
 
 		isMod := modTagStr == "1"
 
-		slog.Info("Message",
+		slog.Debug("Message",
 			slog.String("channel", channel),
 			slog.String("username", username),
 			slog.String("text", text),
@@ -73,14 +75,25 @@ func (p *TwitchProducer) Run() error {
 		slog.Info("Connected to IRC")
 	})
 
+	states := p.database.GetAllStates()
+	for _, state := range states {
+		p.AddChannel(state.Channel)
+	}
+
 	return p.ircClient.Connect()
 }
 
 func (p *TwitchProducer) AddChannel(channel string) {
+	slog.Info("Channel added to chat producer",
+		slog.String("channel", channel),
+	)
 	p.ircClient.Join(channel)
 }
 
 func (p *TwitchProducer) RemoveChannel(channel string) {
+	slog.Info("Channel removed from chat producer",
+		slog.String("channel", channel),
+	)
 	p.ircClient.Depart(channel)
 }
 

@@ -48,7 +48,9 @@ export const useUserStore = defineStore('user', () => {
   }
 
   if (token.value) {
-    validateToken(token.value).catch((e) => {
+    validateToken(token.value).then((user) => {
+      console.log(user)
+    }).catch((e) => {
       console.error(e)
       logout()
     })

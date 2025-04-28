@@ -94,8 +94,9 @@ async function loginWithTwitch() {
 }
 
 onMounted(() => {
-  const token = route.params.token as string;
-  const state = route.params.state;
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  const state = urlParams.get('state');
 
   if (token && state) {
     const storedState = localStorage.getItem('twitch_auth_state');
@@ -107,7 +108,6 @@ onMounted(() => {
     }
   }
 
-  // Scroll handling
   window.addEventListener('scroll', handleScroll, {passive: true});
   handleScroll();
 });

@@ -22,6 +22,11 @@ type Config struct {
 		JwtSecret    string `yaml:"jwtSecret" validate:"required"`
 		RedirectURL  string `yaml:"redirectUrl" validate:"required"`
 	} `yaml:"auth" validate:"required"`
+
+	Telegram struct {
+		Token  string `yaml:"token" validate:"required"`
+		ChatID string `yaml:"chatId" validate:"required"`
+	}
 }
 
 func Load() (*Config, error) {

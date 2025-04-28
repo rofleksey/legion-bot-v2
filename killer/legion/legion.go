@@ -261,8 +261,6 @@ func (l *Legion) startFrenzy(channel string) {
 		}
 	})
 
-	slog.Info("Frenzy is starting!", slog.String("channel", channel))
-
 	msg := l.GetLocalString(lang, "start", nil)
 	l.SendMessage(channel, msg)
 

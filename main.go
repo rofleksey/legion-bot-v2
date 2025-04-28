@@ -4,6 +4,8 @@ import (
 	_ "embed"
 	"fmt"
 	"github.com/robfig/cron/v3"
+	slogmulti "github.com/samber/slog-multi"
+	slogtelegram "github.com/samber/slog-telegram/v2"
 	"legion-bot-v2/api"
 	"legion-bot-v2/bot"
 	"legion-bot-v2/chat"
@@ -70,6 +72,20 @@ func main() {
 		log.Fatalf("Config error: %v", err)
 	}
 
+	logHandlers := []slog.Handler{
+		slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		}),
+		slogtelegram.Option{
+			Level:    slog.LevelInfo,
+			Token:    cfg.Telegram.Token,
+			Username: cfg.Telegram.ChatID,
+		}.NewTelegramHandler(),
+	}
+
+	multiHandler := slogmulti.Fanout(logHandlers...)
+	slog.SetDefault(slog.New(multiHandler))
+
 	slog.Info("Starting service...")
 
 	c := cron.New()
@@ -104,7 +120,7 @@ func main() {
 	botInstance := bot.NewBot(database, chatActions, timerManager, localiser, killerMap)
 	botInstance.Init()
 
-	chatProducer, err := producer.NewTwitchProducer(cfg, botInstance)
+	chatProducer, err := producer.NewTwitchProducer(cfg, database, botInstance)
 	if err != nil {
 		log.Fatalf("Failed to initialize chat producer: %v", err)
 	}
@@ -118,7 +134,7 @@ func main() {
 		chatProducer.Stop()
 	}()
 
-	slog.Info("Starting server...")
+	slog.Debug("Starting server...")
 	server := api.NewServer(cfg, database)
 	go func() {
 		if err := server.Run(); err != nil {
@@ -129,7 +145,7 @@ func main() {
 		}
 	}()
 
-	slog.Info("Connecting to twitch...")
+	slog.Debug("Connecting to twitch...")
 	if err = chatProducer.Run(); err != nil {
 		log.Fatalf("Chat listener failed: %v", err)
 	}
