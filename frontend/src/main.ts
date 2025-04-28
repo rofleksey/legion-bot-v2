@@ -1,8 +1,8 @@
 import './assets/main.css'
 
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import { createI18n } from 'vue-i18n'
+import {createApp} from 'vue'
+import {createPinia} from 'pinia'
+import {createI18n} from 'vue-i18n'
 
 import App from './App.vue'
 import router from './router'
@@ -51,6 +51,36 @@ const i18n = createI18n({
         hits: 'Hits',
         miss: 'Misses',
         stuns: 'Stuns',
+      },
+      "settings": {
+        "title": "Settings",
+        "save_button": "Save Changes",
+        "saving": "Saving...",
+        "save_success": "Settings applied successfully!",
+        "save_failed": "Failed to apply settings",
+        "general_title": "General Settings",
+        "killers_title": "Killers Settings",
+        "general": "General",
+        "legion": "🔪 Legion",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "language": "Language",
+        "delay_between_killers": "Delay Between Killers",
+        "delay_at_the_stream_start": "Delay At The Stream Start",
+        "min_number_of_viewers": "Min Number Of Viewers",
+        "legion_description": "Has a chance to 'hit' users that send messages. Affected users are inflicted with 'deep wound' status effect and need to !mend, otherwise they 'bleed out' and receive a timeout. If it manages to hit 'Fatal Hit' number of users - the last one is 'hooked' and receives a timeout. If it gets no hits for 'Frenzy Timeout' duration - the killer goes away. Can be body blocked (by 'deep wound'-ed users), !pallet stunned, !locker stunned, !tbag-ged.",
+        "fatal_hit": "Fatal Hit",
+        "frenzy_timeout": "Frenzy Timeout",
+        "deep_wound_timeout": "Deep Wound Timeout",
+        "react_chance": "Message React Chance",
+        "hit_chance": "Hit Chance",
+        "min_delay_hits": "Min Delay Between Hits",
+        "hook_ban_time": "Hook Ban Time",
+        "bleedout_ban_time": "Bleed Out Ban Time",
+        "bodyblock_chance": "Body Block Success Chance",
+        "locker_grab_chance": "Locker Grab Chance",
+        "locker_stun_chance": "Locker Stun Chance",
+        "pallet_stun_chance": "Pallet Stun Chance"
       }
     },
     ru: {
@@ -89,6 +119,36 @@ const i18n = createI18n({
         hits: 'Ударов',
         miss: 'Промахов',
         stuns: 'Оглушений',
+      },
+      "settings": {
+        "title": "Настройки",
+        "save_button": "Сохранить изменения",
+        "saving": "Сохранение...",
+        "save_success": "Настройки успешно применены!",
+        "save_failed": "Не удалось применить настройки",
+        "general_title": "Основные настройки",
+        "killers_title": "Настройки убийц",
+        "general": "Общие",
+        "legion": "🔪 Легион",
+        "enabled": "Включено",
+        "disabled": "Отключено",
+        "language": "Язык",
+        "delay_between_killers": "Задержка между убийцами",
+        "delay_at_the_stream_start": "Задержка в начале стрима",
+        "min_number_of_viewers": "Мин. Кол-во Зрителей",
+        "legion_description": "Имеет шанс 'ударить' пользователей, которые отправляют сообщения. Пораженные пользователи получают эффект 'глубокая рана' и должны использовать команду !mend, иначе они 'истекают кровью' и получают таймаут. Если убийца достигает нужного количества 'ударов' - последний пользователь 'подвешивается на крюк' и получает таймаут. Если убийца не может нанести ни одного удара в течение 'Времени ярости' - он уходит. Легиона можно бодиблочить (пользователями с 'глубокой раной'), оглушить палетой (!pallet), шкафом (!locker) или тибегнуть ему (!tbag).",
+        "fatal_hit": "Номер смертельного удара",
+        "frenzy_timeout": "Таймаут ярости",
+        "deep_wound_timeout": "Таймаут глубокой раны",
+        "react_chance": "Шанс реакции на сообщение",
+        "hit_chance": "Шанс попадания",
+        "min_delay_hits": "Мин. задержка между ударами",
+        "hook_ban_time": "Время бана на крюке",
+        "bleedout_ban_time": "Время бана при истекании кровью",
+        "bodyblock_chance": "Шанс бодиблока",
+        "locker_grab_chance": "Шанс хватания из шкафа",
+        "locker_stun_chance": "Шанс оглушения шкафом",
+        "pallet_stun_chance": "Шанс оглушения палетой"
       }
     }
   }

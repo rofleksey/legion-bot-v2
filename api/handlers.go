@@ -6,13 +6,15 @@ import (
 	"legion-bot-v2/dao"
 	"legion-bot-v2/db"
 	"legion-bot-v2/util"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"time"
 )
 
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
+	slog.Info("Login attempt")
+
 	state, err := generateRandomString(32)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -80,6 +82,10 @@ func (s *Server) handleCallback(w http.ResponseWriter, r *http.Request) {
 
 	user := result.Data[0]
 
+	slog.Info("Successful login",
+		slog.String("login", user.Login),
+	)
+
 	jwtToken, err := s.createJWTToken(user)
 	if err != nil {
 		http.Error(w, "Failed to create token: "+err.Error(), http.StatusInternalServerError)
@@ -128,7 +134,9 @@ func (s *Server) updateSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("User %s updating settings", claims.Login)
+	slog.Info("Settings updated",
+		slog.String("login", claims.TwitchUser.Login),
+	)
 
 	var newSettings db.Settings
 	if err := json.NewDecoder(r.Body).Decode(&newSettings); err != nil {
@@ -205,7 +213,7 @@ func (s *Server) handleImport(w http.ResponseWriter, r *http.Request) {
 
 	for _, legion := range req.Legions {
 		if legion.Settings.Language == "" {
-			legion.Settings.Language = "ru"
+			legion.Settings.Language = "en"
 		}
 
 		s.database.UpdateState(legion.Channel, func(state *db.ChannelState) {

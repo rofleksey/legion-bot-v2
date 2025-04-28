@@ -1,106 +1,117 @@
 <template>
   <div class="settings-container">
     <div class="settings-header">
-      <h1 class="settings-title">Settings</h1>
+      <h1 class="settings-title">{{ t('settings.title') }}</h1>
       <div class="settings-actions">
         <button
           class="settings-save-button"
           :disabled="isSaving"
           @click="saveSettings"
         >
-          {{ isSaving ? 'Saving...' : 'Save Changes' }}
+          {{ isSaving ? t('settings.saving') : t('settings.save_button') }}
         </button>
       </div>
     </div>
 
     <div class="settings-content" v-if="settings">
       <div class="settings-section">
-        <h2 class="settings-section-title">General Settings</h2>
+        <h2 class="settings-section-title">{{ t('settings.general_title') }}</h2>
         <div class="settings-grid">
           <AppSwitch
             :model-value="!settings.disabled"
             @update:model-value="updateDisabled"
-            :label="settings.disabled ? 'Disabled' : 'Enabled'"
+            :label="settings.disabled ? t('settings.disabled') : t('settings.enabled')"
           />
 
           <AppSelect
             v-model="settings.language"
-            label="Language"
+            :label="t('settings.language')"
             :options="['en', 'ru']"
           />
         </div>
       </div>
 
       <div class="settings-section">
-        <h2 class="settings-section-title">Killers Settings</h2>
+        <h2 class="settings-section-title">{{ t('settings.killers_title') }}</h2>
         <div class="settings-subsection">
-          <h3 class="settings-subsection-title">General</h3>
+          <h3 class="settings-subsection-title">{{ t('settings.general') }}</h3>
           <div class="settings-grid">
             <AppDurationInput
               v-model="settings.killers.general.delayBetweenKillers"
               :min="1e9"
-              label="Delay Between Killers"
+              :label="t('settings.delay_between_killers')"
+            />
+            <AppDurationInput
+              v-model="settings.killers.general.delayAtTheStreamStart"
+              :min="300 * 1e9"
+              :label="t('settings.delay_at_the_stream_start')"
+            />
+            <AppNumberInput
+              v-model="settings.killers.general.minNumberOfViewers"
+              :min="0"
+              :label="t('settings.min_number_of_viewers')"
             />
           </div>
         </div>
 
         <div class="settings-subsection">
-          <h3 class="settings-subsection-title">Legion</h3>
+          <h3 class="settings-subsection-title">{{ t('settings.legion') }}</h3>
+          <AppQuotation class="settings-subsection-description">{{ t('settings.legion_description') }}</AppQuotation>
           <div class="settings-grid">
             <AppSwitch
               v-model="settings.killers.legion.enabled"
-              :label="settings.killers.legion.enabled ? 'Enabled' : 'Disabled'"
+              :label="settings.killers.legion.enabled ? t('settings.enabled') : t('settings.disabled')"
             />
           </div>
-          <div class="settings-grid" :class="{disabled: !settings.killers.legion.enabled}">
+          <div class="settings-grid">
             <AppNumberInput
               v-model="settings.killers.legion.fatalHit"
               :min="2"
-              label="Fatal Hit"
+              :label="t('settings.fatal_hit')"
             />
             <AppDurationInput
               v-model="settings.killers.legion.frenzyTimeout"
-              label="Frenzy Timeout"
+              :label="t('settings.frenzy_timeout')"
             />
             <AppDurationInput
               v-model="settings.killers.legion.deepWoundTimeout"
-              label="Deep Wound Timeout"
+              :label="t('settings.deep_wound_timeout')"
             />
             <AppChanceInput
               v-model="settings.killers.legion.reactChance"
-              label="Message React Chance"
+              :label="t('settings.react_chance')"
             />
             <AppChanceInput
               v-model="settings.killers.legion.hitChance"
-              label="Hit Chance"
+              :label="t('settings.hit_chance')"
             />
             <AppDurationInput
               v-model="settings.killers.legion.minDelayBetweenHits"
-              label="Min Delay Between Hits"
+              :label="t('settings.min_delay_hits')"
             />
             <AppDurationInput
               v-model="settings.killers.legion.hookBanTime"
-              label="Hook Ban Time"
+              :label="t('settings.hook_ban_time')"
             />
             <AppDurationInput
               v-model="settings.killers.legion.bleedOutBanTime"
-              label="Bleed Out Ban Time"
+              :label="t('settings.bleedout_ban_time')"
             />
             <AppChanceInput
               v-model="settings.killers.legion.bodyBlockSuccessChance"
-              label="Body Block Success Chance"
+              :label="t('settings.bodyblock_chance')"
             />
             <AppChanceInput
               v-model="settings.killers.legion.lockerGrabChance"
-              label="Locker Grab Chance"
+              :label="t('settings.locker_grab_chance')"
             />
             <AppChanceInput
               v-model="settings.killers.legion.lockerStunChance"
-              label="Locker Stun Chance"
+              :label="t('settings.locker_stun_chance')"
             />
             <AppChanceInput
               v-model="settings.killers.legion.palletStunChance"
-              label="Pallet Stun Chance"
+              :label="t('settings.pallet_stun_chance')"
             />
           </div>
         </div>
@@ -120,30 +131,27 @@ import AppDurationInput from "@/components/AppDurationInput.vue";
 import AppNumberInput from "@/components/AppNumberInput.vue";
 import AppChanceInput from "@/components/AppChanceInput.vue";
 import {useNotifications} from "@/services/notifications.ts";
+import {useI18n} from "vue-i18n";
+import AppQuotation from "@/components/AppQuotation.vue";
 
+const {t} = useI18n()
 const notifications = useNotifications()
 
 const userStore = useUserStore()
 const token = computed(() => userStore.token)
 
 const settings = ref<Settings | null>(null);
-
 const isSaving = ref(false);
 
 function updateDisabled(val: boolean) {
-  if (!settings.value) {
-    return
-  }
-
-  settings.value.disabled = !val
+  if (!settings.value) return;
+  settings.value.disabled = !val;
 }
 
 async function fetchSettings() {
   try {
     const response = await axios.get('/api/settings', {
-      headers: {
-        Authorization: `Bearer ${token.value}`
-      }
+      headers: {Authorization: `Bearer ${token.value}`}
     });
     settings.value = response.data;
   } catch (error) {
@@ -155,21 +163,17 @@ async function saveSettings() {
   isSaving.value = true;
   try {
     await axios.post('/api/settings', settings.value, {
-      headers: {
-        Authorization: `Bearer ${token.value}`
-      }
+      headers: {Authorization: `Bearer ${token.value}`}
     });
-    notifications.info('Settings applied successfully!', 'OK')
+    notifications.info(t('settings.save_success'), 'OK')
   } catch (error) {
-    notifications.error('Failed to apply settings', error?.toString?.() ?? '');
+    notifications.error(t('settings.save_failed'), error?.toString?.() ?? '');
   } finally {
     isSaving.value = false;
   }
 }
 
-onMounted(() => {
-  fetchSettings();
-});
+onMounted(fetchSettings);
 </script>
 
 <style scoped>
@@ -243,6 +247,13 @@ onMounted(() => {
 
 .settings-subsection-title {
   font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  color: var(--foreground);
+}
+
+.settings-subsection-description {
+  font-size: 15px;
   font-weight: 500;
   margin-bottom: 16px;
   color: var(--foreground);

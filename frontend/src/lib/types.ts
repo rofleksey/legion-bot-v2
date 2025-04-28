@@ -19,6 +19,8 @@ export interface KillersSettings {
 
 export interface GeneralKillerSettings {
   delayBetweenKillers: number;
+  delayAtTheStreamStart: number;
+  minNumberOfViewers: number;
 }
 
 export interface LegionSettings {

@@ -15,7 +15,7 @@ type KillersSettings struct {
 
 func DefaultSettings() Settings {
 	return Settings{
-		Disabled: false,
+		Disabled: true,
 		Language: "en",
 		Killers: KillersSettings{
 			General: DefaultGeneralKillerSettings(),
@@ -25,12 +25,16 @@ func DefaultSettings() Settings {
 }
 
 type GeneralKillerSettings struct {
-	DelayBetweenKillers time.Duration `json:"delayBetweenKillers"`
+	DelayBetweenKillers   time.Duration `json:"delayBetweenKillers"`
+	DelayAtTheStreamStart time.Duration `json:"delayAtTheStreamStart"`
+	MinNumberOfViewers    int           `json:"minNumberOfViewers"`
 }
 
 func DefaultGeneralKillerSettings() *GeneralKillerSettings {
 	return &GeneralKillerSettings{
-		DelayBetweenKillers: 2 * time.Hour,
+		DelayBetweenKillers:   2 * time.Hour,
+		DelayAtTheStreamStart: 30 * time.Minute,
+		MinNumberOfViewers:    10,
 	}
 }
 
