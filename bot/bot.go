@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"fmt"
 	"github.com/elliotchance/pie/v2"
 	"github.com/jellydator/ttlcache/v3"
 	"legion-bot-v2/chat"
@@ -86,11 +85,6 @@ func (b *Bot) HandleCommands(userMsg db.Message) bool {
 	user := chanState.UserMap[userMsg.Username]
 
 	switch {
-	case strings.HasPrefix(userMsg.Text, "!killer"):
-		msg := b.GetLocalString(lang, "commands", map[string]string{"STATS": fmt.Sprintf("https://leg.rofleksey.ru/#/stats/%s", userMsg.Channel)})
-		b.SendMessage(userMsg.Channel, msg)
-		return true
-
 	case strings.HasPrefix(userMsg.Text, "!hp"):
 		otherUsername := strings.ToLower(strings.TrimSpace(strings.TrimPrefix(strings.ReplaceAll(userMsg.Text, "@", ""), "!hp")))
 		if otherUsername == "" {

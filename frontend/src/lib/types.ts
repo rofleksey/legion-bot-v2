@@ -15,6 +15,7 @@ export interface Settings {
 export interface KillersSettings {
   general: GeneralKillerSettings;
   legion: LegionSettings;
+  ghostface: GhostFaceSettings;
 }
 
 export interface GeneralKillerSettings {
@@ -25,6 +26,7 @@ export interface GeneralKillerSettings {
 
 export interface LegionSettings {
   enabled: boolean;
+  weight: number;
   bodyBlockSuccessChance: number;
   deepWoundTimeout: number;
   fatalHit: number;
@@ -37,4 +39,13 @@ export interface LegionSettings {
   palletStunChance: number;
   reactChance: number;
   bleedOutBanTime: number;
+}
+
+export interface GhostFaceSettings {
+  enabled: boolean;
+  weight: number;
+  hookBanTime: number;
+  reactChance: number;
+  minDelayBetweenHits: number;
+  timeout: number;
 }

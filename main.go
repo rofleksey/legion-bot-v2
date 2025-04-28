@@ -13,6 +13,7 @@ import (
 	"legion-bot-v2/db"
 	"legion-bot-v2/i18n"
 	"legion-bot-v2/killer"
+	"legion-bot-v2/killer/ghostface"
 	"legion-bot-v2/killer/legion"
 	"legion-bot-v2/producer"
 	"legion-bot-v2/timers"
@@ -138,7 +139,8 @@ func main() {
 	}
 
 	killerMap := map[string]killer.Killer{
-		"legion": legion.New(database, chatActions, timerManager, localiser),
+		"legion":    legion.New(database, chatActions, timerManager, localiser),
+		"ghostface": ghostface.New(database, chatActions, timerManager, localiser),
 	}
 
 	botInstance := bot.NewBot(database, chatActions, timerManager, localiser, killerMap)
@@ -146,7 +148,7 @@ func main() {
 
 	chatProducer := producer.NewTwitchProducer(ircClient, helixClient, database, botInstance)
 	if os.Getenv("ENVIRONMENT") != "production" {
-		chatProducer.AddChannel("souzasoul")
+		chatProducer.AddChannel("galaxytm_")
 	}
 
 	sig := make(chan os.Signal, 1)

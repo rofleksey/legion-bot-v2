@@ -1,6 +1,6 @@
 {
-  "commands": "Периодически в чат забегает Легион и несколько минут пытается раздать хиты сурвам, которые пишут в чате. Команды: !mend, !heal, !pallet, !locker, !tbag, !unhook, !hp. Стата: STATS",
-  "start": "Легион начал бежать в сторону чата \uD83D\uDD2A (!killer)",
+  "start_legion": "Легион начал бежать в сторону чата \uD83D\uDD2A (!killer)",
+  "commands_legion": "Команды: !mend, !heal, !pallet, !locker, !tbag, !unhook, !hp. Стата: STATS",
   "on_recover": "@USERNAME использовал стояк и встал самостоятельно \uD83D\uDD2A",
   "on_dead": "@USERNAME не подлатался вовремя и умер \uD83D\uDC80 Геймер получает таймаут \uD83D\uDC80",
   "on_heal": "@USERNAME вылечили",
@@ -38,5 +38,10 @@
   "locker_grab": "Легион успел открыть шкаф с @USERNAME и повесил его \uD83D\uDD2A Теперь геймер висит на хуке пока его не снимут \uD83E\uDE9D (!unhook @USERNAME)",
   "cant_tbag_rn": "Вы не можете тибегать прямо сейчас",
   "tbag_wasted": "@USERNAME тибегнул, но этого никто не увидел \uD83D\uDC80",
-  "tbag_success": "@USERNAME тибегнул и привлек внимание Легиона \uD83D\uDD2A"
+  "tbag_success": "@USERNAME тибегнул и привлек внимание Легиона \uD83D\uDD2A",
+  "start_gf": "Крик начал смотреть на чат \uD83D\uDC7B (!killer)",
+  "commands_gf": "Команды: !mend, !heal, !tbag, !unhook, !hp. Стата: STATS",
+  "gf_go_away": "Крик молча ушел \uD83D\uDC7B Он успел немного посмотреть на COUNT геймеров \uD83D\uDC7B",
+  "gf_tbag": "@USERNAME тибегнул и привлек внимание Крика \uD83D\uDC7B",
+  "gf_hit_dead": "Крик убил @USERNAME и повесил его \uD83D\uDC7B Теперь геймер висит на хуке пока его не снимут \uD83D\uDC7B (!unhook @USERNAME)"
 }

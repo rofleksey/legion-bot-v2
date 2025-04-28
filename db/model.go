@@ -9,11 +9,8 @@ type Channel struct {
 
 type User struct {
 	Health string         `json:"health"`
+	Marked bool           `json:"marked"`
 	Stats  map[string]int `json:"stats"`
-}
-
-type LegionState struct {
-	HitCount int `json:"hitCount"`
 }
 
 type ChannelState struct {

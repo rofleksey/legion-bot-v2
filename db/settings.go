@@ -1,6 +1,9 @@
 package db
 
-import "time"
+import (
+	"os"
+	"time"
+)
 
 type Settings struct {
 	Disabled bool            `json:"disabled"`
@@ -9,17 +12,19 @@ type Settings struct {
 }
 
 type KillersSettings struct {
-	General *GeneralKillerSettings `json:"general"`
-	Legion  *LegionSettings        `json:"legion"`
+	General   *GeneralKillerSettings `json:"general"`
+	Legion    *LegionSettings        `json:"legion"`
+	GhostFace *GhostFaceSettings     `json:"ghostface"`
 }
 
 func DefaultSettings() Settings {
 	return Settings{
-		Disabled: true,
+		Disabled: os.Getenv("ENVIRONMENT") == "production",
 		Language: "en",
 		Killers: KillersSettings{
-			General: DefaultGeneralKillerSettings(),
-			Legion:  DefaultLegionSettings(),
+			General:   DefaultGeneralKillerSettings(),
+			Legion:    DefaultLegionSettings(),
+			GhostFace: DefaultGhostFaceSettings(),
 		},
 	}
 }
@@ -40,6 +45,7 @@ func DefaultGeneralKillerSettings() *GeneralKillerSettings {
 
 type LegionSettings struct {
 	Enabled                bool          `json:"enabled"`
+	Weight                 int           `json:"weight"`
 	BodyBlockSuccessChance float64       `json:"bodyBlockSuccessChance"`
 	DeepWoundTimeout       time.Duration `json:"deepWoundTimeout"`
 	FatalHit               int           `json:"fatalHit"`
@@ -57,6 +63,7 @@ type LegionSettings struct {
 func DefaultLegionSettings() *LegionSettings {
 	return &LegionSettings{
 		Enabled:                true,
+		Weight:                 100,
 		BodyBlockSuccessChance: 0.2,
 		DeepWoundTimeout:       time.Minute,
 		FatalHit:               5,
@@ -69,5 +76,25 @@ func DefaultLegionSettings() *LegionSettings {
 		PalletStunChance:       0.18,
 		ReactChance:            0.3,
 		BleedOutBanTime:        30 * time.Second,
+	}
+}
+
+type GhostFaceSettings struct {
+	Enabled             bool          `json:"enabled"`
+	Weight              int           `json:"weight"`
+	HookBanTime         time.Duration `json:"hookBanTime"`
+	MinDelayBetweenHits time.Duration `json:"minDelayBetweenHits"`
+	ReactChance         float64       `json:"reactChance"`
+	Timeout             time.Duration `json:"timeout"`
+}
+
+func DefaultGhostFaceSettings() *GhostFaceSettings {
+	return &GhostFaceSettings{
+		Enabled:             true,
+		Weight:              100,
+		HookBanTime:         time.Minute,
+		MinDelayBetweenHits: 5 * time.Second,
+		ReactChance:         0.75,
+		Timeout:             5 * time.Minute,
 	}
 }

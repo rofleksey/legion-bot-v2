@@ -62,6 +62,12 @@
               v-model="settings.killers.legion.enabled"
               :label="settings.killers.legion.enabled ? t('settings.enabled') : t('settings.disabled')"
             />
+            <AppNumberInput
+              v-model="settings.killers.legion.weight"
+              :min="1"
+              :max="1000000"
+              :label="t('settings.weight')"
+            />
           </div>
           <div class="settings-grid">
             <AppNumberInput
@@ -87,7 +93,7 @@
             />
             <AppDurationInput
               v-model="settings.killers.legion.minDelayBetweenHits"
-              :label="t('settings.min_delay_hits')"
+              :label="t('settings.min_delay_between_hits')"
             />
             <AppDurationInput
               v-model="settings.killers.legion.hookBanTime"
@@ -112,6 +118,41 @@
             <AppChanceInput
               v-model="settings.killers.legion.palletStunChance"
               :label="t('settings.pallet_stun_chance')"
+            />
+          </div>
+        </div>
+
+        <div class="settings-subsection">
+          <h3 class="settings-subsection-title">{{ t('settings.ghostface') }}</h3>
+          <AppQuotation class="settings-subsection-description">{{ t('settings.ghostface_description') }}</AppQuotation>
+          <div class="settings-grid">
+            <AppSwitch
+              v-model="settings.killers.legion.enabled"
+              :label="settings.killers.legion.enabled ? t('settings.enabled') : t('settings.disabled')"
+            />
+            <AppNumberInput
+              v-model="settings.killers.legion.weight"
+              :min="1"
+              :max="1000000"
+              :label="t('settings.weight')"
+            />
+          </div>
+          <div class="settings-grid">
+            <AppDurationInput
+              v-model="settings.killers.ghostface.timeout"
+              :label="t('settings.timeout')"
+            />
+            <AppChanceInput
+              v-model="settings.killers.ghostface.reactChance"
+              :label="t('settings.react_chance')"
+            />
+            <AppDurationInput
+              v-model="settings.killers.ghostface.minDelayBetweenHits"
+              :label="t('settings.min_delay_between_hits')"
+            />
+            <AppDurationInput
+              v-model="settings.killers.ghostface.hookBanTime"
+              :label="t('settings.hook_ban_time')"
             />
           </div>
         </div>
@@ -264,7 +305,7 @@ onMounted(fetchSettings);
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 32px;
 }
 
 .settings-grid.disabled {

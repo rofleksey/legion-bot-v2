@@ -1,6 +1,7 @@
 package legion
 
 import (
+	"fmt"
 	"github.com/mitchellh/mapstructure"
 	"legion-bot-v2/chat"
 	"legion-bot-v2/db"
@@ -46,14 +47,14 @@ func (l *Legion) Enabled(channel string) bool {
 }
 
 func New(db db.DB, actions chat.Actions, timers timers.Timers, localiser i18n.Localiser) *Legion {
-	leg := &Legion{
+	k := &Legion{
 		DB:        db,
 		Actions:   actions,
 		Timers:    timers,
 		Localiser: localiser,
 	}
 
-	return leg
+	return k
 }
 
 func (l *Legion) handleCommands(userMsg db.Message) bool {
@@ -64,6 +65,11 @@ func (l *Legion) handleCommands(userMsg db.Message) bool {
 	user := chanState.UserMap[userMsg.Username]
 
 	switch {
+	case strings.HasPrefix(userMsg.Text, "!killer"):
+		msg := l.GetLocalString(lang, "commands_legion", map[string]string{"STATS": fmt.Sprintf("https://leg.rofleksey.ru/#/stats/%s", userMsg.Channel)})
+		l.SendMessage(userMsg.Channel, msg)
+		return true
+
 	case strings.HasPrefix(userMsg.Text, "!pallet"):
 		if user.Health == "hooked" || user.Health == "dead" {
 			msg := l.GetLocalString(lang, "cant_pallet_rn", map[string]string{"USERNAME": userMsg.Username})
@@ -196,6 +202,10 @@ func (l *Legion) HandleMessage(userMsg db.Message) {
 		return
 	}
 
+	if l.handleCommands(userMsg) {
+		return
+	}
+
 	user := chanState.UserMap[userMsg.Username]
 	diff := now.Sub(chanState.Date)
 
@@ -269,7 +279,7 @@ func (l *Legion) startFrenzy(channel string) {
 		}
 	})
 
-	msg := l.GetLocalString(lang, "start", nil)
+	msg := l.GetLocalString(lang, "start_legion", nil)
 	l.SendMessage(channel, msg)
 
 	l.startFrenzyTimer(channel)
