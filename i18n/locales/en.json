@@ -42,5 +42,16 @@
   "gf_reveal_fail": "@USERNAME could not reveal The Ghost Face\uD83D\uDC7B",
   "start_doctor": "The Doctor has applied shock therapy \uD83E\uDDE0 (!killer)",
   "commands_doctor": "Commands: !mend, !heal, !unhook, !hp. Stats: STATS",
-  "doctor_go_away": "Chat has successfully survived the shock therapy \uD83E\uDDE0"
+  "doctor_go_away": "Chat has successfully survived the shock therapy \uD83E\uDDE0",
+  "start_pinhead": "Pinhead has arrived and chosen a word on topic TOPIC. Chat has several minutes to guess it by asking general questions (!solve). \uD83D\uDCE6 (!killer)",
+  "start_pinhead_secret": "Pinhead has arrived and chosen a word on an unknown topic. Chat has several minutes to guess it by asking yes/no questions (!solve). \uD83D\uDCE6 (!killer)",
+  "commands_pinhead": "Commands: !solve, !mend, !heal, !unhook, !hp. Stats: STATS",
+  "pinhead_yes": "To the question 'QUESTION' Cenobite answers YES \uD83D\uDCE6",
+  "pinhead_no": "To the question 'QUESTION' Cenobite answers NO \uD83D\uDCE6",
+  "pinhead_maybe": "To the question 'QUESTION' Cenobite answers MAYBE / PARTIALLY \uD83D\uDCE6",
+  "pinhead_invalid": "Cenobite doesn't answer the question 'QUESTION' because it's invalid. Ask yes/no questions. \uD83D\uDCE6",
+  "pinhead_failed": "Chat successfully guessed the word WORD \uD83D\uDCE6 Pinhead leaves in shame \uD83D\uDCE6",
+  "pinhead_success": "Chat failed to guess the word WORD in time \uD83D\uDCE6 Pinhead has inflicted deep wounds on some gamers \uD83D\uDCE6 If they don't mend (!mend), they'll get a timeout \uD83D\uDCE6",
+  "pinhead_generate_prompt": "From the list of topics: [TOPIC_LIST], select one random topic, then choose ONE simple word from that topic. The word should be easy for an average audience and suitable for a yes/no guessing game. If the word is not guessable with yes/no questions, skip it. Output strictly in the format 'RESULT $topic $word' with no additional text, explanations, or comments.",
+  "pinhead_guess_prompt": "You are playing a yes/no guessing game where the user tries to guess the word 'THE_WORD'.  \n\n### **Response Rules:**  \nAnswer **only** in one of these exact formats:  \n- `OK` (if the user **correctly guessed the exact word**)  \n- `ANS y` (if the answer is definitively \"yes\")  \n- `ANS n` (if the answer is definitively \"no\")  \n- `MAYBE` (if the answer is ambiguous, context-dependent, or partially true)  \n- `INVALID` (if the question is nonsensical or cannot be answered with yes/no)  \n\n### **Constraints:**  \n1. Never deviate from the 5 allowed responses.  \n2. Never explain, justify, or add extra text.  \n3. For `OK`, the user’s guess must match the hidden word **exactly** (case-insensitive).  \n\n### **Examples:**  \n- Hidden word: \"apple\"  \n  - Q: \"Is it red?\" → `ANS y`  \n  - Q: \"Is it a fruit?\" → `ANS y`  \n  - Q: \"Is it a banana?\" → `ANS n`  \n  - Q: \"Is it sweet?\" → `MAYBE` (some apples are sour)  \n  - Q: \"Apple?\" → `OK`  \n  - Q: \"How heavy is it?\" → `INVALID` (not yes/no)  \n  - Q: \"Is it a vehicle?\" → `ANS n`  "
 }

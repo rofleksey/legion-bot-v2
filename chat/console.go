@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"legion-bot-v2/util"
 	"log/slog"
 	"time"
 )
@@ -8,6 +9,10 @@ import (
 var _ Actions = (*ConsoleActions)(nil)
 
 type ConsoleActions struct {
+}
+
+func (a *ConsoleActions) GetViewerList(channel string) []string {
+	return []string{util.BotUsername}
 }
 
 func (a *ConsoleActions) DeleteMessage(channel, id string) {

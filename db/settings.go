@@ -16,6 +16,7 @@ type KillersSettings struct {
 	Legion    *LegionSettings        `json:"legion"`
 	GhostFace *GhostFaceSettings     `json:"ghostface"`
 	Doctor    *DoctorSettings        `json:"doctor"`
+	Pinhead   *PinheadSettings       `json:"pinhead"`
 }
 
 func DefaultSettings() Settings {
@@ -27,6 +28,7 @@ func DefaultSettings() Settings {
 			Legion:    DefaultLegionSettings(),
 			GhostFace: DefaultGhostFaceSettings(),
 			Doctor:    DefaultDoctorSettings(),
+			Pinhead:   DefaultPinheadSettings(),
 		},
 	}
 }
@@ -118,5 +120,29 @@ func DefaultDoctorSettings() *DoctorSettings {
 		MinDelayBetweenHits: 10 * time.Second,
 		ReactChance:         0.75,
 		Timeout:             3 * time.Minute,
+	}
+}
+
+type PinheadSettings struct {
+	Enabled          bool          `json:"enabled"`
+	Weight           int           `json:"weight"`
+	ShowTopic        bool          `json:"showTopic"`
+	VictimCount      int           `json:"victimCount"`
+	DeepWoundTimeout time.Duration `json:"deepWoundTimeout"`
+	BleedOutBanTime  time.Duration `json:"bleedOutBanTime"`
+	Topics           string        `json:"topics"`
+	Timeout          time.Duration `json:"timeout"`
+}
+
+func DefaultPinheadSettings() *PinheadSettings {
+	return &PinheadSettings{
+		Enabled:          os.Getenv("ENVIRONMENT") != "production",
+		Weight:           100,
+		ShowTopic:        true,
+		Timeout:          3 * time.Minute,
+		VictimCount:      10,
+		DeepWoundTimeout: time.Minute,
+		BleedOutBanTime:  time.Minute,
+		Topics:           "бытовая техника, природа, одежда, обувь, канцелярия, продукты, физика, спорт",
 	}
 }

@@ -1,5 +1,7 @@
 package gpt
 
+import "context"
+
 type Options struct {
 	MaxTokens   int     `json:"maxTokens"`
 	Temperature float64 `json:"temperature"`
@@ -12,5 +14,5 @@ type Prompt struct {
 }
 
 type Gpt interface {
-	Process(prompt Prompt) (string, error)
+	Process(ctx context.Context, prompt Prompt) (string, error)
 }

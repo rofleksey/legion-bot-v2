@@ -11,11 +11,10 @@ import (
 	"legion-bot-v2/chat"
 	"legion-bot-v2/config"
 	"legion-bot-v2/db"
+	"legion-bot-v2/gpt"
 	"legion-bot-v2/i18n"
 	"legion-bot-v2/killer"
-	"legion-bot-v2/killer/doctor"
-	"legion-bot-v2/killer/ghostface"
-	"legion-bot-v2/killer/legion"
+	"legion-bot-v2/killer/pinhead"
 	"legion-bot-v2/producer"
 	"legion-bot-v2/timers"
 	"legion-bot-v2/util"
@@ -137,13 +136,16 @@ func main() {
 		log.Fatalf("Failed to initialize i18n: %v", err)
 	}
 
+	gptInstance := gpt.NewYandexGpt(cfg)
+
 	killerMap := map[string]killer.Killer{
-		"legion":    legion.New(database, chatActions, timerManager, localiser),
-		"ghostface": ghostface.New(database, chatActions, timerManager, localiser),
-		"doctor":    doctor.New(database, chatActions, timerManager, localiser),
+		//"legion":    legion.New(database, chatActions, timerManager, localiser, gptInstance),
+		//"ghostface": ghostface.New(database, chatActions, timerManager, localiser, gptInstance),
+		//"doctor":    doctor.New(database, chatActions, timerManager, localiser, gptInstance),
+		"pinhead": pinhead.New(database, chatActions, timerManager, localiser, gptInstance),
 	}
 
-	botInstance := bot.NewBot(database, chatActions, timerManager, localiser, killerMap)
+	botInstance := bot.NewBot(database, chatActions, timerManager, localiser, gptInstance, killerMap)
 	botInstance.Init()
 
 	chatProducer := producer.NewTwitchProducer(ircClient, helixClient, database, botInstance)

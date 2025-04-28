@@ -5,6 +5,7 @@ import (
 	"github.com/jellydator/ttlcache/v3"
 	"legion-bot-v2/chat"
 	"legion-bot-v2/db"
+	"legion-bot-v2/gpt"
 	"legion-bot-v2/i18n"
 	"legion-bot-v2/killer"
 	"legion-bot-v2/timers"
@@ -19,6 +20,7 @@ type Bot struct {
 	chat.Actions
 	timers.Timers
 	i18n.Localiser
+	gpt.Gpt
 	killerMap      map[string]killer.Killer
 	streamStartMap *ttlcache.Cache[string, time.Time]
 	viewerCountMap *ttlcache.Cache[string, int]
@@ -29,6 +31,7 @@ func NewBot(
 	actions chat.Actions,
 	timers timers.Timers,
 	localiser i18n.Localiser,
+	gptInstance gpt.Gpt,
 	killerMap map[string]killer.Killer,
 ) *Bot {
 	bot := &Bot{
@@ -36,6 +39,7 @@ func NewBot(
 		Actions:   actions,
 		Timers:    timers,
 		Localiser: localiser,
+		Gpt:       gptInstance,
 		killerMap: killerMap,
 		streamStartMap: ttlcache.New[string, time.Time](
 			ttlcache.WithTTL[string, time.Time](30 * time.Minute),

@@ -187,6 +187,49 @@
             />
           </div>
         </div>
+
+        <div class="settings-subsection">
+          <h3 class="settings-subsection-title">{{ t('settings.pinhead') }}</h3>
+          <AppQuotation class="settings-subsection-description">{{ t('settings.pinhead_description') }}</AppQuotation>
+          <div class="settings-grid">
+            <AppSwitch
+              v-model="settings.killers.pinhead.enabled"
+              :label="settings.killers.pinhead.enabled ? t('settings.enabled') : t('settings.disabled')"
+            />
+            <AppNumberInput
+              v-model="settings.killers.pinhead.weight"
+              :min="1"
+              :max="1000000"
+              :label="t('settings.weight')"
+            />
+          </div>
+          <div class="settings-grid">
+            <AppSwitch
+              v-model="settings.killers.pinhead.showTopic"
+              :label="settings.killers.pinhead.showTopic ? t('settings.show_topic') : t('settings.hide_topic')"
+            />
+            <AppDurationInput
+              v-model="settings.killers.pinhead.deepWoundTimeout"
+              :label="t('settings.deep_wound_timeout')"
+            />
+            <AppDurationInput
+              v-model="settings.killers.legion.bleedOutBanTime"
+              :label="t('settings.bleedout_ban_time')"
+            />
+            <AppDurationInput
+              v-model="settings.killers.pinhead.timeout"
+              :label="t('settings.timeout')"
+            />
+            <AppNumberInput
+              v-model="settings.killers.pinhead.victimCount"
+              :label="t('settings.victim_count')"
+            />
+            <AppStringInput
+              v-model="settings.killers.pinhead.topics"
+              :label="t('settings.topics')"
+            />
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -205,6 +248,7 @@ import AppChanceInput from "@/components/AppChanceInput.vue";
 import {useNotifications} from "@/services/notifications.ts";
 import {useI18n} from "vue-i18n";
 import AppQuotation from "@/components/AppQuotation.vue";
+import AppStringInput from "@/components/AppStringInput.vue";
 
 const {t} = useI18n()
 const notifications = useNotifications()

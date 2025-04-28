@@ -5,6 +5,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"legion-bot-v2/chat"
 	"legion-bot-v2/db"
+	"legion-bot-v2/gpt"
 	"legion-bot-v2/i18n"
 	"legion-bot-v2/killer"
 	"legion-bot-v2/timers"
@@ -26,14 +27,16 @@ type GhostFace struct {
 	chat.Actions
 	timers.Timers
 	i18n.Localiser
+	gpt.Gpt
 }
 
-func New(db db.DB, actions chat.Actions, timers timers.Timers, localiser i18n.Localiser) *GhostFace {
+func New(db db.DB, actions chat.Actions, timers timers.Timers, localiser i18n.Localiser, g gpt.Gpt) *GhostFace {
 	k := &GhostFace{
 		DB:        db,
 		Actions:   actions,
 		Timers:    timers,
 		Localiser: localiser,
+		Gpt:       g,
 	}
 
 	return k

@@ -5,6 +5,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"legion-bot-v2/chat"
 	"legion-bot-v2/db"
+	"legion-bot-v2/gpt"
 	"legion-bot-v2/i18n"
 	"legion-bot-v2/killer"
 	"legion-bot-v2/timers"
@@ -26,6 +27,7 @@ type Legion struct {
 	chat.Actions
 	timers.Timers
 	i18n.Localiser
+	gpt.Gpt
 }
 
 func (l *Legion) Weight(channel string) int {
@@ -51,12 +53,13 @@ func (l *Legion) Enabled(channel string) bool {
 	return chanState.Settings.Killers.Legion.Enabled
 }
 
-func New(db db.DB, actions chat.Actions, timers timers.Timers, localiser i18n.Localiser) *Legion {
+func New(db db.DB, actions chat.Actions, timers timers.Timers, localiser i18n.Localiser, g gpt.Gpt) *Legion {
 	k := &Legion{
 		DB:        db,
 		Actions:   actions,
 		Timers:    timers,
 		Localiser: localiser,
+		Gpt:       g,
 	}
 
 	return k

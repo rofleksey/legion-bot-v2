@@ -17,6 +17,7 @@ export interface KillersSettings {
   legion: LegionSettings;
   ghostface: GhostFaceSettings;
   doctor: DoctorSettings;
+  pinhead: PinheadSettings;
 }
 
 export interface GeneralKillerSettings {
@@ -56,5 +57,16 @@ export interface DoctorSettings {
   weight: number;
   reactChance: number;
   minDelayBetweenHits: number;
+  timeout: number;
+}
+
+export interface PinheadSettings {
+  enabled: boolean;
+  weight: number;
+  showTopic: boolean;
+  victimCount: number;
+  deepWoundTimeout: number;
+  bleedOutBanTime: number;
+  topics: string;
   timeout: number;
 }

@@ -37,6 +37,24 @@ func (t *TwitchActions) getQueue(channel string) *util.TaskQueue {
 	return t.queues[channel]
 }
 
+func (t *TwitchActions) GetViewerList(channel string) []string {
+	result, err := t.ircClient.Userlist(channel)
+	if err != nil {
+		slog.Error("Error getting viewer list",
+			slog.String("channel", channel),
+			slog.Any("error", err),
+		)
+
+		return []string{}
+	}
+
+	if len(result) == 0 {
+		return []string{}
+	}
+
+	return result
+}
+
 func (t *TwitchActions) DeleteMessage(channel, id string) {
 	t.getQueue(channel).Enqueue(func() {
 		slog.Info("Message has been deleted",

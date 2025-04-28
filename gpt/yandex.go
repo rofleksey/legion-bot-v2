@@ -15,6 +15,8 @@ import (
 const yandexUrl = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
 const ModelUri = "gpt://%s/yandexgpt-lite/rc"
 
+var _ Gpt = (*YandexGpt)(nil)
+
 type YandexGpt struct {
 	cfg    *config.Config
 	client *http.Client
