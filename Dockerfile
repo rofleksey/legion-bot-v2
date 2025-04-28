@@ -15,5 +15,6 @@ WORKDIR /opt
 RUN apk update && apk add --no-cache curl ca-certificates
 COPY --from=builder /opt/legion-bot-v2 /opt/legion-bot-v2
 COPY --from=frontend /opt/dist /opt/frontend/dist
+COPY ./i18n/locales /opt/i18n/locales
 EXPOSE 8080
 CMD [ "./legion-bot-v2" ]
