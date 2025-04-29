@@ -16,7 +16,8 @@ export default defineConfigWithVueTs(
   // Add this configuration to disable the ban-ts-comment rule
   {
     rules: {
-      '@typescript-eslint/ban-ts-comment': 'off'
+      '@typescript-eslint/ban-ts-comment': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
     }
   }
 )

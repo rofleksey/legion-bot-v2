@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/jellydator/ttlcache/v3"
 	"legion-bot-v2/dao"
@@ -157,6 +158,32 @@ func (s *Server) updateSettings(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (s *Server) handleCheatDetect(w http.ResponseWriter, r *http.Request) {
+	var reqBody dao.CheatDetectRequest
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		http.Error(w, "Invalid settings data", http.StatusBadRequest)
+		return
+	}
+
+	slog.Info("Detect cheats request",
+		slog.String("username", reqBody.Username),
+	)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	res, err := s.cheatDetector.Detect(ctx, reqBody.Username)
+	if err != nil {
+		slog.Error("Failed to execute cheat detect request",
+			slog.String("username", reqBody.Username),
+			slog.Any("error", err),
+		)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(res)
 }
 
 func (s *Server) handleValidateToken(w http.ResponseWriter, r *http.Request) {

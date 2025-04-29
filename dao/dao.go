@@ -31,3 +31,7 @@ type ResponseUser struct {
 	ProfileImageURL string `json:"profileImageUrl"`
 	Email           string `json:"email"`
 }
+
+type CheatDetectRequest struct {
+	Username string `json:"username"`
+}

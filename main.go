@@ -9,6 +9,7 @@ import (
 	"legion-bot-v2/api"
 	"legion-bot-v2/bot"
 	"legion-bot-v2/chat"
+	"legion-bot-v2/cheatdetect"
 	"legion-bot-v2/config"
 	"legion-bot-v2/db"
 	"legion-bot-v2/gpt"
@@ -30,39 +31,60 @@ import (
 )
 
 // TODO:
+// redirect to main if no auth
+// fix mobile if no auth (main)
+// login as
+// admin menu
+// display status
+// display problems
+// add more Info icons in the settings
+// show alert about chat language before enabling the bot
 // greetings
-// ai
-// !spin
-// !flashlight
-// myers
 // !clip
-// !perk
-// !addon
-// voting
-// flashlight blind
+// chatbot ai
+// documentation
+// help page (!killer)
+
+// TODO: potential bugs
+// check if messages are being processed sequentially
+
+// TODO: these require link to a steam profile:
+// monitor profile messages
+// monitor stats changes
+
+// TODO: these require the stream monitoring:
 // chase clip with autoupload
 // scoreboard autosave
 // other streamers notification
-// !chatgpt
 // match timestamps
-// dead hard notification
-// ds notification
-// !insult
-// changelog
-// changelog notification
-// help page (!killer)
-// current addons help (!addons) (!perks)
-// chatbot ai
-// monitor profile messages
-// monitor stats changes
+// decisive notification
+// flashlight blind
 // notes about players
 // steam related checks
 // fmp/dbdtools checks discord
 // played before
-// gallery of killers
-// documentation
+// voting
+
+// TODO: these require perks/addons database:
+// !perk
+// !addon
+// other streamers perks
+// current addons help (!addons) (!perks)
+
+// TODO: killer ideas:
+// trapper - user gets into a trap by saying a word from a blacklist, others need to !untrap them or they get hooked
+// dredge - enables emoji-only mode
+// pig - one player gets a head trap - needs to guess a streamer defined word
+// myers
+
+// TODO: these are very minor but require a lot of pain:
 // privacy policy
 // terms
+// !spin
+// !flashlight
+// gallery of killers
+// changelog
+// changelog notification
 
 //go:embed banner.txt
 var banner string
@@ -170,8 +192,10 @@ func main() {
 		chatProducer.Stop()
 	}()
 
+	cheatDetector := cheatdetect.NewDetector()
+
 	slog.Debug("Starting server...")
-	server := api.NewServer(cfg, database, chatProducer)
+	server := api.NewServer(cfg, database, chatProducer, cheatDetector)
 	go func() {
 		if err := server.Run(); err != nil {
 			slog.Error("Server error",

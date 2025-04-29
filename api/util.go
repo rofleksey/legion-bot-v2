@@ -49,7 +49,7 @@ func (s *Server) createJWTToken(user dao.TwitchUser) (string, error) {
 	claims := JWTClaims{
 		TwitchUser: user,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(72 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			Issuer:    "twitch-auth-server",
 		},

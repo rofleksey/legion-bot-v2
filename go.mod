@@ -5,6 +5,7 @@ go 1.24
 require (
 	github.com/elliotchance/pie/v2 v2.9.1
 	github.com/gempir/go-twitch-irc/v4 v4.2.0
+	github.com/go-playground/assert/v2 v2.2.0
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/jellydator/ttlcache/v3 v3.3.0

@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/jellydator/ttlcache/v3"
+	"legion-bot-v2/cheatdetect"
 	"legion-bot-v2/config"
 	"legion-bot-v2/db"
 	"legion-bot-v2/producer"
@@ -15,15 +16,21 @@ import (
 )
 
 type Server struct {
-	cfg          *config.Config
-	oauth2Config oauth2.Config
-	database     db.DB
-	chatProducer producer.Producer
-	stateCache   *ttlcache.Cache[string, struct{}]
-	mux          *http.ServeMux
+	cfg           *config.Config
+	oauth2Config  oauth2.Config
+	database      db.DB
+	chatProducer  producer.Producer
+	cheatDetector *cheatdetect.Detector
+	stateCache    *ttlcache.Cache[string, struct{}]
+	mux           *http.ServeMux
 }
 
-func NewServer(cfg *config.Config, database db.DB, chatProducer producer.Producer) *Server {
+func NewServer(
+	cfg *config.Config,
+	database db.DB,
+	chatProducer producer.Producer,
+	cheatDetector *cheatdetect.Detector,
+) *Server {
 	stateCache := ttlcache.New[string, struct{}](
 		ttlcache.WithTTL[string, struct{}](30 * time.Minute),
 	)
@@ -37,19 +44,24 @@ func NewServer(cfg *config.Config, database db.DB, chatProducer producer.Produce
 			RedirectURL:  cfg.Auth.RedirectURL,
 			Scopes:       []string{"user:read:email"},
 		},
-		database:     database,
-		chatProducer: chatProducer,
-		stateCache:   stateCache,
-		mux:          http.NewServeMux(),
+		database:      database,
+		chatProducer:  chatProducer,
+		cheatDetector: cheatDetector,
+		stateCache:    stateCache,
+		mux:           http.NewServeMux(),
 	}
 
 	server.mux.HandleFunc("/api/auth/login", server.handleLogin)
 	server.mux.HandleFunc("/api/auth/callback", server.handleCallback)
-	server.mux.HandleFunc("/api/settings", server.handleSettings)
 	server.mux.HandleFunc("/api/validate", server.handleValidateToken)
-	server.mux.HandleFunc("/api/__import", server.handleImport)
+
+	server.mux.HandleFunc("/api/settings", server.handleSettings)
+
 	server.mux.HandleFunc("/api/stats/{channel}", server.handleChannelStats)
 	server.mux.HandleFunc("/api/stats/{channel}/{username}", server.handleUserStats)
+
+	server.mux.HandleFunc("/api/__import", server.handleImport)
+	server.mux.HandleFunc("/api/cheatDetect", server.handleCheatDetect)
 
 	fs := http.FileServer(http.Dir("./frontend/dist"))
 	cacheFS := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
