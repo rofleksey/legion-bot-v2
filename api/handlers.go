@@ -167,7 +167,7 @@ func (s *Server) handleCheatDetect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	slog.Info("Detect cheats request",
+	slog.Info("Detect request",
 		slog.String("username", reqBody.Username),
 	)
 

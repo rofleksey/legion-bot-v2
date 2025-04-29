@@ -1,7 +1,59 @@
+<template>
+  <div class="cheat-detection-container">
+    <div class="cheat-detection-header">
+      <h1 class="cheat-detection-title">
+        {{t('cheat_detection.title')}}
+      </h1>
+      <p class="cheat-detection-subtitle">
+        {{t('cheat_detection.subtitle')}}
+      </p>
+    </div>
+
+    <div class="cheat-detection-search">
+      <div class="search-input-container">
+        <input
+          v-model="query"
+          @keyup.enter="searchUsers"
+          class="search-input"
+          :placeholder="t('cheat_detection.enter_username')"
+          type="text"
+        />
+        <button @click="searchUsers" class="search-button" :disabled="isLoading">
+          <span v-if="!isLoading">{{t('cheat_detection.search')}}</span>
+          <span v-else class="spinner"></span>
+        </button>
+      </div>
+    </div>
+
+    <div v-if="hasSearched" class="results-container">
+      <div v-if="isLoading" class="loading-state">
+        <div class="spinner"></div>
+        <p>{{t('cheat_detection.searching')}}</p>
+      </div>
+
+      <div v-else-if="results.length === 0" class="empty-state">
+        <svg class="empty-icon" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,7H13V9H11V7M11,11H13V17H11V11Z" />
+        </svg>
+        <h3>{{t('cheat_detection.no_results')}}</h3>
+        <p>{{t('cheat_detection.username_clean')}}</p>
+      </div>
+
+      <div v-else class="results-list">
+        <div v-for="(user, index) in results" :key="index" class="result-item">
+          <div class="result-username">{{ user.username }}</div>
+          <div class="result-site">{{ user.site }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { ref } from 'vue'
 import {useNotifications} from "@/services/notifications.ts";
 import axios from "axios";
+import {useI18n} from "vue-i18n";
 
 interface DetectedUser {
   username: string
@@ -9,6 +61,7 @@ interface DetectedUser {
 }
 
 const notifications = useNotifications()
+const {t} = useI18n()
 
 const query = ref('')
 const isLoading = ref(false)
@@ -32,55 +85,6 @@ const searchUsers = async () => {
   }
 }
 </script>
-
-<template>
-  <div class="cheat-detection-container">
-    <div class="cheat-detection-header">
-      <h1 class="cheat-detection-title">Cheat Detection Database</h1>
-      <p class="cheat-detection-subtitle">
-        Check if a username has been detected cheating on any gaming platforms
-      </p>
-    </div>
-
-    <div class="cheat-detection-search">
-      <div class="search-input-container">
-        <input
-          v-model="query"
-          @keyup.enter="searchUsers"
-          class="search-input"
-          placeholder="Enter username..."
-          type="text"
-        />
-        <button @click="searchUsers" class="search-button" :disabled="isLoading">
-          <span v-if="!isLoading">Search</span>
-          <span v-else class="spinner"></span>
-        </button>
-      </div>
-    </div>
-
-    <div v-if="hasSearched" class="results-container">
-      <div v-if="isLoading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Searching database...</p>
-      </div>
-
-      <div v-else-if="results.length === 0" class="empty-state">
-        <svg class="empty-icon" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,7H13V9H11V7M11,11H13V17H11V11Z" />
-        </svg>
-        <h3>No results found</h3>
-        <p>This username hasn't been detected cheating in our database.</p>
-      </div>
-
-      <div v-else class="results-list">
-        <div v-for="(user, index) in results" :key="index" class="result-item">
-          <div class="result-username">{{ user.username }}</div>
-          <div class="result-site">{{ user.site }}</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
 
 <style scoped>
 .cheat-detection-container {

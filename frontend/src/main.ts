@@ -94,6 +94,15 @@ const i18n = createI18n({
         "hide_topic": "Hide Topic",
         "topics": "Topic List",
         "weight_description": "This number affects the chance of choosing a given killer. The higher it is, the higher the probability. For example, if killer A has a weight of 100, and killer B has a weight of 300, then the chance that B will be chosen is three times higher than A."
+      },
+      "cheat_detection": {
+        "title": "Cheater Database",
+        "subtitle": "Check if a username has been detected on cheating forums",
+        "search": "Search",
+        "searching": "Searching database...",
+        "enter_username": "Enter username...",
+        "no_results": "No results found",
+        "username_clean": "This username hasn't been detected cheating in our database."
       }
     },
     ru: {
@@ -175,7 +184,16 @@ const i18n = createI18n({
         "hide_topic": "Скрыть Тему",
         "topics": "Список Тем",
         "weight_description": "Это число влияет на шанс выбора данного убийцы. Чем оно выше - тем выше вероятность. Например, если у убийцы А вес 100, а у убийцы Б вес 300, то шанс того, что будет выбран Б в три раза выше, чем А.",
-      }
+      },
+      "cheat_detection": {
+        "title": "База данных читеров",
+        "subtitle": "Проверьте, обнаружено ли имя пользователя на форумах читеров",
+        "search": "Поиск",
+        "searching": "Поиск в базе данных...",
+        "enter_username": "Введите имя пользователя...",
+        "no_results": "Результатов не найдено",
+        "username_clean": "Это имя пользователя не обнаружено в нашей базе данных читеров."
+      },
     }
   }
 })
