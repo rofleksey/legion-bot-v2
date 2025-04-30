@@ -146,6 +146,11 @@ func main() {
 		log.Fatalf("Failed to init twitch clients: %v", err)
 	}
 
+	appClient, err := util.InitAppTwitchClient(cfg)
+	if err != nil {
+		log.Fatalf("Failed to init app twitch client: %v", err)
+	}
+
 	var chatActions chat.Actions
 	if os.Getenv("ENVIRONMENT") == "production" {
 		chatActions = chat.NewTwitchActions(ircClient, helixClient)
@@ -179,7 +184,7 @@ func main() {
 	botInstance := bot.NewBot(database, chatActions, timerManager, localiser, gptInstance, killerMap)
 	botInstance.Init()
 
-	chatProducer := producer.NewTwitchProducer(cfg, ircClient, helixClient, database, botInstance)
+	chatProducer := producer.NewTwitchProducer(cfg, ircClient, helixClient, appClient, database, botInstance)
 	if os.Getenv("ENVIRONMENT") != "production" {
 		chatProducer.AddChannel("tru3ta1ent")
 	}

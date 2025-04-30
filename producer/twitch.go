@@ -19,6 +19,7 @@ type TwitchProducer struct {
 	cfg         *config.Config
 	ircClient   *twitch.Client
 	helixClient *helix.Client
+	appClient   *helix.Client
 	database    db.DB
 	botInstance *bot.Bot
 }
@@ -27,6 +28,7 @@ func NewTwitchProducer(
 	cfg *config.Config,
 	ircClient *twitch.Client,
 	helixClient *helix.Client,
+	appClient *helix.Client,
 	database db.DB,
 	botInstance *bot.Bot,
 ) *TwitchProducer {
@@ -34,6 +36,7 @@ func NewTwitchProducer(
 		cfg:         cfg,
 		ircClient:   ircClient,
 		helixClient: helixClient,
+		appClient:   appClient,
 		database:    database,
 		botInstance: botInstance,
 	}
@@ -144,10 +147,10 @@ func (p *TwitchProducer) tryAddOutgoingRaidsListener(channel string) {
 	broadcasterID := broadcasterResp.Data.Users[0].ID
 
 	if raidSubId != "" {
-		_, _ = p.helixClient.RemoveEventSubSubscription(raidSubId)
+		_, _ = p.appClient.RemoveEventSubSubscription(raidSubId)
 	}
 
-	resp, err := p.helixClient.CreateEventSubSubscription(&helix.EventSubSubscription{
+	resp, err := p.appClient.CreateEventSubSubscription(&helix.EventSubSubscription{
 		Type:    helix.EventSubTypeChannelRaid,
 		Version: "1",
 		Condition: helix.EventSubCondition{
@@ -190,7 +193,7 @@ func (p *TwitchProducer) tryRemoveOutgoingRaidsListener(channel string) {
 	raidSubId := chanState.Subs.RaidID
 
 	if raidSubId != "" {
-		_, _ = p.helixClient.RemoveEventSubSubscription(raidSubId)
+		_, _ = p.appClient.RemoveEventSubSubscription(raidSubId)
 	}
 
 	p.database.UpdateState(channel, func(state *db.ChannelState) {
