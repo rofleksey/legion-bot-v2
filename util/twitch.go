@@ -44,13 +44,12 @@ func InitTwitchClients(clientID, accessToken string) (*twitch.Client, *helix.Cli
 	ircClient := twitch.NewClient(clientID, "oauth:"+accessToken)
 
 	helixClient, err := helix.NewClient(&helix.Options{
-		ClientID: clientID,
+		ClientID:        clientID,
+		UserAccessToken: accessToken,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create helix client: %w", err)
 	}
-
-	helixClient.SetUserAccessToken(accessToken)
 
 	return ircClient, helixClient, nil
 }

@@ -86,8 +86,6 @@ func (t *TwitchActions) DeleteMessage(channel, id string) {
 		}
 		channelUser := channelResp.Data.Users[0]
 
-		t.helixClient.SetUserAccessToken(botUser.ID)
-
 		banResp, err := t.helixClient.DeleteChatMessage(&helix.DeleteChatMessageParams{
 			BroadcasterID: channelUser.ID,
 			ModeratorID:   botUser.ID,
@@ -218,8 +216,6 @@ func (t *TwitchActions) TimeoutUser(channel, username string, duration time.Dura
 		}
 		banUser := userResp.Data.Users[0]
 
-		t.helixClient.SetUserAccessToken(botUser.ID)
-
 		banResp, err := t.helixClient.BanUser(&helix.BanUserParams{
 			BroadcasterID: channelUser.ID,
 			ModeratorId:   botUser.ID,
@@ -289,8 +285,6 @@ func (t *TwitchActions) UnbanUser(channel, username string) {
 			return
 		}
 		banUser := userResp.Data.Users[0]
-
-		t.helixClient.SetUserAccessToken(botUser.ID)
 
 		unbanResp, err := t.helixClient.UnbanUser(&helix.UnbanUserParams{
 			BroadcasterID: channelUser.ID,
