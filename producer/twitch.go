@@ -125,10 +125,18 @@ func (p *TwitchProducer) tryAddOutgoingRaidsListener(channel string) {
 	broadcasterResp, err := p.helixClient.GetUsers(&helix.UsersParams{
 		Logins: []string{channel},
 	})
-	if err != nil || len(broadcasterResp.Data.Users) == 0 {
+	if err != nil {
 		slog.Error("Failed to get channel user info from helix for outgoing raids",
 			slog.String("channel", channel),
 			slog.Any("error", err),
+		)
+		return
+	}
+	if len(broadcasterResp.Data.Users) == 0 {
+		slog.Error("Failed to get channel user info from helix for outgoing raids",
+			slog.String("channel", channel),
+			slog.String("error", broadcasterResp.Error),
+			slog.String("errorMsg", broadcasterResp.ErrorMessage),
 		)
 		return
 	}
@@ -151,10 +159,18 @@ func (p *TwitchProducer) tryAddOutgoingRaidsListener(channel string) {
 			Secret:   p.cfg.Chat.WebHookSecret,
 		},
 	})
-	if err != nil || len(resp.Data.EventSubSubscriptions) == 0 {
+	if err != nil {
 		slog.Error("Failed to create event sub for raids",
 			slog.String("channel", channel),
 			slog.Any("error", err),
+		)
+		return
+	}
+	if len(resp.Data.EventSubSubscriptions) == 0 {
+		slog.Error("Failed to create event sub for raids",
+			slog.String("channel", channel),
+			slog.String("error", resp.Error),
+			slog.String("errorMsg", resp.ErrorMessage),
 		)
 		return
 	}
