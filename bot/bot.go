@@ -239,6 +239,9 @@ func (b *Bot) HandleCommands(userMsg db.Message) bool {
 
 		return true
 
+	case strings.HasPrefix(userMsg.Text, "!ltest") && userMsg.Username == util.BotOwner:
+		b.TimeoutUser(userMsg.Channel, "rofleksey", 10*time.Second, "")
+
 	case strings.Contains(userMsg.Text, "@"+util.BotUsername) || strings.Contains(userMsg.Text, "легион") || strings.Contains(userMsg.Text, "legion"):
 		responseText, err := b.GenericResponse(lang, userMsg.Text)
 		if err != nil {
