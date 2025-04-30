@@ -1,6 +1,20 @@
 <template>
   <div class="toggle-container">
-    <label v-if="label" class="toggle-label">{{ label }}</label>
+    <div v-if="label" class="toggle-label-container">
+      <label class="toggle-label">{{ label }}</label>
+      <button
+        v-if="showHelpIcon"
+        class="toggle-help-icon"
+        @click="emitHelpClick"
+        aria-label="Help"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 16V12" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 8H12.01" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
     <div
       class="toggle-switch"
       :class="{ 'toggle-switch--active': modelValue }"
@@ -14,22 +28,30 @@
 </template>
 
 <script setup lang="ts">
-
 interface Props {
   modelValue: boolean;
-  label: string;
+  label?: string;
+  showHelpIcon?: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  label: '',
+  showHelpIcon: false
+});
 
 interface Emits {
   (e: 'update:modelValue', value: boolean): void;
+  (e: 'help-click'): void;
 }
 
 const emit = defineEmits<Emits>();
 
 function toggle() {
   emit('update:modelValue', !props.modelValue);
+}
+
+function emitHelpClick() {
+  emit('help-click');
 }
 </script>
 
@@ -40,12 +62,34 @@ function toggle() {
   gap: 0.5rem;
 }
 
+.toggle-label-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .toggle-label {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 0.875rem;
   font-weight: 500;
   color: #e2e8f0;
   user-select: none;
+}
+
+.toggle-help-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #94A3B8;
+  transition: color 0.2s;
+}
+
+.toggle-help-icon:hover {
+  color: #CBD5E1;
 }
 
 .toggle-switch {

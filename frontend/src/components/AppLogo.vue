@@ -22,6 +22,12 @@ const router = useRouter();
   cursor: pointer;
 }
 
+@media (max-width: 1024px) {
+  .logo {
+    font-size: 1.3rem;
+  }
+}
+
 .logo span {
   color: var(--primary);
 }

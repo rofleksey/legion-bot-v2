@@ -3,12 +3,14 @@ import {defineStore} from 'pinia'
 import type {User} from "@/lib/types.ts";
 import axios from 'axios'
 import {useNotifications} from "@/services/notifications.ts";
+import {useRouter} from "vue-router";
 
 const localStorageTokenKey = 'legionbot-token'
 const localStorageUserKey = 'legionbot-user'
 
 export const useUserStore = defineStore('user', () => {
   const notifications = useNotifications()
+  const router = useRouter()
 
   const localTokenStr = localStorage.getItem(localStorageTokenKey)
   const token = ref<string | null>(localTokenStr || null);
@@ -48,6 +50,7 @@ export const useUserStore = defineStore('user', () => {
     token.value = null
     localStorage.removeItem(localStorageUserKey)
     localStorage.removeItem(localStorageTokenKey)
+    router.push('/')
     notifications.warning('Logged out')
   }
 

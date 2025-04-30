@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"fmt"
 	"github.com/elliotchance/pie/v2"
 	"github.com/jellydator/ttlcache/v3"
 	"legion-bot-v2/chat"
@@ -323,21 +324,7 @@ func (b *Bot) HandleMessage(userMsg db.Message) {
 			return
 		}
 
-		killerList := pie.Filter(pie.Values(b.killerMap), func(k killer.Killer) bool {
-			return k.Enabled(userMsg.Channel)
-		})
-
-		if len(killerList) == 0 {
-			return
-		}
-
-		viewerCount := b.getCachedViewerCount(userMsg.Channel)
-		if viewerCount < generalKillerSettings.MinNumberOfViewers {
-			return
-		}
-
-		nextKiller := selectKiller(killerList, userMsg.Channel)
-		nextKiller.Start(userMsg)
+		b.startRandomKiller(userMsg)
 		return
 	}
 
@@ -353,7 +340,88 @@ func (b *Bot) HandleMessage(userMsg db.Message) {
 	curKiller.HandleMessage(userMsg)
 }
 
-func selectKiller(arr []killer.Killer, channel string) killer.Killer {
+func (b *Bot) HandleIncomingRaid(channel, otherChannel string) {
+	chanState := b.GetState(channel)
+	chatSettings := chanState.Settings.Chat
+
+	if !chatSettings.StartKillerOnRaid || chanState.Killer != "" {
+		return
+	}
+
+	b.startRandomKiller(db.Message{
+		Channel:  chanState.Channel,
+		Username: util.BotUsername,
+		IsMod:    false,
+		Text:     "",
+	})
+}
+
+func (b *Bot) HandleOutgoingRaid(channel, otherChannel string) {
+	chanState := b.GetState(channel)
+
+	chatSettings := chanState.Settings.Chat
+	followRaids := chatSettings.FollowRaids
+	followRaidsMessage := strings.TrimSpace(chatSettings.FollowRaidsMessage)
+
+	if !followRaids || followRaidsMessage == "" {
+		return
+	}
+
+	b.SendForeignMessage(otherChannel, followRaidsMessage)
+}
+
+func (b *Bot) startRandomKiller(userMsg db.Message) {
+	chanState := b.GetState(userMsg.Channel)
+	generalKillerSettings := chanState.Settings.Killers.General
+
+	if chanState.Killer != "" {
+		return
+	}
+
+	killerList := pie.Filter(pie.Values(b.killerMap), func(k killer.Killer) bool {
+		return k.Enabled(userMsg.Channel)
+	})
+
+	if len(killerList) == 0 {
+		return
+	}
+
+	viewerCount := b.getCachedViewerCount(userMsg.Channel)
+	if viewerCount < generalKillerSettings.MinNumberOfViewers {
+		return
+	}
+
+	nextKiller := selectKillerWeighted(killerList, userMsg.Channel)
+	nextKiller.Start(userMsg)
+}
+
+func (b *Bot) StartSpecificKiller(channel, name string) error {
+	chanState := b.GetState(channel)
+
+	if chanState.Killer != "" {
+		return fmt.Errorf("killer is already running")
+	}
+
+	nextKiller, ok := b.killerMap[name]
+	if !ok {
+		slog.Error("Killer not found",
+			slog.String("channel", channel),
+			slog.String("name", name),
+		)
+		return fmt.Errorf("killer not found")
+	}
+
+	nextKiller.Start(db.Message{
+		Channel:  chanState.Channel,
+		Username: util.BotUsername,
+		IsMod:    false,
+		Text:     "",
+	})
+
+	return nil
+}
+
+func selectKillerWeighted(arr []killer.Killer, channel string) killer.Killer {
 	totalWeight := 0
 	for _, k := range arr {
 		totalWeight += k.Weight(channel)

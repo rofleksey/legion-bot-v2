@@ -32,6 +32,7 @@ import {useRoute} from "vue-router";
 import {useI18n} from "vue-i18n";
 import axios from "axios";
 import {useNotifications} from "@/services/notifications.ts";
+import {errorToString} from "@/lib/misc.ts";
 
 const notifications = useNotifications();
 const {t} = useI18n()
@@ -53,7 +54,7 @@ function fetchStats() {
       loading.value = false;
     })
     .catch((e) => {
-      notifications.error('Error fetching stats', e?.toString?.() ?? '');
+      notifications.error('Error fetching stats', errorToString(e));
       error.value = true;
     }).finally(() => {
       loading.value = false;

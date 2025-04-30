@@ -21,6 +21,11 @@ type ChannelState struct {
 	Stats       map[string]int   `json:"stats"`
 	UserMap     map[string]*User `json:"userMap"`
 	Settings    Settings         `json:"settings"`
+	Subs        ChannelSubs      `json:"subs"`
+}
+
+type ChannelSubs struct {
+	RaidID string `json:"raidId"`
 }
 
 type Message struct {

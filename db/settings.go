@@ -9,6 +9,13 @@ type Settings struct {
 	Disabled bool            `json:"disabled"`
 	Language string          `json:"language"`
 	Killers  KillersSettings `json:"killers"`
+	Chat     ChatSettings    `json:"chat"`
+}
+
+type ChatSettings struct {
+	StartKillerOnRaid  bool   `json:"startKillerOnRaid"`
+	FollowRaids        bool   `json:"followRaids"`
+	FollowRaidsMessage string `json:"followRaidsMessage"`
 }
 
 type KillersSettings struct {
@@ -22,7 +29,7 @@ type KillersSettings struct {
 func DefaultSettings() Settings {
 	return Settings{
 		Disabled: os.Getenv("ENVIRONMENT") == "production",
-		Language: "en",
+		Language: "ru",
 		Killers: KillersSettings{
 			General:   DefaultGeneralKillerSettings(),
 			Legion:    DefaultLegionSettings(),

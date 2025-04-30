@@ -3,13 +3,9 @@
     <div class="settings-header">
       <h1 class="settings-title">{{ t('settings.title') }}</h1>
       <div class="settings-actions">
-        <button
-          class="settings-save-button"
-          :disabled="isSaving"
-          @click="saveSettings"
-        >
-          {{ isSaving ? t('settings.saving') : t('settings.save_button') }}
-        </button>
+        <AppButton :loading="postLoading"  @click="saveSettings">
+          {{ postLoading ? t('settings.saving') : t('settings.save_button') }}
+        </AppButton>
       </div>
     </div>
 
@@ -70,6 +66,9 @@
               show-help-icon
               @help-click="Dialog.show(t('settings.weight_description'))"
             />
+            <AppButton :loading="postLoading" @click="summonKiller('legion')">
+              {{ t('settings.summon') }}
+            </AppButton>
           </div>
           <div class="settings-grid">
             <AppNumberInput
@@ -140,6 +139,9 @@
               show-help-icon
               @help-click="Dialog.show(t('settings.weight_description'))"
             />
+            <AppButton :loading="postLoading" @click="summonKiller('ghostface')">
+              {{ t('settings.summon') }}
+            </AppButton>
           </div>
           <div class="settings-grid">
             <AppDurationInput
@@ -177,6 +179,9 @@
               show-help-icon
               @help-click="Dialog.show(t('settings.weight_description'))"
             />
+            <AppButton :loading="postLoading" @click="summonKiller('doctor')">
+              {{ t('settings.summon') }}
+            </AppButton>
           </div>
           <div class="settings-grid">
             <AppDurationInput
@@ -210,6 +215,9 @@
               show-help-icon
               @help-click="Dialog.show(t('settings.weight_description'))"
             />
+            <AppButton :loading="postLoading" @click="summonKiller('pinhead')">
+              {{ t('settings.summon') }}
+            </AppButton>
           </div>
           <div class="settings-grid">
             <AppSwitch
@@ -239,6 +247,29 @@
           </div>
         </div>
       </div>
+
+      <div class="settings-section">
+        <h2 class="settings-section-title">{{ t('settings.chat_title') }}</h2>
+        <div class="settings-subsection">
+          <h3 class="settings-subsection-title">{{ t('settings.raids') }}</h3>
+          <div class="settings-grid">
+            <AppSwitch
+              v-model="settings.chat.startKillerOnRaid"
+              :label="t('settings.start_killer_on_raids')"
+              show-help-icon
+              @help-click="Dialog.show(t('settings.start_killer_on_raids_info'))"
+            />
+            <AppSwitch
+              v-model="settings.chat.followRaids"
+              :label="t('settings.follow_raids')"
+            />
+            <AppStringInput
+              v-model="settings.chat.followRaidsMessage"
+              :label="t('settings.follow_raids_message')"
+            />
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -258,6 +289,8 @@ import {useI18n} from "vue-i18n";
 import AppQuotation from "@/components/AppQuotation.vue";
 import AppStringInput from "@/components/AppStringInput.vue";
 import {Dialog} from "@/services/dialog.ts";
+import AppButton from "@/components/AppButton.vue";
+import {errorToString} from "@/lib/misc.ts";
 
 const {t} = useI18n()
 const notifications = useNotifications()
@@ -266,7 +299,7 @@ const userStore = useUserStore()
 const token = computed(() => userStore.token)
 
 const settings = ref<Settings | null>(null);
-const isSaving = ref(false);
+const postLoading = ref(false);
 
 function updateDisabled(val: boolean) {
   if (!settings.value) return;
@@ -285,16 +318,30 @@ async function fetchSettings() {
 }
 
 async function saveSettings() {
-  isSaving.value = true;
+  postLoading.value = true;
   try {
     await axios.post('/api/settings', settings.value, {
       headers: {Authorization: `Bearer ${token.value}`}
     });
     notifications.info(t('settings.save_success'), 'OK')
-  } catch (error) {
-    notifications.error(t('settings.save_failed'), error?.toString?.() ?? '');
+  } catch (e) {
+    notifications.error(t('settings.save_failed'), errorToString(e));
   } finally {
-    isSaving.value = false;
+    postLoading.value = false;
+  }
+}
+
+async function summonKiller(name: string) {
+  postLoading.value = true;
+  try {
+    await axios.post('/api/summonKiller', { name }, {
+      headers: {Authorization: `Bearer ${token.value}`}
+    });
+    notifications.info(t('settings.summoned'), 'OK')
+  } catch (e) {
+    notifications.error(t('settings.summon_failed'), errorToString(e));
+  } finally {
+    postLoading.value = false;
   }
 }
 
@@ -324,26 +371,6 @@ onMounted(fetchSettings);
 .settings-actions {
   display: flex;
   gap: 12px;
-}
-
-.settings-save-button {
-  padding: 8px 16px;
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-  border: none;
-  border-radius: 4px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.settings-save-button:hover {
-  background-color: var(--primary-dark);
-}
-
-.settings-save-button:disabled {
-  background-color: var(--muted);
-  cursor: not-allowed;
 }
 
 .settings-content {

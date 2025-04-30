@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import ChannelStatsView from "@/views/ChannelStatsView.vue";
 import SettingsView from "@/views/SettingsView.vue";
 import CheatDetect from "@/views/CheatDetect.vue";
+import {useUserStore} from "@/stores/user.ts";
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -16,6 +17,13 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: SettingsView,
+      beforeEnter: () => {
+        const userStore = useUserStore();
+        if (userStore.user) {
+          return
+        }
+        return '/'
+      },
     },
     {
       path: '/stats/:channel',

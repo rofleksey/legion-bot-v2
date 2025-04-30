@@ -19,7 +19,10 @@ type TwitchActions struct {
 	mu          sync.Mutex
 }
 
-func NewTwitchActions(ircClient *twitch.Client, helixClient *helix.Client) *TwitchActions {
+func NewTwitchActions(
+	ircClient *twitch.Client,
+	helixClient *helix.Client,
+) *TwitchActions {
 	return &TwitchActions{
 		ircClient:   ircClient,
 		helixClient: helixClient,
@@ -168,6 +171,62 @@ func (t *TwitchActions) SendMessage(channel, text string) {
 		)
 
 		t.ircClient.Say(channel, text)
+	})
+}
+
+func (t *TwitchActions) SendForeignMessage(channel, text string) {
+	t.getQueue(channel).Enqueue(func() {
+		slog.Info("Send foreign message",
+			slog.String("channel", channel),
+			slog.String("text", text),
+		)
+
+		botResp, err := t.helixClient.GetUsers(&helix.UsersParams{
+			Logins: []string{util.BotUsername},
+		})
+		if err != nil || len(botResp.Data.Users) == 0 {
+			slog.Error("Error getting bot user",
+				slog.String("channel", channel),
+				slog.Any("error", err),
+			)
+			return
+		}
+		botUser := botResp.Data.Users[0]
+
+		channelResp, err := t.helixClient.GetUsers(&helix.UsersParams{
+			Logins: []string{channel},
+		})
+		if err != nil || len(channelResp.Data.Users) == 0 {
+			slog.Error("Error getting channel user",
+				slog.String("channel", channel),
+				slog.Any("error", err),
+			)
+			return
+		}
+		channelUser := channelResp.Data.Users[0]
+
+		sendMsgResp, err := t.helixClient.SendChatMessage(&helix.SendChatMessageParams{
+			BroadcasterID: channelUser.ID,
+			SenderID:      botUser.ID,
+			Message:       text,
+		})
+		if err != nil {
+			slog.Error("Error sending foreign message",
+				slog.String("channel", channel),
+				slog.String("message", text),
+				slog.Any("error", err),
+			)
+			return
+		}
+
+		if sendMsgResp.StatusCode >= 400 {
+			slog.Error("Send foreign message API error",
+				slog.String("channel", channel),
+				slog.String("message", text),
+				slog.String("error", sendMsgResp.Error),
+				slog.String("errorMsg", sendMsgResp.ErrorMessage),
+			)
+		}
 	})
 }
 

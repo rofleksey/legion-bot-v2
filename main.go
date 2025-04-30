@@ -31,10 +31,7 @@ import (
 )
 
 // TODO:
-// activate on raids
-// activate manually
-// redirect to main if no auth
-// fix mobile if no auth (main)
+// ascii art on stream start
 // login as
 // admin menu
 // display status
@@ -43,9 +40,9 @@ import (
 // show alert about chat language before enabling the bot
 // greetings
 // !clip
-// chatbot ai
+// improve chatbot ai
 // documentation
-// help page (!killer)
+// killer specific help page (!killer) + generic (!legionbot) help page
 
 // TODO: potential bugs
 // check if messages are being processed sequentially
@@ -55,6 +52,7 @@ import (
 // monitor stats changes
 
 // TODO: these require the stream monitoring:
+// rewind the whole stream
 // chase clip with autoupload
 // scoreboard autosave
 // other streamers notification
@@ -77,9 +75,11 @@ import (
 // trapper - user gets into a trap by saying a word from a blacklist, others need to !untrap them or they get hooked
 // dredge - enables emoji-only mode
 // pig - one player gets a head trap - needs to guess a streamer defined word
+// pyramid head - condemn -> final judgement (permanent ban)
 // myers
 
 // TODO: these are very minor but require a lot of pain:
+// stop all functions on stop
 // privacy policy
 // terms
 // !spin
@@ -179,7 +179,7 @@ func main() {
 	botInstance := bot.NewBot(database, chatActions, timerManager, localiser, gptInstance, killerMap)
 	botInstance.Init()
 
-	chatProducer := producer.NewTwitchProducer(ircClient, helixClient, database, botInstance)
+	chatProducer := producer.NewTwitchProducer(cfg, ircClient, helixClient, database, botInstance)
 	if os.Getenv("ENVIRONMENT") != "production" {
 		chatProducer.AddChannel("tru3ta1ent")
 	}
@@ -197,7 +197,7 @@ func main() {
 	cheatDetector := cheatdetect.NewDetector()
 
 	slog.Debug("Starting server...")
-	server := api.NewServer(cfg, database, chatProducer, cheatDetector)
+	server := api.NewServer(cfg, botInstance, database, chatProducer, cheatDetector)
 	go func() {
 		if err := server.Run(); err != nil {
 			slog.Error("Server error",

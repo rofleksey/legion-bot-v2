@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/jellydator/ttlcache/v3"
+	"legion-bot-v2/bot"
 	"legion-bot-v2/cheatdetect"
 	"legion-bot-v2/config"
 	"legion-bot-v2/db"
@@ -18,6 +19,7 @@ import (
 type Server struct {
 	cfg           *config.Config
 	oauth2Config  oauth2.Config
+	bot           *bot.Bot
 	database      db.DB
 	chatProducer  producer.Producer
 	cheatDetector *cheatdetect.Detector
@@ -27,6 +29,7 @@ type Server struct {
 
 func NewServer(
 	cfg *config.Config,
+	bot *bot.Bot,
 	database db.DB,
 	chatProducer producer.Producer,
 	cheatDetector *cheatdetect.Detector,
@@ -37,6 +40,7 @@ func NewServer(
 
 	server := Server{
 		cfg: cfg,
+		bot: bot,
 		oauth2Config: oauth2.Config{
 			ClientID:     cfg.Auth.ClientID,
 			ClientSecret: cfg.Auth.ClientSecret,
@@ -59,8 +63,10 @@ func NewServer(
 
 	server.mux.HandleFunc("/api/stats/{channel}", server.handleChannelStats)
 	server.mux.HandleFunc("/api/stats/{channel}/{username}", server.handleUserStats)
+	server.mux.HandleFunc("/api/summonKiller", server.handleSummonKiller)
 
-	server.mux.HandleFunc("/api/__import", server.handleImport)
+	server.mux.HandleFunc("/api/webhook/raid", server.handleOutgoingRaid)
+
 	server.mux.HandleFunc("/api/cheatDetect", server.handleCheatDetect)
 
 	fs := http.FileServer(http.Dir("./frontend/dist"))

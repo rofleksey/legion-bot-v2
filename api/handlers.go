@@ -1,15 +1,19 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"github.com/jellydator/ttlcache/v3"
+	"github.com/nicklaw5/helix/v2"
+	"io"
 	"legion-bot-v2/dao"
 	"legion-bot-v2/db"
-	"legion-bot-v2/util"
+	"log"
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -186,6 +190,104 @@ func (s *Server) handleCheatDetect(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
+func (s *Server) handleSummonKiller(w http.ResponseWriter, r *http.Request) {
+	claims, err := s.authenticateRequest(r)
+	if err != nil {
+		http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	var reqBody dao.SummonKillerRequest
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		http.Error(w, "Invalid killer data", http.StatusBadRequest)
+		return
+	}
+
+	slog.Info("Summon killer request",
+		slog.String("name", reqBody.Name),
+	)
+
+	if err = s.bot.StartSpecificKiller(claims.TwitchUser.Login, reqBody.Name); err != nil {
+		slog.Error("Failed to summon killer manually",
+			slog.String("channel", claims.TwitchUser.Login),
+			slog.String("name", reqBody.Name),
+			slog.Any("error", err),
+		)
+
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+type eventSubNotification struct {
+	Subscription helix.EventSubSubscription `json:"subscription"`
+	Challenge    string                     `json:"challenge"`
+	Event        json.RawMessage            `json:"event"`
+}
+
+func (s *Server) handleOutgoingRaid(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		slog.Error("Failed to read outgoing raid body",
+			slog.Any("error", err),
+		)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	if !helix.VerifyEventSubNotification(s.cfg.Chat.WebHookSecret, r.Header, string(body)) {
+		slog.Error("Invalid signature for outgoing raid")
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	log.Println("Verified signature for raid subscription")
+
+	var vals eventSubNotification
+	err = json.NewDecoder(bytes.NewReader(body)).Decode(&vals)
+	if err != nil {
+		slog.Error("Failed to decode outgoing raid general body",
+			slog.Any("error", err),
+		)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if vals.Challenge != "" {
+		w.Write([]byte(vals.Challenge))
+		return
+	}
+
+	var raidEvent helix.EventSubChannelRaidEvent
+
+	err = json.NewDecoder(bytes.NewReader(vals.Event)).Decode(&raidEvent)
+	if err != nil {
+		slog.Error("Failed to decode outgoing raid body",
+			slog.Any("error", err),
+		)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	fromChannel := strings.ReplaceAll(raidEvent.FromBroadcasterUserLogin, "#", "")
+	toChannel := strings.ReplaceAll(raidEvent.ToBroadcasterUserLogin, "#", "")
+
+	slog.Error("Outgoing raid",
+		slog.String("from", fromChannel),
+		slog.String("to", toChannel),
+		slog.Int("viewers", raidEvent.Viewers),
+	)
+
+	go s.bot.HandleOutgoingRaid(fromChannel, toChannel)
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("ok"))
+}
+
 func (s *Server) handleValidateToken(w http.ResponseWriter, r *http.Request) {
 	claims, err := s.authenticateRequest(r)
 	if err != nil {
@@ -226,40 +328,4 @@ func (s *Server) handleUserStats(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user.Stats)
-}
-
-func (s *Server) handleImport(w http.ResponseWriter, r *http.Request) {
-	claims, err := s.authenticateRequest(r)
-	if err != nil {
-		http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
-		return
-	}
-
-	if claims.Login != util.BotOwner {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
-	}
-
-	var req dao.ImportRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	for _, legion := range req.Legions {
-		if legion.Settings.Language == "" {
-			legion.Settings.Language = "en"
-		}
-
-		s.database.UpdateState(legion.Channel, func(state *db.ChannelState) {
-			state.Channel = legion.Channel
-			state.Date = time.Unix(0, legion.Date*int64(time.Millisecond))
-			state.Stats = legion.Stats
-			state.UserMap = legion.UserMap
-			state.Settings = legion.Settings
-		})
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
 }

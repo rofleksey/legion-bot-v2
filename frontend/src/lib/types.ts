@@ -10,6 +10,13 @@ export interface Settings {
   disabled: boolean;
   language: string;
   killers: KillersSettings;
+  chat: ChatSettings;
+}
+
+export interface ChatSettings {
+  startKillerOnRaid: boolean;
+  followRaids: boolean;
+  followRaidsMessage: string;
 }
 
 export interface KillersSettings {

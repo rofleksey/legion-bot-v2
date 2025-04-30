@@ -16,7 +16,7 @@ const i18n = createI18n({
   fallbackLocale: 'en',
   messages: {
     en: {
-      twitch_login: 'Login with Twitch',
+      login: 'Login',
       app_title: 'Bring The Entity\'s Terror To Your Chat',
       app_description: 'Legion Bot stalks your chat like a Dead by Daylight killer, striking unpredictably and timing out chatters on the fifth hit. Customize your killer, attack frequency, and AI responses for maximum suspense.',
       get_started: 'Get started',
@@ -42,6 +42,7 @@ const i18n = createI18n({
       loading: 'Loading statistics...',
       error_loading: 'Failed to load statistics',
       retry: 'Try Again',
+      cheat_detector: 'Check user',
       stats: {
         bleedOuts: 'Bleed Outs',
         bodyBlock: 'Body Blocks',
@@ -93,7 +94,16 @@ const i18n = createI18n({
         "show_topic": "Show Topic",
         "hide_topic": "Hide Topic",
         "topics": "Topic List",
-        "weight_description": "This number affects the chance of choosing a given killer. The higher it is, the higher the probability. For example, if killer A has a weight of 100, and killer B has a weight of 300, then the chance that B will be chosen is three times higher than A."
+        "weight_description": "This number affects the chance of choosing a given killer. The higher it is, the higher the probability. For example, if killer A has a weight of 100, and killer B has a weight of 300, then the chance that B will be chosen is three times higher than A.",
+        "start_killer_on_raids": "Start Killer On Raids",
+        "start_killer_on_raids_info": "A killer will be launched on YOUR channel on every raid (if one isn't already active)",
+        "summon": "Summon",
+        "summoned": "Killer summoned",
+        "summon_failed": "Failed to summon killer",
+        "chat_title": "Chat",
+        "raids": "Raids",
+        "follow_raids": "Follow Outgoing Raids",
+        "follow_raids_message": "Message To Send",
       },
       "cheat_detection": {
         "title": "Cheater Database",
@@ -106,7 +116,7 @@ const i18n = createI18n({
       }
     },
     ru: {
-      twitch_login: 'Войти через Twitch',
+      login: 'Войти',
       app_title: 'Вселите Ужас Сущности в Ваш Чат',
       app_description: 'Легион Бот охотится за вашими зрителями как убийца из Dead by Daylight — нападает неожиданно, а после пятого удара отправляет нарушителей в таймаут. Настраивайте персонажа, частоту атак и ответы ИИ для максимального погружения.',
       get_started: 'Начать',
@@ -132,6 +142,7 @@ const i18n = createI18n({
       loading: 'Загрузка статистики...',
       error_loading: 'Ошибка загрузки статистики',
       retry: 'Попробовать снова',
+      cheat_detector: 'Проверить пользователя',
       stats: {
         bleedOuts: 'Истеканий',
         bodyBlock: 'Боди Блоков',
@@ -184,6 +195,15 @@ const i18n = createI18n({
         "hide_topic": "Скрыть Тему",
         "topics": "Список Тем",
         "weight_description": "Это число влияет на шанс выбора данного убийцы. Чем оно выше - тем выше вероятность. Например, если у убийцы А вес 100, а у убийцы Б вес 300, то шанс того, что будет выбран Б в три раза выше, чем А.",
+        "start_killer_on_raids": "Запускать Убийцу При Рейдах",
+        "start_killer_on_raids_info": "При каждом рейде на ВАШ канал будет запущен убийца (если он уже не активен)",
+        "summon": "Призвать",
+        "summoned": "Убийца призван",
+        "summon_failed": "Не удалось призвать убийцу",
+        "chat_title": "Чат",
+        "raids": "🚀 Рейды",
+        "follow_raids": "Переходить по исходящим рейдам",
+        "follow_raids_message": "Какую фразу писать",
       },
       "cheat_detection": {
         "title": "База данных читеров",

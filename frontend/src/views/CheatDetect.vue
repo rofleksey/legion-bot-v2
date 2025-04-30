@@ -54,6 +54,7 @@ import { ref } from 'vue'
 import {useNotifications} from "@/services/notifications.ts";
 import axios from "axios";
 import {useI18n} from "vue-i18n";
+import {errorToString} from "@/lib/misc.ts";
 
 interface DetectedUser {
   username: string
@@ -77,8 +78,8 @@ const searchUsers = async () => {
   try {
     const response = await axios.post('/api/cheatDetect', { username: query.value })
     results.value = response.data
-  } catch (e: any) {
-    notifications.error('Failed to get a list of users', e?.toString?.())
+  } catch (e) {
+    notifications.error('Failed to get a list of users', errorToString(e));
     results.value = []
   } finally {
     isLoading.value = false

@@ -1,6 +1,6 @@
 <template>
   <button class="login-btn" @click="loginWithTwitch" v-if="!user">
-    {{ t('twitch_login') }}
+    {{ t('login') }}
   </button>
   <div v-else class="user-info" @click="router.push('/settings')">
     <img :src="user.profileImageUrl" class="user-avatar" width="32" height="32" style="border-radius: 50%;">

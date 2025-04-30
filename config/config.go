@@ -12,8 +12,9 @@ type Config struct {
 	BaseURL string `yaml:"baseUrl" validate:"required"`
 
 	Chat struct {
-		ClientID     string `yaml:"clientId" validate:"required"`
-		RefreshToken string `yaml:"refreshToken" validate:"required"`
+		ClientID      string `yaml:"clientId" validate:"required"`
+		RefreshToken  string `yaml:"refreshToken" validate:"required"`
+		WebHookSecret string `yaml:"webhookSecret" validate:"required"`
 	} `yaml:"chat" validate:"required"`
 
 	Auth struct {

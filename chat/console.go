@@ -45,6 +45,13 @@ func (a *ConsoleActions) SendMessage(channel, text string) {
 	)
 }
 
+func (a *ConsoleActions) SendForeignMessage(channel, text string) {
+	slog.Debug("Send foreign message",
+		slog.String("channel", channel),
+		slog.String("text", text),
+	)
+}
+
 func (a *ConsoleActions) TimeoutUser(channel, username string, duration time.Duration, reason string) {
 	slog.Debug("User has been timeout",
 		slog.String("channel", channel),
