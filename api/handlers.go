@@ -12,7 +12,6 @@ import (
 	"legion-bot-v2/dao"
 	"legion-bot-v2/db"
 	"legion-bot-v2/util"
-	"log"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -307,8 +306,6 @@ func (s *Server) handleOutgoingRaid(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
-
-	log.Println("Verified signature for raid subscription")
 
 	var eventDao dao.EventSubNotification
 	err = json.NewDecoder(bytes.NewReader(body)).Decode(&eventDao)

@@ -32,12 +32,9 @@ import (
 
 // TODO:
 // ascii art on stream start
-// login as
-// admin menu
 // display status
 // display problems
 // add more Info icons in the settings
-// show alert about chat language before enabling the bot
 // greetings
 // !clip
 // improve chatbot ai

@@ -115,9 +115,6 @@ func (p *TwitchProducer) Run() error {
 
 func (p *TwitchProducer) AddChannel(channel string) {
 	p.ircClient.Join(channel)
-	slog.Info("Channel added to chat producer",
-		slog.String("channel", channel),
-	)
 
 	go p.tryAddOutgoingRaidsListener(channel)
 }
@@ -199,10 +196,6 @@ func (p *TwitchProducer) tryRemoveOutgoingRaidsListener(channel string) {
 }
 
 func (p *TwitchProducer) RemoveChannel(channel string) {
-	slog.Info("Channel removed from chat producer",
-		slog.String("channel", channel),
-	)
-
 	p.ircClient.Depart(channel)
 	go p.tryRemoveOutgoingRaidsListener(channel)
 }
