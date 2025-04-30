@@ -2,9 +2,11 @@
   <footer>
     <div class="footer-links">
       <a href="https://t.me/rofleksey" class="footer-link">{{ t('support')}}</a>
+      <RouterLink to="/cheat_detector" class="footer-link">{{ t('cheat_detector')}}</RouterLink>
+    </div>
+    <div class="footer-links">
       <a href="#" class="footer-link">{{ t('privacy_policy')}}</a>
       <a href="#" class="footer-link">{{ t('terms_of_service')}}</a>
-      <RouterLink to="/cheat_detector" class="footer-link">{{ t('cheat_detector')}}</RouterLink>
     </div>
     <p class="copyright">© 2024-2025 DBD Legion Bot</p>
   </footer>
@@ -31,13 +33,12 @@ footer {
   flex-wrap: wrap;
   justify-content: center;
   gap: 2rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 @media (max-width: 1024px) {
   .footer-links {
     gap: 1rem;
-    margin-bottom: 1rem;
   }
 }
 

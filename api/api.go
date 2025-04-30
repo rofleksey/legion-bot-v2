@@ -46,7 +46,7 @@ func NewServer(
 			ClientSecret: cfg.Auth.ClientSecret,
 			Endpoint:     twitch.Endpoint,
 			RedirectURL:  cfg.Auth.RedirectURL,
-			Scopes:       []string{"user:read:email"},
+			Scopes:       []string{},
 		},
 		database:      database,
 		chatProducer:  chatProducer,
@@ -65,7 +65,10 @@ func NewServer(
 	server.mux.HandleFunc("/api/stats/{channel}/{username}", server.handleUserStats)
 	server.mux.HandleFunc("/api/summonKiller", server.handleSummonKiller)
 
-	server.mux.HandleFunc("/api/webhook/raid", server.handleOutgoingRaid)
+	server.mux.HandleFunc("/api/admin/users", server.handleUserList)
+	server.mux.HandleFunc("/api/admin/loginAs", server.handleLoginAs)
+
+	server.mux.HandleFunc("/api/webhook/raids", server.handleOutgoingRaid)
 
 	server.mux.HandleFunc("/api/cheatDetect", server.handleCheatDetect)
 

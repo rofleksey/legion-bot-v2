@@ -114,6 +114,7 @@ func (p *TwitchProducer) Run() error {
 }
 
 func (p *TwitchProducer) AddChannel(channel string) {
+	p.ircClient.Join(channel)
 	slog.Info("Channel added to chat producer",
 		slog.String("channel", channel),
 	)
@@ -182,10 +183,6 @@ func (p *TwitchProducer) tryAddOutgoingRaidsListener(channel string) {
 	p.database.UpdateState(channel, func(state *db.ChannelState) {
 		state.Subs.RaidID = sub.ID
 	})
-
-	slog.Info("Created event sub for raids",
-		slog.String("channel", channel),
-	)
 }
 
 func (p *TwitchProducer) tryRemoveOutgoingRaidsListener(channel string) {
@@ -199,10 +196,6 @@ func (p *TwitchProducer) tryRemoveOutgoingRaidsListener(channel string) {
 	p.database.UpdateState(channel, func(state *db.ChannelState) {
 		state.Subs.RaidID = ""
 	})
-
-	slog.Info("Removed event sub for raids",
-		slog.String("channel", channel),
-	)
 }
 
 func (p *TwitchProducer) RemoveChannel(channel string) {

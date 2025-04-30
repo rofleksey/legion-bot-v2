@@ -14,7 +14,10 @@ import {useUserStore} from "@/stores/user";
 import {computed} from "vue";
 import axios from "axios";
 import {useRouter} from "vue-router";
+import {useNotifications} from "@/services/notifications.ts";
+import {errorToString} from "@/lib/misc.ts";
 
+const notifications = useNotifications();
 const { t } = useI18n()
 const router = useRouter()
 
@@ -28,9 +31,8 @@ async function loginWithTwitch() {
       localStorage.setItem('twitch_auth_state', response.data.state);
       window.location.href = response.data.authUrl;
     }
-  } catch (error) {
-    console.error('Error during Twitch login:', error);
-    // Consider adding user feedback here
+  } catch (e) {
+    notifications.error('Error during Twitch login', errorToString(e));
   }
 }
 </script>

@@ -1,7 +1,8 @@
 <template>
   <header>
     <AppLogo />
-    <LanguageSwitcher />
+    <LanguageSwitcher class="app-header-lang-switcher" />
+    <div class="grower"/>
     <LoginButton />
   </header>
 </template>
@@ -16,9 +17,16 @@ import LanguageSwitcher from "@/components/LanguageSwitcher.vue";
 header {
   padding: 2rem;
   display: flex;
-  justify-content: space-between;
   align-items: center;
   position: relative;
   z-index: 10;
+}
+
+.app-header-lang-switcher {
+  padding-left: 40px;
+}
+
+.grower {
+  flex-grow: 1;
 }
 </style>

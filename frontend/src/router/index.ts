@@ -2,8 +2,9 @@ import {createRouter, createWebHashHistory} from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import ChannelStatsView from "@/views/ChannelStatsView.vue";
 import SettingsView from "@/views/SettingsView.vue";
-import CheatDetect from "@/views/CheatDetect.vue";
+import CheatDetectView from "@/views/CheatDetectView.vue";
 import {useUserStore} from "@/stores/user.ts";
+import UserListView from "@/views/admin/UserListView.vue";
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -33,7 +34,12 @@ const router = createRouter({
     {
       path: '/cheat_detector',
       name: 'cheat-detector',
-      component: CheatDetect,
+      component: CheatDetectView,
+    },
+    {
+      path: '/admin/userList',
+      name: 'admin-user-list',
+      component: UserListView
     },
   ],
 })

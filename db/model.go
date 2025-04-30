@@ -2,11 +2,6 @@ package db
 
 import "time"
 
-type Channel struct {
-	Name string
-	Lang string
-}
-
 type User struct {
 	Health string         `json:"health"`
 	Marked bool           `json:"marked"`

@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/elliotchance/pie/v2"
 	"github.com/jellydator/ttlcache/v3"
 	"github.com/nicklaw5/helix/v2"
 	"io"
 	"legion-bot-v2/dao"
 	"legion-bot-v2/db"
+	"legion-bot-v2/util"
 	"log"
 	"log/slog"
 	"net/http"
@@ -222,10 +225,70 @@ func (s *Server) handleSummonKiller(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-type eventSubNotification struct {
-	Subscription helix.EventSubSubscription `json:"subscription"`
-	Challenge    string                     `json:"challenge"`
-	Event        json.RawMessage            `json:"event"`
+func (s *Server) handleUserList(w http.ResponseWriter, r *http.Request) {
+	claims, err := s.authenticateRequest(r)
+	if err != nil {
+		http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	if claims.TwitchUser.Login != util.BotOwner {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	list := pie.Map(s.database.GetAllStates(), func(chanState db.ChannelState) dao.AdminTwitchUser {
+		return dao.AdminTwitchUser{
+			Login: chanState.Channel,
+		}
+	})
+	if list == nil {
+		list = []dao.AdminTwitchUser{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(list)
+}
+
+func (s *Server) handleLoginAs(w http.ResponseWriter, r *http.Request) {
+	claims, err := s.authenticateRequest(r)
+	if err != nil {
+		http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	if claims.TwitchUser.Login != util.BotOwner {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	var reqBody dao.AdminTwitchUser
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		http.Error(w, "Invalid killer data", http.StatusBadRequest)
+		return
+	}
+
+	twitchUser := dao.TwitchUser{
+		Login:           reqBody.Login,
+		DisplayName:     reqBody.Login,
+		ProfileImageURL: fmt.Sprintf("%s/apple-touch-icon.png", s.cfg.BaseURL),
+	}
+
+	jwtToken, err := s.createJWTToken(twitchUser)
+	if err != nil {
+		http.Error(w, "Failed to create token: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(dao.AdminLoginResponse{
+		Token: jwtToken,
+		User: dao.ResponseTwitchUser{
+			Login:           twitchUser.Login,
+			DisplayName:     twitchUser.DisplayName,
+			ProfileImageURL: twitchUser.ProfileImageURL,
+		},
+	})
 }
 
 func (s *Server) handleOutgoingRaid(w http.ResponseWriter, r *http.Request) {
@@ -247,8 +310,8 @@ func (s *Server) handleOutgoingRaid(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("Verified signature for raid subscription")
 
-	var vals eventSubNotification
-	err = json.NewDecoder(bytes.NewReader(body)).Decode(&vals)
+	var eventDao dao.EventSubNotification
+	err = json.NewDecoder(bytes.NewReader(body)).Decode(&eventDao)
 	if err != nil {
 		slog.Error("Failed to decode outgoing raid general body",
 			slog.Any("error", err),
@@ -257,14 +320,14 @@ func (s *Server) handleOutgoingRaid(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if vals.Challenge != "" {
-		w.Write([]byte(vals.Challenge))
+	if eventDao.Challenge != "" {
+		w.Write([]byte(eventDao.Challenge))
 		return
 	}
 
 	var raidEvent helix.EventSubChannelRaidEvent
 
-	err = json.NewDecoder(bytes.NewReader(vals.Event)).Decode(&raidEvent)
+	err = json.NewDecoder(bytes.NewReader(eventDao.Event)).Decode(&raidEvent)
 	if err != nil {
 		slog.Error("Failed to decode outgoing raid body",
 			slog.Any("error", err),
@@ -296,12 +359,10 @@ func (s *Server) handleValidateToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(dao.ResponseUser{
-		ID:              claims.TwitchUser.ID,
+	json.NewEncoder(w).Encode(dao.ResponseTwitchUser{
 		Login:           claims.TwitchUser.Login,
 		DisplayName:     claims.TwitchUser.DisplayName,
 		ProfileImageURL: claims.TwitchUser.ProfileImageURL,
-		Email:           claims.TwitchUser.Email,
 	})
 }
 

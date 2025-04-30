@@ -101,7 +101,7 @@ const i18n = createI18n({
         "summoned": "Killer summoned",
         "summon_failed": "Failed to summon killer",
         "chat_title": "Chat",
-        "raids": "Raids",
+        "raids": "🚀 Raids",
         "follow_raids": "Follow Outgoing Raids",
         "follow_raids_message": "Message To Send",
       },

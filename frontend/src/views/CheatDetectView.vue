@@ -20,7 +20,9 @@
         />
         <button @click="searchUsers" class="search-button" :disabled="isLoading">
           <span v-if="!isLoading">{{t('cheat_detection.search')}}</span>
-          <span v-else class="spinner"></span>
+          <span v-else class="spinner-container">
+            <span class="spinner"></span>
+          </span>
         </button>
       </div>
     </div>
@@ -143,6 +145,8 @@ const searchUsers = async () => {
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
+  min-width: 80px;
+  height: 44px;
 }
 
 .search-button:hover {
@@ -215,6 +219,14 @@ const searchUsers = async () => {
   font-size: 0.875rem;
 }
 
+.spinner-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
 .spinner {
   width: 1.25rem;
   height: 1.25rem;
@@ -222,7 +234,6 @@ const searchUsers = async () => {
   border-radius: 50%;
   border-top-color: white;
   animation: spin 1s ease-in-out infinite;
-  margin: 0 auto;
 }
 
 @keyframes spin {
