@@ -31,6 +31,8 @@ import (
 )
 
 // TODO:
+// activate on raids
+// activate manually
 // redirect to main if no auth
 // fix mobile if no auth (main)
 // login as

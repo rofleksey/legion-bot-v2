@@ -240,7 +240,8 @@ func (t *TwitchActions) TimeoutUser(channel, username string, duration time.Dura
 		if banResp.StatusCode >= 400 {
 			slog.Error("Ban API error",
 				slog.String("channel", channel),
-				slog.Any("error", err),
+				slog.Any("error", banResp.Error),
+				slog.Any("msg", banResp.ErrorMessage),
 			)
 		}
 	})
@@ -307,7 +308,8 @@ func (t *TwitchActions) UnbanUser(channel, username string) {
 		if unbanResp.StatusCode >= 400 {
 			slog.Error("Unban API error",
 				slog.String("channel", channel),
-				slog.Any("error", err),
+				slog.Any("error", unbanResp.Error),
+				slog.Any("msg", unbanResp.ErrorMessage),
 			)
 		}
 	})

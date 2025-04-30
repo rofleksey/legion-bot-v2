@@ -115,6 +115,32 @@ func (l *Legion) handleCommands(userMsg db.Message) bool {
 		l.SendMessage(userMsg.Channel, msg)
 		return true
 
+	case strings.HasPrefix(userMsg.Text, "!bleedout") && userMsg.Username == util.BotOwner:
+		otherUsername := strings.ToLower(strings.TrimSpace(strings.TrimPrefix(strings.ReplaceAll(userMsg.Text, "@", ""), "!bleedout")))
+		if otherUsername == "" {
+			otherUsername = userMsg.Username
+		}
+
+		otherUser, userExists := chanState.UserMap[otherUsername]
+		if !userExists {
+			otherUser = db.NewUser()
+			l.UpdateState(userMsg.Channel, func(chanState *db.ChannelState) {
+				chanState.UserMap[otherUsername] = otherUser
+			})
+		}
+
+		l.UpdateState(userMsg.Channel, func(chanState *db.ChannelState) {
+			chanState.Stats["bleedOuts"]++
+
+			chanState.UserMap[otherUsername].Health = "dead"
+			chanState.Stats["bleedOuts"]++
+		})
+
+		l.TimeoutUser(userMsg.Channel, otherUsername, legionSettings.BleedOutBanTime, "")
+
+		msg := l.GetLocalString(lang, "on_dead", map[string]string{"USERNAME": otherUsername})
+		l.SendMessage(userMsg.Channel, msg)
+
 	case strings.HasPrefix(userMsg.Text, "!tbag"):
 		if user.Health == "hooked" || user.Health == "dead" {
 			msg := l.GetLocalString(lang, "cant_do_rn", map[string]string{"USERNAME": userMsg.Username})
