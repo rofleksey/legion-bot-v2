@@ -23,7 +23,7 @@ func (s *Server) handleOutgoingRaid(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if !helix.VerifyEventSubNotification(s.cfg.Chat.WebHookSecret, r.Header, string(body)) {
+	if !helix.VerifyEventSubNotification(s.cfg.Twitch.WebHookSecret, r.Header, string(body)) {
 		slog.Error("Invalid signature for outgoing raid")
 		w.WriteHeader(http.StatusOK)
 		return
@@ -84,7 +84,7 @@ func (s *Server) handleGuestStarBegin(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if !helix.VerifyEventSubNotification(s.cfg.Chat.WebHookSecret, r.Header, string(body)) {
+	if !helix.VerifyEventSubNotification(s.cfg.Twitch.WebHookSecret, r.Header, string(body)) {
 		slog.Error("Invalid signature for guest star begin")
 		w.WriteHeader(http.StatusOK)
 		return
@@ -141,7 +141,7 @@ func (s *Server) handleGuestStarEnd(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if !helix.VerifyEventSubNotification(s.cfg.Chat.WebHookSecret, r.Header, string(body)) {
+	if !helix.VerifyEventSubNotification(s.cfg.Twitch.WebHookSecret, r.Header, string(body)) {
 		slog.Error("Invalid signature for guest star end")
 		w.WriteHeader(http.StatusOK)
 		return
@@ -198,7 +198,7 @@ func (s *Server) handleStreamStart(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if !helix.VerifyEventSubNotification(s.cfg.Chat.WebHookSecret, r.Header, string(body)) {
+	if !helix.VerifyEventSubNotification(s.cfg.Twitch.WebHookSecret, r.Header, string(body)) {
 		slog.Error("Invalid signature for stream start")
 		w.WriteHeader(http.StatusOK)
 		return

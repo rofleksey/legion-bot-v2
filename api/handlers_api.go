@@ -60,7 +60,7 @@ func (s *Server) handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req.Header.Set("Client-ID", s.cfg.Auth.ClientID)
+	req.Header.Set("Client-ID", s.cfg.Twitch.ClientID)
 
 	resp, err := client.Do(req)
 	if err != nil {

@@ -11,17 +11,16 @@ import (
 type Config struct {
 	BaseURL string `yaml:"baseUrl" validate:"required"`
 
-	Chat struct {
+	Twitch struct {
 		ClientID      string `yaml:"clientId" validate:"required"`
+		ClientSecret  string `yaml:"clientSecret" validate:"required"`
 		RefreshToken  string `yaml:"refreshToken" validate:"required"`
 		WebHookSecret string `yaml:"webhookSecret" validate:"required"`
-	} `yaml:"chat" validate:"required"`
+		RedirectURL   string `yaml:"redirectUrl" validate:"required"`
+	} `yaml:"twitch" validate:"required"`
 
 	Auth struct {
-		ClientID     string `yaml:"clientId" validate:"required"`
-		ClientSecret string `yaml:"clientSecret" validate:"required"`
-		JwtSecret    string `yaml:"jwtSecret" validate:"required"`
-		RedirectURL  string `yaml:"redirectUrl" validate:"required"`
+		JwtSecret string `yaml:"jwtSecret" validate:"required"`
 	} `yaml:"auth" validate:"required"`
 
 	Telegram struct {

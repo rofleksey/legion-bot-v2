@@ -83,7 +83,7 @@ func (p *TwitchProducer) addGuestStarBeginListener(channel, broadcasterID, botID
 		Transport: helix.EventSubTransport{
 			Method:   "webhook",
 			Callback: fmt.Sprintf("%s/api/webhook/guestStart/begin", p.cfg.BaseURL),
-			Secret:   p.cfg.Chat.WebHookSecret,
+			Secret:   p.cfg.Twitch.WebHookSecret,
 		},
 	})
 	if err != nil {
@@ -126,7 +126,7 @@ func (p *TwitchProducer) addGuestStarEndListener(channel, broadcasterID, botID s
 		Transport: helix.EventSubTransport{
 			Method:   "webhook",
 			Callback: fmt.Sprintf("%s/api/webhook/guestStart/end", p.cfg.BaseURL),
-			Secret:   p.cfg.Chat.WebHookSecret,
+			Secret:   p.cfg.Twitch.WebHookSecret,
 		},
 	})
 	if err != nil {
@@ -168,7 +168,7 @@ func (p *TwitchProducer) addStreamStartListener(channel, broadcasterID string) {
 		Transport: helix.EventSubTransport{
 			Method:   "webhook",
 			Callback: fmt.Sprintf("%s/api/webhook/stream/start", p.cfg.BaseURL),
-			Secret:   p.cfg.Chat.WebHookSecret,
+			Secret:   p.cfg.Twitch.WebHookSecret,
 		},
 	})
 	if err != nil {
@@ -210,7 +210,7 @@ func (p *TwitchProducer) addOutgoingRaidsListener(channel, broadcasterID string)
 		Transport: helix.EventSubTransport{
 			Method:   "webhook",
 			Callback: fmt.Sprintf("%s/api/webhook/raids", p.cfg.BaseURL),
-			Secret:   p.cfg.Chat.WebHookSecret,
+			Secret:   p.cfg.Twitch.WebHookSecret,
 		},
 	})
 	if err != nil {

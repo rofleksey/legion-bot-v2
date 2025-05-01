@@ -74,7 +74,7 @@ func (t *TwitchActions) getGuestStarSessionIsActive(broadcasterID, moderatorID s
 	}
 
 	req.Header.Set("Authorization", "Bearer "+t.accessToken)
-	req.Header.Set("Client-Id", t.cfg.Chat.ClientID)
+	req.Header.Set("Client-Id", t.cfg.Twitch.ClientID)
 
 	client := &http.Client{
 		Timeout: time.Second * 10,

@@ -42,10 +42,10 @@ func NewServer(
 		cfg: cfg,
 		bot: bot,
 		oauth2Config: oauth2.Config{
-			ClientID:     cfg.Auth.ClientID,
-			ClientSecret: cfg.Auth.ClientSecret,
+			ClientID:     cfg.Twitch.ClientID,
+			ClientSecret: cfg.Twitch.ClientSecret,
 			Endpoint:     twitch.Endpoint,
-			RedirectURL:  cfg.Auth.RedirectURL,
+			RedirectURL:  cfg.Twitch.RedirectURL,
 			Scopes:       []string{},
 		},
 		database:      database,

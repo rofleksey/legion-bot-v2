@@ -1,7 +1,6 @@
 package util
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/gempir/go-twitch-irc/v4"
 	"github.com/nicklaw5/helix/v2"
@@ -10,41 +9,50 @@ import (
 	"time"
 )
 
-func FetchTwitchAccessToken(refreshToken string) (string, error) {
-	client := &http.Client{
-		Timeout: time.Second * 30,
+func FetchTwitchUserAccessToken(cfg *config.Config) (string, error) {
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConns:    10,
+			IdleConnTimeout: 30 * time.Second,
+		},
+		Timeout: 10 * time.Second,
 	}
 
-	req, err := http.NewRequest("GET", RefreshURL+"/"+refreshToken, nil)
+	client, err := helix.NewClient(&helix.Options{
+		ClientID:     cfg.Twitch.ClientID,
+		ClientSecret: cfg.Twitch.ClientSecret,
+		RefreshToken: cfg.Twitch.RefreshToken,
+		HTTPClient:   httpClient,
+	})
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to create twitch client: %v", err)
 	}
 
-	resp, err := client.Do(req)
+	resp, err := client.RefreshUserAccessToken(cfg.Twitch.RefreshToken)
 	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("failed to refresh token: %s", resp.Status)
+		return "", fmt.Errorf("failed to refresh user access token: %v", err)
 	}
 
-	var result struct {
-		Token string `json:"token"`
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("failed to request app access token: invalid status code %d: %s (%s)", resp.StatusCode, resp.Error, resp.ErrorMessage)
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", err
-	}
-
-	return result.Token, nil
+	return resp.Data.AccessToken, nil
 }
 
 func InitAppTwitchClient(cfg *config.Config, userAccessToken string) (*helix.Client, error) {
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConns:    10,
+			IdleConnTimeout: 30 * time.Second,
+		},
+		Timeout: 10 * time.Second,
+	}
+
 	client, err := helix.NewClient(&helix.Options{
-		ClientID:     cfg.Auth.ClientID,
-		ClientSecret: cfg.Auth.ClientSecret,
+		ClientID:     cfg.Twitch.ClientID,
+		ClientSecret: cfg.Twitch.ClientSecret,
+		HTTPClient:   httpClient,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create twitch client: %v", err)
@@ -80,7 +88,7 @@ func InitTwitchClients(cfg *config.Config, userAccessToken string) (*twitch.Clie
 	}
 
 	helixClient, err := helix.NewClient(&helix.Options{
-		ClientID:        cfg.Chat.ClientID,
+		ClientID:        cfg.Twitch.ClientID,
 		UserAccessToken: userAccessToken,
 		HTTPClient:      httpClient,
 	})
@@ -88,7 +96,7 @@ func InitTwitchClients(cfg *config.Config, userAccessToken string) (*twitch.Clie
 		return nil, nil, fmt.Errorf("failed to create helix client: %w", err)
 	}
 
-	ircClient := twitch.NewClient(cfg.Auth.ClientID, "oauth:"+userAccessToken)
+	ircClient := twitch.NewClient(cfg.Twitch.ClientID, "oauth:"+userAccessToken)
 
 	return ircClient, helixClient, nil
 }
