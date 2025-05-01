@@ -212,6 +212,38 @@
         </div>
 
         <div class="settings-subsection">
+          <h3 class="settings-subsection-title">{{ t('settings.dredge') }}</h3>
+          <AppQuotation class="settings-subsection-description">{{ t('settings.dredge_description') }}</AppQuotation>
+          <div class="settings-grid">
+            <AppSwitch
+              v-model="settings.killers.dredge.enabled"
+              :label="settings.killers.dredge.enabled ? t('settings.enabled') : t('settings.disabled')"
+            />
+            <AppNumberInput
+              v-model="settings.killers.dredge.weight"
+              :min="1"
+              :max="1000000"
+              :label="t('settings.weight')"
+              show-help-icon
+              @help-click="Dialog.show(t('settings.weight_description'))"
+            />
+            <AppButton :loading="postLoading" @click="summonKiller('dredge')">
+              {{ t('settings.summon') }}
+            </AppButton>
+          </div>
+          <div class="settings-grid">
+            <AppDurationInput
+              v-model="settings.killers.dredge.timeout"
+              :label="t('settings.timeout')"
+            />
+            <AppDurationInput
+              v-model="settings.killers.dredge.hookBanTime"
+              :label="t('settings.hook_ban_time')"
+            />
+          </div>
+        </div>
+
+        <div class="settings-subsection">
           <h3 class="settings-subsection-title">{{ t('settings.doctor') }}</h3>
           <AppQuotation class="settings-subsection-description">{{ t('settings.doctor_description') }}</AppQuotation>
           <div class="settings-grid">

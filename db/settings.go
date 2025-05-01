@@ -24,6 +24,7 @@ type KillersSettings struct {
 	GhostFace *GhostFaceSettings     `json:"ghostface"`
 	Doctor    *DoctorSettings        `json:"doctor"`
 	Pinhead   *PinheadSettings       `json:"pinhead"`
+	Dredge    *DredgeSettings        `json:"dredge"`
 }
 
 func DefaultSettings() Settings {
@@ -36,6 +37,7 @@ func DefaultSettings() Settings {
 			GhostFace: DefaultGhostFaceSettings(),
 			Doctor:    DefaultDoctorSettings(),
 			Pinhead:   DefaultPinheadSettings(),
+			Dredge:    DefaultDredgeSettings(),
 		},
 	}
 }
@@ -151,5 +153,21 @@ func DefaultPinheadSettings() *PinheadSettings {
 		DeepWoundTimeout: time.Minute,
 		BleedOutBanTime:  3 * time.Minute,
 		Topics:           "бытовая техника, природа, одежда, обувь, канцелярия, продукты, физика, спорт",
+	}
+}
+
+type DredgeSettings struct {
+	Enabled     bool          `json:"enabled"`
+	Weight      int           `json:"weight"`
+	Timeout     time.Duration `json:"timeout"`
+	HookBanTime time.Duration `json:"hookBanTime"`
+}
+
+func DefaultDredgeSettings() *DredgeSettings {
+	return &DredgeSettings{
+		Enabled:     os.Getenv("ENVIRONMENT") != "production",
+		Weight:      100,
+		Timeout:     3 * time.Minute,
+		HookBanTime: time.Minute,
 	}
 }

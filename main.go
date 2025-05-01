@@ -15,10 +15,7 @@ import (
 	"legion-bot-v2/gpt"
 	"legion-bot-v2/i18n"
 	"legion-bot-v2/killer"
-	"legion-bot-v2/killer/doctor"
-	"legion-bot-v2/killer/ghostface"
-	"legion-bot-v2/killer/legion"
-	"legion-bot-v2/killer/pinhead"
+	"legion-bot-v2/killer/dredge"
 	"legion-bot-v2/producer"
 	"legion-bot-v2/timers"
 	"legion-bot-v2/util"
@@ -177,10 +174,11 @@ func main() {
 	gptInstance := gpt.NewYandexGpt(cfg)
 
 	killerMap := map[string]killer.Killer{
-		"legion":    legion.New(database, chatActions, timerManager, localiser, gptInstance),
-		"ghostface": ghostface.New(database, chatActions, timerManager, localiser, gptInstance),
-		"doctor":    doctor.New(database, chatActions, timerManager, localiser, gptInstance),
-		"pinhead":   pinhead.New(database, chatActions, timerManager, localiser, gptInstance),
+		//"legion":    legion.New(database, chatActions, timerManager, localiser, gptInstance),
+		//"ghostface": ghostface.New(database, chatActions, timerManager, localiser, gptInstance),
+		//"doctor":    doctor.New(database, chatActions, timerManager, localiser, gptInstance),
+		//"pinhead":   pinhead.New(database, chatActions, timerManager, localiser, gptInstance),
+		"dredge": dredge.New(database, chatActions, timerManager, localiser, gptInstance),
 	}
 
 	botInstance := bot.NewBot(database, chatActions, timerManager, localiser, gptInstance, killerMap)
@@ -188,7 +186,7 @@ func main() {
 
 	chatProducer := producer.NewTwitchProducer(cfg, ircClient, helixClient, appClient, database, botInstance)
 	if os.Getenv("ENVIRONMENT") != "production" {
-		chatProducer.AddChannel("tru3ta1ent")
+		chatProducer.AddChannel("dbdleague")
 	}
 
 	//chatProducer := producer.NewConsoleProducer(botInstance)

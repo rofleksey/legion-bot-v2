@@ -104,6 +104,8 @@ const i18n = createI18n({
         "raids": "🚀 Raids",
         "follow_raids": "Follow Outgoing Raids",
         "follow_raids_message": "Message To Send",
+        "dredge": "🌙 The Dredge",
+        "dredge_description": "Activates the Realm of Darkness (emote-only mode) for the entire duration. Users can vote on who to hang by sending the victim's username to the bot via DM. If the vote has a clear winner, that user will be killed and hooked at the end of the Realm of Darkness. Otherwise, The Dredge simply leaves."
       },
       "cheat_detection": {
         "title": "Cheater Database",
@@ -204,6 +206,8 @@ const i18n = createI18n({
         "raids": "🚀 Рейды",
         "follow_raids": "Переходить по исходящим рейдам",
         "follow_raids_message": "Какую фразу писать",
+        "dredge": "🌙 Грязь",
+        "dredge_description": "Включает Царство Мрака (режим только для эмоутов) на все время действия. Пользователи могут голосовать кого повесить, отправляя юзернейм жертвы боту в лс. Если голование имеет явного победителя, в конце Царства Мрака этот пользователь будет убит и повешен на крюк. Иначе, Грязь просто уходит.",
       },
       "cheat_detection": {
         "title": "База данных читеров",

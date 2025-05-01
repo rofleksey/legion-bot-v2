@@ -11,3 +11,7 @@ type GhostFaceState struct {
 type PinheadState struct {
 	Word string `json:"word"`
 }
+
+type DredgeState struct {
+	Votes map[string]string `json:"votes"`
+}

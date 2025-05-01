@@ -103,6 +103,10 @@ func (p *TwitchProducer) Run() error {
 		username := strings.ToLower(message.User.Name)
 		text := strings.TrimSpace(message.Message)
 
+		if username == util.BotUsername {
+			return
+		}
+
 		slog.Info("Whisper Message",
 			slog.String("username", username),
 			slog.String("text", text),

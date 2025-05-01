@@ -33,14 +33,14 @@
   "locker_grab": "The Legion grabbed @USERNAME out of the locker and hooked them \uD83D\uDD2A Unhook this gamer! \uD83E\uDE9D (!unhook @USERNAME)",
   "tbag_wasted": "@USERNAME tbagged without anyone nearby \uD83D\uDC80",
   "tbag_success": "@USERNAME tbagged and caught The Legion's attention \uD83D\uDD2A",
-  "start_gf": "Ghost Face started monitoring the chat \uD83D\uDC7B (!killer)",
+  "start_gf": "Ghost Face started monitoring the chat \uD83D\uDC7B  (!killer)",
   "commands_gf": "Commands: !mend, !heal, !tbag, !unhook, !hp. Stats: STATS",
-  "gf_go_away": "The Ghost Face silently left \uD83D\uDC7B He managed to look at COUNT gamers \uD83D\uDC7B",
+  "gf_go_away": "The Ghost Face silently left \uD83D\uDC7B He marked COUNT gamers \uD83D\uDC7B They might be in danger next round \uD83D\uDC7B",
   "gf_tbag": "@USERNAME t-bagged and caught The Ghost Face's attention \uD83D\uDC7B",
   "gf_hit_dead": "The Ghost Face has downed and hooked @USERNAME \uD83D\uDD2A Unhook this gamer! \uD83D\uDD2A (!unhook @USERNAME)",
   "gf_revealed": "The Ghost Face has been revealed by @USERNAME \uD83D\uDC7B",
   "gf_reveal_fail": "@USERNAME could not reveal The Ghost Face\uD83D\uDC7B",
-  "start_doctor": "The Doctor has applied shock therapy \uD83E\uDDE0 (!killer)",
+  "start_doctor": "The Doctor has applied shock therapy \uD83E\uDDE0 Something weird started happening with the messages \uD83E\uDDE0 (!killer)",
   "commands_doctor": "Commands: !mend, !heal, !unhook, !hp. Stats: STATS",
   "doctor_go_away": "Chat has successfully survived the shock therapy \uD83E\uDDE0",
   "start_pinhead": "Pinhead has arrived and chosen a word on topic TOPIC. Chat has several minutes to guess it by asking general questions (!solve). \uD83D\uDCE6 (!killer)",
@@ -54,5 +54,8 @@
   "pinhead_success": "Chat failed to guess the word WORD in time \uD83D\uDCE6 Pinhead has inflicted deep wounds on some gamers \uD83D\uDCE6 If they don't mend (!mend), they'll get a timeout \uD83D\uDCE6",
   "pinhead_generate_prompt": "From the list of topics: [TOPIC_LIST], select one random topic, then choose ONE simple word from that topic. The word should be easy for an average audience and suitable for a yes/no guessing game. If the word is not guessable with yes/no questions, skip it. Output strictly in the format 'RESULT $topic $word' with no additional text, explanations, or comments.",
   "pinhead_guess_prompt": "You are playing a yes/no guessing game where the user tries to guess the word 'THE_WORD'.  \n\n### **Response Rules:**  \nAnswer **only** in one of these exact formats:  \n- OK (if the user **correctly guessed the exact word**)  \n- ANS y (if the answer is definitively \"yes\")  \n- ANS n (if the answer is definitively \"no\")  \n- MAYBE (if the answer is ambiguous, context-dependent, or partially true)  \n- INVALID (if the question is nonsensical or cannot be answered with yes/no)  \n\n### **Constraints:**  \n1. Never deviate from the 5 allowed responses.  \n2. Never explain, justify, or add extra text.  \n3. For OK, the user’s guess must match the hidden word **exactly** (case-insensitive).  \n\n### **Examples:**  \n- Hidden word: \"apple\"  \n  - Q: \"Is it red?\" → ANS y  \n  - Q: \"Is it a fruit?\" → ANS y  \n  - Q: \"Is it a banana?\" → ANS n  \n  - Q: \"Is it sweet?\" → MAYBE  \n  - Q: \"Apple?\" → OK  \n  - Q: \"How heavy is it?\" → INVALID (not yes/no)  \n  - Q: \"Is it a vehicle?\" → ANS n  ",
-  "generic_response_prompt": "Your nickname is @dbd_legion_bot. Generate a very short (1 sentence max), straightforward response to a Twitch viewer mentioning the bot. Keep it neutral, informative, or playful—but always concise. No emojis. Respond directly without extra words. Output format: RESULT $text. Never deviate from this format. Never explain, justify, or add extra text."
+  "generic_response_prompt": "Your nickname is @dbd_legion_bot. Generate a very short (1 sentence max), straightforward response to a Twitch viewer mentioning the bot. Keep it neutral, informative, or playful—but always concise. No emojis. Respond directly without extra words. Output format: RESULT $text. Never deviate from this format. Never explain, justify, or add extra text.",
+  "start_dredge": "The Realm of Darkness has begun 🌙 Chat can only communicate using emotes 🌙 Vote on who The Dredge should hang by sending the victim's username to the bot via DM 🌙",
+  "dredge_go_away": "🌙 The Realm of Darkness has ended 🌙",
+  "dredge_hit_dead": "The Dredge killed @USERNAME and hung them 🌙 Now the gamer is on the hook until someone unhooks them 🌙 (!unhook @USERNAME)"
 }

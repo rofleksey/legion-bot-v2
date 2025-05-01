@@ -23,6 +23,7 @@ export interface KillersSettings {
   ghostface: GhostFaceSettings;
   doctor: DoctorSettings;
   pinhead: PinheadSettings;
+  dredge: DredgeSettings;
 }
 
 export interface GeneralKillerSettings {
@@ -73,5 +74,12 @@ export interface PinheadSettings {
   deepWoundTimeout: number;
   bleedOutBanTime: number;
   topics: string;
+  timeout: number;
+}
+
+export interface DredgeSettings {
+  enabled: boolean;
+  weight: number;
+  hookBanTime: number;
   timeout: number;
 }
