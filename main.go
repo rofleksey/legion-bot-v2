@@ -129,30 +129,30 @@ func main() {
 	}
 	c.Start()
 
-	accessToken, err := util.FetchTwitchAccessToken(cfg.Chat.RefreshToken)
+	userAccessToken, err := util.FetchTwitchAccessToken(cfg.Chat.RefreshToken)
 	if err != nil {
 		log.Fatalf("Failed to get Twitch access token: %v", err)
 	}
 	if os.Getenv("ENVIRONMENT") != "production" {
 		slog.Debug("Got access token",
-			slog.String("token", accessToken),
+			slog.String("token", userAccessToken),
 			slog.String("clientId", cfg.Chat.ClientID),
 		)
 	}
 
-	ircClient, helixClient, err := util.InitTwitchClients(cfg, accessToken)
+	ircClient, helixClient, err := util.InitTwitchClients(cfg, userAccessToken)
 	if err != nil {
 		log.Fatalf("Failed to init twitch clients: %v", err)
 	}
 
-	appClient, err := util.InitAppTwitchClient(cfg)
+	appClient, err := util.InitAppTwitchClient(cfg, userAccessToken)
 	if err != nil {
 		log.Fatalf("Failed to init app twitch client: %v", err)
 	}
 
 	var chatActions chat.Actions
 	if os.Getenv("ENVIRONMENT") == "production" {
-		chatActions = chat.NewTwitchActions(cfg, accessToken, ircClient, helixClient)
+		chatActions = chat.NewTwitchActions(cfg, userAccessToken, ircClient, helixClient)
 	} else {
 		slog.Debug("!!! Using debug chat actions")
 		chatActions = &chat.ConsoleActions{}
