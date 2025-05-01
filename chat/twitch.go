@@ -1,10 +1,17 @@
 package chat
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"github.com/gempir/go-twitch-irc/v4"
 	"github.com/nicklaw5/helix/v2"
+	"io"
+	"legion-bot-v2/config"
+	"legion-bot-v2/taskq"
 	"legion-bot-v2/util"
 	"log/slog"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -13,31 +20,136 @@ import (
 var _ Actions = (*TwitchActions)(nil)
 
 type TwitchActions struct {
+	cfg         *config.Config
+	accessToken string
 	ircClient   *twitch.Client
 	helixClient *helix.Client
-	queues      map[string]*util.TaskQueue
+	queues      map[string]*taskq.Queue
 	mu          sync.Mutex
 }
 
 func NewTwitchActions(
+	cfg *config.Config,
+	accessToken string,
 	ircClient *twitch.Client,
 	helixClient *helix.Client,
 ) *TwitchActions {
 	return &TwitchActions{
+		cfg:         cfg,
+		accessToken: accessToken,
 		ircClient:   ircClient,
 		helixClient: helixClient,
-		queues:      make(map[string]*util.TaskQueue),
+		queues:      make(map[string]*taskq.Queue),
 	}
 }
 
-func (t *TwitchActions) getQueue(channel string) *util.TaskQueue {
+func (t *TwitchActions) getQueue(channel string) *taskq.Queue {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
 	if _, exists := t.queues[channel]; !exists {
-		t.queues[channel] = util.NewTaskQueue(1, 1, 1)
+		t.queues[channel] = taskq.New(1, 1, 1)
 	}
 	return t.queues[channel]
+}
+
+func (t *TwitchActions) Shutdown() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	for _, q := range t.queues {
+		q.Shutdown()
+	}
+}
+
+func (t *TwitchActions) getGuestStarSessionIsActive(broadcasterID, moderatorID string) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	url := "https://api.twitch.tv/helix/guest_star/session?broadcaster_id=" + broadcasterID + "&moderator_id=" + moderatorID
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return false, fmt.Errorf("failed to create guest star session request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+t.accessToken)
+	req.Header.Set("Client-Id", t.cfg.Chat.ClientID)
+
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, fmt.Errorf("failed to send guest star session request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return false, fmt.Errorf("guest star session request failed with status code: %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return false, fmt.Errorf("failed to read guest star session response: %w", err)
+	}
+
+	var sessionData struct {
+		Data []struct {
+			Guests []interface{} `json:"guests"`
+		} `json:"data"`
+	}
+
+	err = json.Unmarshal(body, &sessionData)
+	if err != nil {
+		return false, fmt.Errorf("failed to parse guest star session response: %w", err)
+	}
+
+	if len(sessionData.Data) == 0 || len(sessionData.Data[0].Guests) == 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (t *TwitchActions) IsGuestStarSessionActive(channel string) bool {
+	return taskq.Compute(t.getQueue(channel), func() bool {
+		botResp, err := t.helixClient.GetUsers(&helix.UsersParams{
+			Logins: []string{util.BotUsername},
+		})
+		if err != nil || len(botResp.Data.Users) == 0 {
+			slog.Error("Error getting bot user",
+				slog.String("channel", channel),
+				slog.Any("error", err),
+			)
+			return false
+		}
+
+		botUser := botResp.Data.Users[0]
+
+		channelResp, err := t.helixClient.GetUsers(&helix.UsersParams{
+			Logins: []string{channel},
+		})
+		if err != nil || len(channelResp.Data.Users) == 0 {
+			slog.Error("Error getting channel user",
+				slog.String("channel", channel),
+				slog.Any("error", err),
+			)
+			return false
+		}
+		channelUser := channelResp.Data.Users[0]
+
+		isSessionActive, err := t.getGuestStarSessionIsActive(channelUser.ID, botUser.ID)
+		if err != nil {
+			slog.Error("Error getting guest star session status",
+				slog.String("channel", channel),
+				slog.Any("error", err),
+			)
+			return false
+		}
+
+		return isSessionActive
+	})
 }
 
 func (t *TwitchActions) SetEmoteMode(channel string, enabled bool) {
@@ -94,11 +206,6 @@ func (t *TwitchActions) SetEmoteMode(channel string, enabled bool) {
 			)
 		}
 	})
-}
-
-func (t *TwitchActions) DisableEmojiMode(channel string) {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (t *TwitchActions) GetViewerList(channel string) []string {
@@ -175,53 +282,57 @@ func (t *TwitchActions) DeleteMessage(channel, id string) {
 }
 
 func (t *TwitchActions) GetStartTime(channel string) time.Time {
-	slog.Debug("Getting channel stream start time",
-		slog.String("channel", channel),
-	)
-
-	res, err := t.helixClient.GetStreams(&helix.StreamsParams{
-		UserLogins: []string{channel},
-	})
-	if err != nil {
-		slog.Error("Failed to get stream info",
+	return taskq.Compute(t.getQueue(channel), func() time.Time {
+		slog.Debug("Getting channel stream start time",
 			slog.String("channel", channel),
-			slog.Any("error", err),
 		)
-		return time.Time{}
-	}
 
-	for _, s := range res.Data.Streams {
-		if strings.ToLower(s.UserLogin) == channel {
-			return s.StartedAt
+		res, err := t.helixClient.GetStreams(&helix.StreamsParams{
+			UserLogins: []string{channel},
+		})
+		if err != nil {
+			slog.Error("Failed to get stream info",
+				slog.String("channel", channel),
+				slog.Any("error", err),
+			)
+			return time.Time{}
 		}
-	}
 
-	return time.Time{}
+		for _, s := range res.Data.Streams {
+			if strings.ToLower(s.UserLogin) == channel {
+				return s.StartedAt
+			}
+		}
+
+		return time.Time{}
+	})
 }
 
 func (t *TwitchActions) GetViewerCount(channel string) int {
-	slog.Debug("Getting channel stream viewer count",
-		slog.String("channel", channel),
-	)
-
-	res, err := t.helixClient.GetStreams(&helix.StreamsParams{
-		UserLogins: []string{channel},
-	})
-	if err != nil {
-		slog.Error("Failed to get stream info",
+	return taskq.Compute(t.getQueue(channel), func() int {
+		slog.Debug("Getting channel stream viewer count",
 			slog.String("channel", channel),
-			slog.Any("error", err),
 		)
-		return 0
-	}
 
-	for _, s := range res.Data.Streams {
-		if strings.ToLower(s.UserLogin) == channel {
-			return s.ViewerCount
+		res, err := t.helixClient.GetStreams(&helix.StreamsParams{
+			UserLogins: []string{channel},
+		})
+		if err != nil {
+			slog.Error("Failed to get stream info",
+				slog.String("channel", channel),
+				slog.Any("error", err),
+			)
+			return 0
 		}
-	}
 
-	return 0
+		for _, s := range res.Data.Streams {
+			if strings.ToLower(s.UserLogin) == channel {
+				return s.ViewerCount
+			}
+		}
+
+		return 0
+	})
 }
 
 func (t *TwitchActions) SendMessage(channel, text string) {

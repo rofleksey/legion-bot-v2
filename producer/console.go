@@ -77,3 +77,7 @@ func (p *ConsoleProducer) AddChannel(channel string) {
 func (p *ConsoleProducer) RemoveChannel(channel string) {
 
 }
+
+func (p *ConsoleProducer) Shutdown() {
+
+}

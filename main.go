@@ -152,11 +152,12 @@ func main() {
 
 	var chatActions chat.Actions
 	if os.Getenv("ENVIRONMENT") == "production" {
-		chatActions = chat.NewTwitchActions(ircClient, helixClient)
+		chatActions = chat.NewTwitchActions(cfg, accessToken, ircClient, helixClient)
 	} else {
 		slog.Debug("!!! Using debug chat actions")
 		chatActions = &chat.ConsoleActions{}
 	}
+	defer chatActions.Shutdown()
 
 	database, err := db.NewDatabase("data/database.db")
 	if err != nil {
@@ -185,6 +186,8 @@ func main() {
 	botInstance.Init()
 
 	chatProducer := producer.NewTwitchProducer(cfg, ircClient, helixClient, appClient, database, botInstance)
+	defer chatProducer.Shutdown()
+
 	if os.Getenv("ENVIRONMENT") != "production" {
 		chatProducer.AddChannel("dbdleague")
 	}
@@ -196,7 +199,8 @@ func main() {
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	go func() {
 		<-sig
-		chatProducer.Stop()
+		slog.Info("Shutting down...")
+		chatProducer.Shutdown()
 	}()
 
 	cheatDetector := cheatdetect.NewDetector()

@@ -1,16 +1,17 @@
 package producer
 
 import (
-	"fmt"
 	"github.com/gempir/go-twitch-irc/v4"
 	"github.com/nicklaw5/helix/v2"
 	"legion-bot-v2/bot"
 	"legion-bot-v2/config"
 	"legion-bot-v2/db"
+	"legion-bot-v2/taskq"
 	"legion-bot-v2/util"
 	"log/slog"
 	"os"
 	"strings"
+	"time"
 )
 
 var _ Producer = (*TwitchProducer)(nil)
@@ -22,6 +23,7 @@ type TwitchProducer struct {
 	appClient   *helix.Client
 	database    db.DB
 	botInstance *bot.Bot
+	queue       *taskq.Queue
 }
 
 func NewTwitchProducer(
@@ -39,7 +41,13 @@ func NewTwitchProducer(
 		appClient:   appClient,
 		database:    database,
 		botInstance: botInstance,
+		queue:       taskq.New(1, 1, 1),
 	}
+}
+
+func (p *TwitchProducer) Shutdown() {
+	p.ircClient.Disconnect()
+	p.queue.Shutdown()
 }
 
 func (p *TwitchProducer) Run() error {
@@ -125,6 +133,7 @@ func (p *TwitchProducer) Run() error {
 			}
 
 			p.AddChannel(chanState.Channel)
+			time.Sleep(time.Second)
 		}
 	}
 
@@ -132,91 +141,21 @@ func (p *TwitchProducer) Run() error {
 }
 
 func (p *TwitchProducer) AddChannel(channel string) {
-	p.ircClient.Join(channel)
-	p.tryAddOutgoingRaidsListener(channel)
-}
-
-func (p *TwitchProducer) tryAddOutgoingRaidsListener(channel string) {
-	chanState := p.database.GetState(channel)
-	raidSubId := chanState.Subs.RaidID
-
-	broadcasterResp, err := p.helixClient.GetUsers(&helix.UsersParams{
-		Logins: []string{channel},
+	p.queue.Enqueue(func() {
+		p.ircClient.Join(channel)
 	})
-	if err != nil {
-		slog.Error("Failed to get channel user info from helix for outgoing raids",
-			slog.String("channel", channel),
-			slog.Any("error", err),
-		)
-		return
-	}
-	if len(broadcasterResp.Data.Users) == 0 {
-		slog.Error("Failed to get channel user info from helix for outgoing raids",
-			slog.String("channel", channel),
-			slog.String("error", broadcasterResp.Error),
-			slog.String("errorMsg", broadcasterResp.ErrorMessage),
-		)
-		return
-	}
 
-	broadcasterID := broadcasterResp.Data.Users[0].ID
-
-	if raidSubId != "" {
-		_, _ = p.appClient.RemoveEventSubSubscription(raidSubId)
-	}
-
-	resp, err := p.appClient.CreateEventSubSubscription(&helix.EventSubSubscription{
-		Type:    helix.EventSubTypeChannelRaid,
-		Version: "1",
-		Condition: helix.EventSubCondition{
-			FromBroadcasterUserID: broadcasterID,
-		},
-		Transport: helix.EventSubTransport{
-			Method:   "webhook",
-			Callback: fmt.Sprintf("%s/api/webhook/raids", p.cfg.BaseURL),
-			Secret:   p.cfg.Chat.WebHookSecret,
-		},
-	})
-	if err != nil {
-		slog.Error("Failed to create event sub for raids",
-			slog.String("channel", channel),
-			slog.Any("error", err),
-		)
-		return
-	}
-	if len(resp.Data.EventSubSubscriptions) == 0 {
-		slog.Error("Failed to create event sub for raids",
-			slog.String("channel", channel),
-			slog.String("error", resp.Error),
-			slog.String("errorMsg", resp.ErrorMessage),
-		)
-		return
-	}
-
-	sub := resp.Data.EventSubSubscriptions[0]
-	p.database.UpdateState(channel, func(state *db.ChannelState) {
-		state.Subs.RaidID = sub.ID
-	})
-}
-
-func (p *TwitchProducer) tryRemoveOutgoingRaidsListener(channel string) {
-	chanState := p.database.GetState(channel)
-	raidSubId := chanState.Subs.RaidID
-
-	if raidSubId != "" {
-		_, _ = p.appClient.RemoveEventSubSubscription(raidSubId)
-	}
-
-	p.database.UpdateState(channel, func(state *db.ChannelState) {
-		state.Subs.RaidID = ""
+	p.queue.Enqueue(func() {
+		p.registerAllListeners(channel)
 	})
 }
 
 func (p *TwitchProducer) RemoveChannel(channel string) {
-	p.ircClient.Depart(channel)
-	go p.tryRemoveOutgoingRaidsListener(channel)
-}
+	p.queue.Enqueue(func() {
+		p.ircClient.Depart(channel)
+	})
 
-func (p *TwitchProducer) Stop() {
-	p.ircClient.Disconnect()
+	p.queue.Enqueue(func() {
+		p.removeAllListeners(channel)
+	})
 }

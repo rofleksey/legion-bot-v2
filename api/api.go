@@ -69,6 +69,8 @@ func NewServer(
 	server.mux.HandleFunc("/api/admin/loginAs", server.handleLoginAs)
 
 	server.mux.HandleFunc("/api/webhook/raids", server.handleOutgoingRaid)
+	server.mux.HandleFunc("/api/webhook/guestStar/begin", server.handleGuestStarBegin)
+	server.mux.HandleFunc("/api/webhook/guestStar/end", server.handleGuestStarEnd)
 
 	server.mux.HandleFunc("/api/cheatDetect", server.handleCheatDetect)
 

@@ -59,6 +59,8 @@ func (b *Bot) Init() {
 	channels := b.GetAllChannelNames()
 
 	for _, channel := range channels {
+		guestStarSessionActive := b.IsGuestStarSessionActive(channel)
+
 		b.UpdateState(channel, func(chanState *db.ChannelState) {
 			if chanState.Killer != "" {
 				chanState.Killer = ""
@@ -79,6 +81,9 @@ func (b *Bot) Init() {
 					chanState.UserMap[username].Health = "injured"
 				}
 			}
+
+			chanState.GuestStar.Active = guestStarSessionActive
+			chanState.GuestStar.Date = time.Now()
 		})
 	}
 }
@@ -292,7 +297,7 @@ func (b *Bot) HandleMessage(userMsg db.Message) {
 	chanState := b.GetState(userMsg.Channel)
 	generalKillerSettings := chanState.Settings.Killers.General
 
-	if chanState.Settings.Disabled {
+	if chanState.Settings.Disabled || chanState.GuestStar.Active {
 		return
 	}
 
@@ -338,13 +343,29 @@ func (b *Bot) HandleMessage(userMsg db.Message) {
 	curKiller.HandleMessage(userMsg)
 }
 
+func (b *Bot) HandleGuestStarBegin(channel string) {
+	b.UpdateState(channel, func(chanState *db.ChannelState) {
+		chanState.GuestStar.Active = true
+		chanState.GuestStar.Date = time.Now()
+	})
+}
+
+func (b *Bot) HandleGuestStarEnd(channel string) {
+	b.UpdateState(channel, func(chanState *db.ChannelState) {
+		chanState.GuestStar.Active = false
+		chanState.GuestStar.Date = time.Now()
+	})
+}
+
 func (b *Bot) HandleWhisper(username, message string) {
 	channels := b.GetAllChannelNames()
 
 	for _, channel := range channels {
 		chanState := b.GetState(channel)
 
-		if chanState.Settings.Disabled || chanState.Killer == "" {
+		if chanState.Settings.Disabled ||
+			chanState.GuestStar.Active ||
+			chanState.Killer == "" {
 			return
 		}
 
@@ -388,7 +409,10 @@ func (b *Bot) HandleOutgoingRaid(channel, otherChannel string) {
 	followRaids := chatSettings.FollowRaids
 	followRaidsMessage := strings.TrimSpace(chatSettings.FollowRaidsMessage)
 
-	if !followRaids || followRaidsMessage == "" {
+	if chanState.Settings.Disabled ||
+		chanState.GuestStar.Active ||
+		!followRaids ||
+		followRaidsMessage == "" {
 		return
 	}
 
@@ -425,6 +449,14 @@ func (b *Bot) StartSpecificKiller(channel, name string) error {
 
 	if chanState.Killer != "" {
 		return fmt.Errorf("killer is already running")
+	}
+
+	if chanState.Settings.Disabled || chanState.GuestStar.Active {
+		return fmt.Errorf("bot is disabled")
+	}
+
+	if chanState.GuestStar.Active {
+		return fmt.Errorf("guest star session is active")
 	}
 
 	nextKiller, ok := b.killerMap[name]

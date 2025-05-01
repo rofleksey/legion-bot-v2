@@ -1,10 +1,5 @@
 package dao
 
-import (
-	"encoding/json"
-	"github.com/nicklaw5/helix/v2"
-)
-
 type TwitchUser struct {
 	Login           string `json:"login"`
 	DisplayName     string `json:"display_name"`
@@ -32,10 +27,4 @@ type SummonKillerRequest struct {
 type AdminLoginResponse struct {
 	Token string             `json:"token"`
 	User  ResponseTwitchUser `json:"user"`
-}
-
-type EventSubNotification struct {
-	Subscription helix.EventSubSubscription `json:"subscription"`
-	Challenge    string                     `json:"challenge"`
-	Event        json.RawMessage            `json:"event"`
 }

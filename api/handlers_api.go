@@ -1,20 +1,16 @@
 package api
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/jellydator/ttlcache/v3"
-	"github.com/nicklaw5/helix/v2"
-	"io"
 	"legion-bot-v2/dao"
 	"legion-bot-v2/db"
 	"legion-bot-v2/util"
 	"log/slog"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 )
 
@@ -290,64 +286,6 @@ func (s *Server) handleLoginAs(w http.ResponseWriter, r *http.Request) {
 			ProfileImageURL: twitchUser.ProfileImageURL,
 		},
 	})
-}
-
-func (s *Server) handleOutgoingRaid(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		slog.Error("Failed to read outgoing raid body",
-			slog.Any("error", err),
-		)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
-
-	if !helix.VerifyEventSubNotification(s.cfg.Chat.WebHookSecret, r.Header, string(body)) {
-		slog.Error("Invalid signature for outgoing raid")
-		w.WriteHeader(http.StatusForbidden)
-		return
-	}
-
-	var eventDao dao.EventSubNotification
-	err = json.NewDecoder(bytes.NewReader(body)).Decode(&eventDao)
-	if err != nil {
-		slog.Error("Failed to decode outgoing raid general body",
-			slog.Any("error", err),
-		)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	if eventDao.Challenge != "" {
-		w.Write([]byte(eventDao.Challenge))
-		return
-	}
-
-	var raidEvent helix.EventSubChannelRaidEvent
-
-	err = json.NewDecoder(bytes.NewReader(eventDao.Event)).Decode(&raidEvent)
-	if err != nil {
-		slog.Error("Failed to decode outgoing raid body",
-			slog.Any("error", err),
-		)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	fromChannel := strings.ReplaceAll(raidEvent.FromBroadcasterUserLogin, "#", "")
-	toChannel := strings.ReplaceAll(raidEvent.ToBroadcasterUserLogin, "#", "")
-
-	slog.Error("Outgoing raid",
-		slog.String("from", fromChannel),
-		slog.String("to", toChannel),
-		slog.Int("viewers", raidEvent.Viewers),
-	)
-
-	go s.bot.HandleOutgoingRaid(fromChannel, toChannel)
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("ok"))
 }
 
 func (s *Server) handleValidateToken(w http.ResponseWriter, r *http.Request) {
