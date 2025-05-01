@@ -129,3 +129,52 @@ func (db *Impl) GetAllStates() []ChannelState {
 
 	return states
 }
+
+func (db *Impl) ReadAllStates(callback func(state *ChannelState)) {
+	err := db.db.View(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket([]byte("channels"))
+		if bucket == nil {
+			return errors.New("bucket not found")
+		}
+
+		return bucket.ForEach(func(k, v []byte) error {
+			var state ChannelState
+			if err := json.Unmarshal(v, &state); err != nil {
+				return err
+			}
+			callback(&state)
+			return nil
+		})
+	})
+
+	if err != nil {
+		slog.Error("Failed to iterate channel states",
+			slog.Any("error", err),
+		)
+	}
+}
+
+func (db *Impl) GetAllChannelNames() []string {
+	var channelNames []string
+
+	err := db.db.View(func(tx *bbolt.Tx) error {
+		bucket := tx.Bucket([]byte("channels"))
+		if bucket == nil {
+			return errors.New("bucket not found")
+		}
+
+		return bucket.ForEach(func(k, _ []byte) error {
+			channelNames = append(channelNames, string(k))
+			return nil
+		})
+	})
+
+	if err != nil {
+		slog.Error("Failed to get channel names",
+			slog.Any("error", err),
+		)
+		return nil
+	}
+
+	return channelNames
+}

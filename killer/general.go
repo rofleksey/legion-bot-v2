@@ -7,8 +7,9 @@ import (
 type Killer interface {
 	Name() string
 	Enabled(channel string) bool
-	FixSettings(channel string)
+	FixSettings(chanState *db.ChannelState) bool
 	Weight(channel string) int
 	Start(userMsg db.Message)
 	HandleMessage(userMsg db.Message)
+	HandleWhisper(userMsg db.PartialMessage)
 }

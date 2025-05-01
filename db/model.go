@@ -30,3 +30,9 @@ type Message struct {
 	IsMod    bool
 	Text     string
 }
+
+type PartialMessage struct {
+	Channel  string
+	Username string
+	Text     string
+}

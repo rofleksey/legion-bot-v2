@@ -30,18 +30,23 @@ type Legion struct {
 	gpt.Gpt
 }
 
+func (l *Legion) HandleWhisper(userMsg db.PartialMessage) {
+
+}
+
 func (l *Legion) Weight(channel string) int {
 	chanState := l.GetState(channel)
 	return chanState.Settings.Killers.Legion.Weight
 }
 
-func (l *Legion) FixSettings(channel string) {
-	chanState := l.GetState(channel)
-	if chanState.Settings.Killers.Legion == nil {
-		l.UpdateState(chanState.Channel, func(chanState *db.ChannelState) {
-			chanState.Settings.Killers.Legion = db.DefaultLegionSettings()
-		})
+func (l *Legion) FixSettings(chanState *db.ChannelState) bool {
+	if chanState.Settings.Killers.Legion != nil {
+		return false
 	}
+
+	chanState.Settings.Killers.Legion = db.DefaultLegionSettings()
+
+	return true
 }
 
 func (l *Legion) Name() string {

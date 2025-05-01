@@ -42,6 +42,10 @@ func New(db db.DB, actions chat.Actions, timers timers.Timers, localiser i18n.Lo
 	return k
 }
 
+func (g *GhostFace) HandleWhisper(userMsg db.PartialMessage) {
+
+}
+
 func (g *GhostFace) Name() string {
 	return "ghostface"
 }
@@ -56,13 +60,14 @@ func (g *GhostFace) Enabled(channel string) bool {
 	return chanState.Settings.Killers.GhostFace.Enabled
 }
 
-func (g *GhostFace) FixSettings(channel string) {
-	chanState := g.GetState(channel)
-	if chanState.Settings.Killers.GhostFace == nil {
-		g.UpdateState(chanState.Channel, func(chanState *db.ChannelState) {
-			chanState.Settings.Killers.GhostFace = db.DefaultGhostFaceSettings()
-		})
+func (g *GhostFace) FixSettings(chanState *db.ChannelState) bool {
+	if chanState.Settings.Killers.GhostFace != nil {
+		return false
 	}
+
+	chanState.Settings.Killers.GhostFace = db.DefaultGhostFaceSettings()
+
+	return true
 }
 
 func (g *GhostFace) startStalkTimer(channel string) {

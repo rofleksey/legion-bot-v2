@@ -56,32 +56,30 @@ func NewBot(
 }
 
 func (b *Bot) Init() {
-	for _, chanState := range b.GetAllStates() {
-		if chanState.Killer != "" {
-			b.UpdateState(chanState.Channel, func(chanState *db.ChannelState) {
+	channels := b.GetAllChannelNames()
+
+	for _, channel := range channels {
+		b.UpdateState(channel, func(chanState *db.ChannelState) {
+			if chanState.Killer != "" {
 				chanState.Killer = ""
 				chanState.KillerState = nil
 				chanState.Date = time.Now()
-			})
-		}
-
-		if chanState.Settings.Killers.General == nil {
-			b.UpdateState(chanState.Channel, func(chanState *db.ChannelState) {
-				chanState.Settings.Killers.General = db.DefaultGeneralKillerSettings()
-			})
-		}
-
-		for _, k := range b.killerMap {
-			k.FixSettings(chanState.Channel)
-		}
-
-		for username, user := range chanState.UserMap {
-			if user.Health == "dead" || user.Health == "deep_wound" {
-				b.UpdateState(chanState.Channel, func(chanState *db.ChannelState) {
-					chanState.UserMap[username].Health = "injured"
-				})
 			}
-		}
+
+			if chanState.Settings.Killers.General == nil {
+				chanState.Settings.Killers.General = db.DefaultGeneralKillerSettings()
+			}
+
+			for _, k := range b.killerMap {
+				k.FixSettings(chanState)
+			}
+
+			for username, user := range chanState.UserMap {
+				if user.Health == "dead" || user.Health == "deep_wound" {
+					chanState.UserMap[username].Health = "injured"
+				}
+			}
+		})
 	}
 }
 
@@ -338,6 +336,33 @@ func (b *Bot) HandleMessage(userMsg db.Message) {
 	}
 
 	curKiller.HandleMessage(userMsg)
+}
+
+func (b *Bot) HandleWhisper(username, message string) {
+	channels := b.GetAllChannelNames()
+
+	for _, channel := range channels {
+		chanState := b.GetState(channel)
+
+		if chanState.Settings.Disabled || chanState.Killer == "" {
+			return
+		}
+
+		curKiller, ok := b.killerMap[chanState.Killer]
+		if !ok {
+			slog.Error("Killer not found",
+				slog.String("channel", chanState.Channel),
+				slog.String("killer", chanState.Killer),
+			)
+			return
+		}
+
+		curKiller.HandleWhisper(db.PartialMessage{
+			Channel:  channel,
+			Username: username,
+			Text:     message,
+		})
+	}
 }
 
 func (b *Bot) HandleIncomingRaid(channel, otherChannel string) {

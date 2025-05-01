@@ -35,7 +35,6 @@ import (
 // display status
 // display problems
 // add more Info icons in the settings
-// react to лиджн
 // more descriptive killer powers in chat
 // change restart cron
 // gf 99

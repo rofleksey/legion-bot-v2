@@ -13,7 +13,6 @@ import (
 	"math/rand/v2"
 	"strings"
 	"time"
-	"unicode"
 )
 
 var _ killer.Killer = (*Doctor)(nil)
@@ -56,13 +55,14 @@ func (d *Doctor) Enabled(channel string) bool {
 	return chanState.Settings.Killers.Doctor.Enabled
 }
 
-func (d *Doctor) FixSettings(channel string) {
-	chanState := d.GetState(channel)
-	if chanState.Settings.Killers.Doctor == nil {
-		d.UpdateState(chanState.Channel, func(chanState *db.ChannelState) {
-			chanState.Settings.Killers.Doctor = db.DefaultDoctorSettings()
-		})
+func (d *Doctor) FixSettings(chanState *db.ChannelState) bool {
+	if chanState.Settings.Killers.Doctor != nil {
+		return false
 	}
+
+	chanState.Settings.Killers.Doctor = db.DefaultDoctorSettings()
+
+	return true
 }
 
 func (d *Doctor) startMadnessTimer(channel string) {
@@ -150,6 +150,10 @@ func (d *Doctor) HandleMessage(userMsg db.Message) {
 	d.handleHit(userMsg)
 }
 
+func (d *Doctor) HandleWhisper(userMsg db.PartialMessage) {
+
+}
+
 func (d *Doctor) handleCommands(userMsg db.Message) bool {
 	chanState := d.GetState(userMsg.Channel)
 	lang := chanState.Settings.Language
@@ -170,37 +174,5 @@ func (d *Doctor) handleHit(userMsg db.Message) {
 	})
 
 	d.DeleteMessage(userMsg.Channel, userMsg.ID)
-	d.SendMessage(userMsg.Channel, scrambleText(userMsg.Text))
-}
-
-func scrambleWord(word []rune) []rune {
-	if len(word) <= 3 {
-		return word
-	}
-
-	lastChar := word[len(word)-1]
-	var punctuation []rune
-	if !unicode.IsLetter(lastChar) && !unicode.IsNumber(lastChar) {
-		punctuation = []rune{lastChar}
-		word = word[:len(word)-1]
-	}
-
-	middle := word[1 : len(word)-1]
-	rand.Shuffle(len(middle), func(i, j int) {
-		middle[i], middle[j] = middle[j], middle[i]
-	})
-
-	scrambled := []rune{word[0]}
-	scrambled = append(scrambled, middle...)
-	scrambled = append(scrambled, word[len(word)-1])
-	scrambled = append(scrambled, punctuation...)
-
-	return scrambled
-}
-
-func scrambleText(text string) string {
-	result := util.WordRegex.ReplaceAllStringFunc(text, func(match string) string {
-		return string(scrambleWord([]rune(match)))
-	})
-	return result
+	d.SendMessage(userMsg.Channel, userMsg.Text)
 }

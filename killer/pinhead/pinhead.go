@@ -57,13 +57,18 @@ func (p *Pinhead) Enabled(channel string) bool {
 	return chanState.Settings.Killers.Pinhead.Enabled
 }
 
-func (p *Pinhead) FixSettings(channel string) {
-	chanState := p.GetState(channel)
-	if chanState.Settings.Killers.Pinhead == nil {
-		p.UpdateState(chanState.Channel, func(chanState *db.ChannelState) {
-			chanState.Settings.Killers.Pinhead = db.DefaultPinheadSettings()
-		})
+func (p *Pinhead) FixSettings(chanState *db.ChannelState) bool {
+	if chanState.Settings.Killers.Pinhead != nil {
+		return false
 	}
+
+	chanState.Settings.Killers.Pinhead = db.DefaultPinheadSettings()
+
+	return true
+}
+
+func (p *Pinhead) HandleWhisper(userMsg db.PartialMessage) {
+
 }
 
 func (p *Pinhead) startRecoverTimer(channel, username string) {

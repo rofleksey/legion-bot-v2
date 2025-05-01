@@ -40,6 +40,67 @@ func (t *TwitchActions) getQueue(channel string) *util.TaskQueue {
 	return t.queues[channel]
 }
 
+func (t *TwitchActions) SetEmoteMode(channel string, enabled bool) {
+	t.getQueue(channel).Enqueue(func() {
+		slog.Info("Set emote mode",
+			slog.String("channel", channel),
+			slog.Bool("enabled", enabled),
+		)
+
+		botResp, err := t.helixClient.GetUsers(&helix.UsersParams{
+			Logins: []string{util.BotUsername},
+		})
+		if err != nil || len(botResp.Data.Users) == 0 {
+			slog.Error("Error getting bot user",
+				slog.String("channel", channel),
+				slog.Any("error", err),
+			)
+			return
+		}
+		botUser := botResp.Data.Users[0]
+
+		channelResp, err := t.helixClient.GetUsers(&helix.UsersParams{
+			Logins: []string{channel},
+		})
+		if err != nil || len(channelResp.Data.Users) == 0 {
+			slog.Error("Error getting channel user",
+				slog.String("channel", channel),
+				slog.Any("error", err),
+			)
+			return
+		}
+		channelUser := channelResp.Data.Users[0]
+
+		setResp, err := t.helixClient.UpdateChatSettings(&helix.UpdateChatSettingsParams{
+			BroadcasterID: channelUser.ID,
+			ModeratorID:   botUser.ID,
+			EmoteMode:     &enabled,
+		})
+		if err != nil {
+			slog.Error("Error setting emote mode",
+				slog.String("channel", channel),
+				slog.Bool("enabled", enabled),
+				slog.Any("error", err),
+			)
+			return
+		}
+
+		if setResp.StatusCode >= 400 {
+			slog.Error("Set emote mode API error",
+				slog.String("channel", channel),
+				slog.Bool("enabled", enabled),
+				slog.Any("error", setResp.Error),
+				slog.Any("errorMsg", setResp.ErrorMessage),
+			)
+		}
+	})
+}
+
+func (t *TwitchActions) DisableEmojiMode(channel string) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (t *TwitchActions) GetViewerList(channel string) []string {
 	result, err := t.ircClient.Userlist(channel)
 	if err != nil {

@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/elliotchance/pie/v2"
 	"github.com/jellydator/ttlcache/v3"
 	"github.com/nicklaw5/helix/v2"
 	"io"
@@ -236,11 +235,14 @@ func (s *Server) handleUserList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list := pie.Map(s.database.GetAllStates(), func(chanState db.ChannelState) dao.AdminTwitchUser {
-		return dao.AdminTwitchUser{
+	var list []dao.AdminTwitchUser
+
+	s.database.ReadAllStates(func(chanState *db.ChannelState) {
+		list = append(list, dao.AdminTwitchUser{
 			Login: chanState.Channel,
-		}
+		})
 	})
+
 	if list == nil {
 		list = []dao.AdminTwitchUser{}
 	}

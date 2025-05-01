@@ -11,6 +11,13 @@ var _ Actions = (*ConsoleActions)(nil)
 type ConsoleActions struct {
 }
 
+func (a *ConsoleActions) SetEmoteMode(channel string, enabled bool) {
+	slog.Debug("Set emote mode",
+		slog.String("channel", channel),
+		slog.Bool("enabled", enabled),
+	)
+}
+
 func (a *ConsoleActions) GetViewerList(channel string) []string {
 	return []string{util.BotUsername}
 }

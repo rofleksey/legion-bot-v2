@@ -99,15 +99,26 @@ func (p *TwitchProducer) Run() error {
 		slog.Info("Connected to IRC")
 	})
 
+	p.ircClient.OnWhisperMessage(func(message twitch.WhisperMessage) {
+		username := strings.ToLower(message.User.Name)
+		text := strings.TrimSpace(message.Message)
+
+		slog.Info("Whisper Message",
+			slog.String("username", username),
+			slog.String("text", text),
+		)
+
+		p.botInstance.HandleWhisper(username, text)
+	})
+
 	if os.Getenv("ENVIRONMENT") == "production" {
-		states := p.database.GetAllStates()
-		for _, state := range states {
-			if state.Settings.Disabled {
-				continue
+		p.database.ReadAllStates(func(chanState *db.ChannelState) {
+			if chanState.Settings.Disabled {
+				return
 			}
 
-			p.AddChannel(state.Channel)
-		}
+			p.AddChannel(chanState.Channel)
+		})
 	}
 
 	return p.ircClient.Connect()

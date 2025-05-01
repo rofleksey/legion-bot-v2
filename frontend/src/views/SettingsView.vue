@@ -164,42 +164,6 @@
         </div>
 
         <div class="settings-subsection">
-          <h3 class="settings-subsection-title">{{ t('settings.doctor') }}</h3>
-          <AppQuotation class="settings-subsection-description">{{ t('settings.doctor_description') }}</AppQuotation>
-          <div class="settings-grid">
-            <AppSwitch
-              v-model="settings.killers.doctor.enabled"
-              :label="settings.killers.doctor.enabled ? t('settings.enabled') : t('settings.disabled')"
-            />
-            <AppNumberInput
-              v-model="settings.killers.doctor.weight"
-              :min="1"
-              :max="1000000"
-              :label="t('settings.weight')"
-              show-help-icon
-              @help-click="Dialog.show(t('settings.weight_description'))"
-            />
-            <AppButton :loading="postLoading" @click="summonKiller('doctor')">
-              {{ t('settings.summon') }}
-            </AppButton>
-          </div>
-          <div class="settings-grid">
-            <AppDurationInput
-              v-model="settings.killers.doctor.timeout"
-              :label="t('settings.timeout')"
-            />
-            <AppChanceInput
-              v-model="settings.killers.doctor.reactChance"
-              :label="t('settings.react_chance')"
-            />
-            <AppDurationInput
-              v-model="settings.killers.doctor.minDelayBetweenHits"
-              :label="t('settings.min_delay_between_hits')"
-            />
-          </div>
-        </div>
-
-        <div class="settings-subsection">
           <h3 class="settings-subsection-title">{{ t('settings.pinhead') }}</h3>
           <AppQuotation class="settings-subsection-description">{{ t('settings.pinhead_description') }}</AppQuotation>
           <div class="settings-grid">
@@ -243,6 +207,42 @@
             <AppStringInput
               v-model="settings.killers.pinhead.topics"
               :label="t('settings.topics')"
+            />
+          </div>
+        </div>
+
+        <div class="settings-subsection">
+          <h3 class="settings-subsection-title">{{ t('settings.doctor') }}</h3>
+          <AppQuotation class="settings-subsection-description">{{ t('settings.doctor_description') }}</AppQuotation>
+          <div class="settings-grid">
+            <AppSwitch
+              v-model="settings.killers.doctor.enabled"
+              :label="settings.killers.doctor.enabled ? t('settings.enabled') : t('settings.disabled')"
+            />
+            <AppNumberInput
+              v-model="settings.killers.doctor.weight"
+              :min="1"
+              :max="1000000"
+              :label="t('settings.weight')"
+              show-help-icon
+              @help-click="Dialog.show(t('settings.weight_description'))"
+            />
+            <AppButton :loading="postLoading" @click="summonKiller('doctor')">
+              {{ t('settings.summon') }}
+            </AppButton>
+          </div>
+          <div class="settings-grid">
+            <AppDurationInput
+              v-model="settings.killers.doctor.timeout"
+              :label="t('settings.timeout')"
+            />
+            <AppChanceInput
+              v-model="settings.killers.doctor.reactChance"
+              :label="t('settings.react_chance')"
+            />
+            <AppDurationInput
+              v-model="settings.killers.doctor.minDelayBetweenHits"
+              :label="t('settings.min_delay_between_hits')"
             />
           </div>
         </div>
