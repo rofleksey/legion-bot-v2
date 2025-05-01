@@ -59,8 +59,6 @@ func InitAppTwitchClient(cfg *config.Config, userAccessToken string) (*helix.Cli
 	}
 
 	resp, err := client.RequestAppAccessToken([]string{
-		"channel:read:guest_star",
-		"channel:manage:guest_star",
 		"moderator:read:guest_star",
 		"moderator:manage:guest_star",
 	})
@@ -73,7 +71,7 @@ func InitAppTwitchClient(cfg *config.Config, userAccessToken string) (*helix.Cli
 	}
 
 	client.SetAppAccessToken(resp.Data.AccessToken)
-	client.SetUserAccessToken(userAccessToken)
+	//client.SetUserAccessToken(userAccessToken)
 
 	return client, nil
 }
