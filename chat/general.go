@@ -13,4 +13,6 @@ type Actions interface {
 	GetViewerCount(channel string) int
 	UnbanUser(channel, username string)
 	GetViewerList(channel string) []string
+	EnableEmojiMode(channel string)
+	DisableEmojiMode(channel string)
 }
