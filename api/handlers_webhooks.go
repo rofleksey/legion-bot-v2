@@ -106,7 +106,7 @@ func (s *Server) handleGuestStarBegin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var guestStarEvent dao.EventSubGuestStarEvent
+	var guestStarEvent dao.BroadcasterUserLoginEvent
 	err = json.NewDecoder(bytes.NewReader(eventDao.Event)).Decode(&guestStarEvent)
 	if err != nil {
 		slog.Error("Failed to decode guest star begin body",
@@ -163,7 +163,7 @@ func (s *Server) handleGuestStarEnd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var guestStarEvent dao.EventSubGuestStarEvent
+	var guestStarEvent dao.BroadcasterUserLoginEvent
 	err = json.NewDecoder(bytes.NewReader(eventDao.Event)).Decode(&guestStarEvent)
 	if err != nil {
 		slog.Error("Failed to decode guest star end body",
@@ -181,6 +181,63 @@ func (s *Server) handleGuestStarEnd(w http.ResponseWriter, r *http.Request) {
 	)
 
 	go s.bot.HandleGuestStarEnd(channel)
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("ok"))
+}
+
+func (s *Server) handleStreamStart(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		slog.Error("Failed to read stream start body",
+			slog.Any("error", err),
+		)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok"))
+		return
+	}
+	defer r.Body.Close()
+
+	if !helix.VerifyEventSubNotification(s.cfg.Chat.WebHookSecret, r.Header, string(body)) {
+		slog.Error("Invalid signature for stream start")
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	var eventDao dao.EventSubNotification
+	err = json.NewDecoder(bytes.NewReader(body)).Decode(&eventDao)
+	if err != nil {
+		slog.Error("Failed to parse stream start general body",
+			slog.Any("error", err),
+		)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok"))
+		return
+	}
+
+	if eventDao.Challenge != "" {
+		w.Write([]byte(eventDao.Challenge))
+		return
+	}
+
+	var event dao.BroadcasterUserLoginEvent
+	err = json.NewDecoder(bytes.NewReader(eventDao.Event)).Decode(&event)
+	if err != nil {
+		slog.Error("Failed to decode stream start body",
+			slog.Any("error", err),
+		)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("ok"))
+		return
+	}
+
+	channel := strings.ToLower(strings.ReplaceAll(event.BroadcasterUserLogin, "#", ""))
+
+	slog.Error("Stream online",
+		slog.String("channel", channel),
+	)
+
+	go s.bot.HandleStreamOnline(channel)
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("ok"))

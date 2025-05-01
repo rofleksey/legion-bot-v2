@@ -11,6 +11,6 @@ type EventSubNotification struct {
 	Event        json.RawMessage            `json:"event"`
 }
 
-type EventSubGuestStarEvent struct {
+type BroadcasterUserLoginEvent struct {
 	BroadcasterUserLogin string `json:"broadcaster_user_login"`
 }

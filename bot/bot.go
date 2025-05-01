@@ -1,6 +1,7 @@
 package bot
 
 import (
+	_ "embed"
 	"fmt"
 	"github.com/elliotchance/pie/v2"
 	"github.com/jellydator/ttlcache/v3"
@@ -16,6 +17,9 @@ import (
 	"strings"
 	"time"
 )
+
+//go:embed banner.txt
+var banner string
 
 type Bot struct {
 	db.DB
@@ -355,6 +359,11 @@ func (b *Bot) HandleGuestStarEnd(channel string) {
 		chanState.GuestStar.Active = false
 		chanState.GuestStar.Date = time.Now()
 	})
+}
+
+func (b *Bot) HandleStreamOnline(channel string) {
+	b.getCachedStreamStartTime(channel)
+	b.SendMessage(channel, banner)
 }
 
 func (b *Bot) HandleWhisper(username, message string) {

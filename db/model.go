@@ -29,6 +29,7 @@ type ChannelSubs struct {
 	RaidID         string `json:"raidId"`
 	GuestStarBegin string `json:"guestStarBegin"`
 	GuestStarEnd   string `json:"guestStarEnd"`
+	StreamStart    string `json:"streamStart"`
 }
 
 type Message struct {

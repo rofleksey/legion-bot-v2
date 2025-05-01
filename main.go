@@ -140,7 +140,7 @@ func main() {
 		)
 	}
 
-	ircClient, helixClient, err := util.InitTwitchClients(cfg.Chat.ClientID, accessToken)
+	ircClient, helixClient, err := util.InitTwitchClients(cfg, accessToken)
 	if err != nil {
 		log.Fatalf("Failed to init twitch clients: %v", err)
 	}

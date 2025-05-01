@@ -50,7 +50,12 @@ func InitAppTwitchClient(cfg *config.Config) (*helix.Client, error) {
 		return nil, fmt.Errorf("failed to create twitch client: %v", err)
 	}
 
-	resp, err := client.RequestAppAccessToken([]string{})
+	resp, err := client.RequestAppAccessToken([]string{
+		"channel:read:guest_star",
+		"channel:manage:guest_star",
+		"moderator:read:guest_star",
+		"moderator:manage:guest_star",
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to request app access token: %v", err)
 	}
@@ -64,16 +69,25 @@ func InitAppTwitchClient(cfg *config.Config) (*helix.Client, error) {
 	return client, nil
 }
 
-func InitTwitchClients(clientID, accessToken string) (*twitch.Client, *helix.Client, error) {
-	ircClient := twitch.NewClient(clientID, "oauth:"+accessToken)
+func InitTwitchClients(cfg *config.Config, accessToken string) (*twitch.Client, *helix.Client, error) {
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConns:    10,
+			IdleConnTimeout: 30 * time.Second,
+		},
+		Timeout: 10 * time.Second,
+	}
 
 	helixClient, err := helix.NewClient(&helix.Options{
-		ClientID:        clientID,
+		ClientID:        cfg.Chat.ClientID,
 		UserAccessToken: accessToken,
+		HTTPClient:      httpClient,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create helix client: %w", err)
 	}
+
+	ircClient := twitch.NewClient(cfg.Auth.ClientID, "oauth:"+accessToken)
 
 	return ircClient, helixClient, nil
 }

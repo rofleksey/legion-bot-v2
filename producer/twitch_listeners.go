@@ -55,11 +55,17 @@ func (p *TwitchProducer) registerAllListeners(channel string) {
 		p.addOutgoingRaidsListener(channel, broadcasterID)
 	})
 	p.queue.Enqueue(func() {
-		p.addGuestStarListener(channel, broadcasterID, botID)
+		p.addGuestStarBeginListener(channel, broadcasterID, botID)
+	})
+	p.queue.Enqueue(func() {
+		p.addGuestStarEndListener(channel, broadcasterID, botID)
+	})
+	p.queue.Enqueue(func() {
+		p.addStreamStartListener(channel, broadcasterID)
 	})
 }
 
-func (p *TwitchProducer) addGuestStarListener(channel, broadcasterID, botID string) {
+func (p *TwitchProducer) addGuestStarBeginListener(channel, broadcasterID, botID string) {
 	chanState := p.database.GetState(channel)
 	guestStarBeginId := chanState.Subs.GuestStarBegin
 
@@ -145,6 +151,48 @@ func (p *TwitchProducer) addGuestStarEndListener(channel, broadcasterID, botID s
 	})
 }
 
+func (p *TwitchProducer) addStreamStartListener(channel, broadcasterID string) {
+	chanState := p.database.GetState(channel)
+	streamStartId := chanState.Subs.StreamStart
+
+	if streamStartId != "" {
+		_, _ = p.appClient.RemoveEventSubSubscription(streamStartId)
+	}
+
+	resp, err := p.appClient.CreateEventSubSubscription(&helix.EventSubSubscription{
+		Type:    "stream.online",
+		Version: "1",
+		Condition: helix.EventSubCondition{
+			BroadcasterUserID: broadcasterID,
+		},
+		Transport: helix.EventSubTransport{
+			Method:   "webhook",
+			Callback: fmt.Sprintf("%s/api/webhook/stream/start", p.cfg.BaseURL),
+			Secret:   p.cfg.Chat.WebHookSecret,
+		},
+	})
+	if err != nil {
+		slog.Error("Failed to create event sub for stream start",
+			slog.String("channel", channel),
+			slog.Any("error", err),
+		)
+		return
+	}
+	if len(resp.Data.EventSubSubscriptions) == 0 {
+		slog.Error("Failed to create event sub for stream start",
+			slog.String("channel", channel),
+			slog.String("error", resp.Error),
+			slog.String("errorMsg", resp.ErrorMessage),
+		)
+		return
+	}
+
+	sub := resp.Data.EventSubSubscriptions[0]
+	p.database.UpdateState(channel, func(state *db.ChannelState) {
+		state.Subs.StreamStart = sub.ID
+	})
+}
+
 func (p *TwitchProducer) addOutgoingRaidsListener(channel, broadcasterID string) {
 	chanState := p.database.GetState(channel)
 	raidSubId := chanState.Subs.RaidID
@@ -208,9 +256,16 @@ func (p *TwitchProducer) removeAllListeners(channel string) {
 		})
 	}
 
+	if chanState.Subs.StreamStart != "" {
+		p.queue.Enqueue(func() {
+			_, _ = p.appClient.RemoveEventSubSubscription(chanState.Subs.StreamStart)
+		})
+	}
+
 	p.database.UpdateState(channel, func(state *db.ChannelState) {
 		state.Subs.RaidID = ""
 		state.Subs.GuestStarBegin = ""
 		state.Subs.GuestStarEnd = ""
+		state.Subs.StreamStart = ""
 	})
 }
