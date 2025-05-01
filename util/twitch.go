@@ -41,7 +41,7 @@ func FetchTwitchAccessToken(refreshToken string) (string, error) {
 	return result.Token, nil
 }
 
-func InitAppTwitchClient(cfg *config.Config) (*helix.Client, error) {
+func InitAppTwitchClient(cfg *config.Config, accessToken string) (*helix.Client, error) {
 	client, err := helix.NewClient(&helix.Options{
 		ClientID:     cfg.Auth.ClientID,
 		ClientSecret: cfg.Auth.ClientSecret,
@@ -65,6 +65,7 @@ func InitAppTwitchClient(cfg *config.Config) (*helix.Client, error) {
 	}
 
 	client.SetAppAccessToken(resp.Data.AccessToken)
+	client.SetUserAccessToken(accessToken)
 
 	return client, nil
 }
