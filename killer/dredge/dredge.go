@@ -80,6 +80,8 @@ func (d *Dredge) onNightfallEnd(channel string) {
 	dredgeSettings := chanState.Settings.Killers.Dredge
 	lang := chanState.Settings.Language
 
+	d.SetEmoteMode(channel, false)
+
 	var dredgeState db.DredgeState
 	if err := mapstructure.Decode(chanState.KillerState, &dredgeState); err != nil {
 		slog.Error("Failed to decode killer state",

@@ -116,13 +116,16 @@ func (p *TwitchProducer) Run() error {
 	})
 
 	if os.Getenv("ENVIRONMENT") == "production" {
-		p.database.ReadAllStates(func(chanState *db.ChannelState) {
+		channels := p.database.GetAllChannelNames()
+
+		for _, channel := range channels {
+			chanState := p.database.GetState(channel)
 			if chanState.Settings.Disabled {
-				return
+				continue
 			}
 
 			p.AddChannel(chanState.Channel)
-		})
+		}
 	}
 
 	return p.ircClient.Connect()
@@ -130,8 +133,7 @@ func (p *TwitchProducer) Run() error {
 
 func (p *TwitchProducer) AddChannel(channel string) {
 	p.ircClient.Join(channel)
-
-	go p.tryAddOutgoingRaidsListener(channel)
+	p.tryAddOutgoingRaidsListener(channel)
 }
 
 func (p *TwitchProducer) tryAddOutgoingRaidsListener(channel string) {
