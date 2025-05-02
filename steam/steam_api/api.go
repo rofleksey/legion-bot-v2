@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"legion-bot-v2/api/dao"
 	"legion-bot-v2/util/taskq"
 	"net/http"
@@ -57,7 +58,7 @@ func NewClient(sessionId, steamSecureLogin string) (*Client, error) {
 		},
 		sessionId:        sessionId,
 		steamSecureLogin: steamSecureLogin,
-		queue:            taskq.New(1, 1.0/3.0, 1), // 1 request per 3 seconds
+		queue:            taskq.New(1, 1.0/5.0, 1), // 1 request per 5 seconds
 	}, nil
 }
 
@@ -80,7 +81,8 @@ func (c *Client) GetLatestComments(steamID string) ([]dao.Comment, error) {
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("%w: %d", ErrInvalidStatusCode, resp.StatusCode)
+			bodyBytez, _ := io.ReadAll(resp.Body)
+			return nil, fmt.Errorf("failed to get latest comments, status code %d: %s", resp.StatusCode, string(bodyBytez))
 		}
 
 		var apiResponse CommentsResponse
@@ -170,7 +172,8 @@ func (c *Client) DeleteComment(steamID string, commentID string) error {
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("failed to delete comment, status code: %d", resp.StatusCode)
+			bodyBytez, _ := io.ReadAll(resp.Body)
+			return fmt.Errorf("failed to delete comment, status code %d: %s", resp.StatusCode, string(bodyBytez))
 		}
 
 		return nil
@@ -203,7 +206,8 @@ func (c *Client) PostComment(steamID, comment string) (string, error) {
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			return "", fmt.Errorf("failed to post comment, status code: %d", resp.StatusCode)
+			bodyBytez, _ := io.ReadAll(resp.Body)
+			return "", fmt.Errorf("failed to post comment, status code %d: %s", resp.StatusCode, string(bodyBytez))
 		}
 
 		// Parse the response to get the comment ID

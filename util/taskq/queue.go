@@ -68,6 +68,11 @@ func Compute[T any](q *Queue, f func() T) T {
 		return zero
 	}
 
+	if result == nil {
+		var zero T
+		return zero
+	}
+
 	return result.(T)
 }
 
@@ -99,6 +104,12 @@ func ComputeWithError[T any](q *Queue, f func() (T, error)) (T, error) {
 	}
 
 	resWithErr := result.(ResWithErr)
+
+	if resWithErr.Res == nil {
+		var zero T
+
+		return zero, resWithErr.Err
+	}
 
 	return resWithErr.Res.(T), resWithErr.Err
 }
