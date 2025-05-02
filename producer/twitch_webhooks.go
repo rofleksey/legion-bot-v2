@@ -41,7 +41,7 @@ func (p *TwitchProducer) registerAllListeners(channel string) {
 		return
 	}
 	if len(botResp.Data.Users) == 0 {
-		slog.Error("Failed to get channel user info for listeners",
+		slog.Error("Failed to get bot user info for listeners",
 			slog.String("channel", channel),
 			slog.String("error", botResp.Error),
 			slog.String("errorMsg", botResp.ErrorMessage),
@@ -55,100 +55,41 @@ func (p *TwitchProducer) registerAllListeners(channel string) {
 		p.addOutgoingRaidsListener(channel, broadcasterID)
 	})
 	p.queue.Enqueue(func() {
-		p.addGuestStarBeginListener(channel, broadcasterID, botID)
-	})
-	p.queue.Enqueue(func() {
-		p.addGuestStarEndListener(channel, broadcasterID, botID)
-	})
-	p.queue.Enqueue(func() {
 		p.addStreamStartListener(channel, broadcasterID)
 	})
-}
 
-func (p *TwitchProducer) addGuestStarBeginListener(channel, broadcasterID, botID string) {
-	chanState := p.database.GetState(channel)
-	guestStarBeginId := chanState.Subs.GuestStarBegin
+	client, err := StartWebsocketClient(
+		broadcasterID,
+		botID,
+		p.cfg.Twitch.ClientID,
+		p.userAccessToken,
+		func(event, eventChannel string) {
+			if channel != eventChannel {
+				return
+			}
 
-	if guestStarBeginId != "" {
-		_, _ = p.appClient.RemoveEventSubSubscription(guestStarBeginId)
-	}
-
-	resp, err := p.appClient.CreateEventSubSubscription(&helix.EventSubSubscription{
-		Type:    "channel.guest_star_session.begin",
-		Version: "beta",
-		Condition: helix.EventSubCondition{
-			BroadcasterUserID: broadcasterID,
-			ModeratorUserID:   botID,
-		},
-		Transport: helix.EventSubTransport{
-			Method:   "webhook",
-			Callback: fmt.Sprintf("%s/api/webhook/guestStart/begin", p.cfg.BaseURL),
-			Secret:   p.cfg.Twitch.WebHookSecret,
-		},
-	})
+			switch event {
+			case "channel.guest_star_session.begin":
+				go p.botInstance.HandleGuestStarBegin(channel)
+			case "channel.guest_star_session.end":
+				go p.botInstance.HandleGuestStarEnd(channel)
+			}
+		})
 	if err != nil {
-		slog.Error("Failed to create event sub for guest start begin",
+		slog.Error("Failed to start websocket client",
 			slog.String("channel", channel),
 			slog.Any("error", err),
 		)
 		return
 	}
-	if len(resp.Data.EventSubSubscriptions) == 0 {
-		slog.Error("Failed to create event sub for guest start begin",
-			slog.String("channel", channel),
-			slog.String("error", resp.Error),
-			slog.String("errorMsg", resp.ErrorMessage),
-		)
-		return
-	}
 
-	sub := resp.Data.EventSubSubscriptions[0]
-	p.database.UpdateState(channel, func(state *db.ChannelState) {
-		state.Subs.GuestStarBegin = sub.ID
-	})
-}
+	slog.Debug("Successfully created web socket client",
+		slog.String("channel", channel),
+	)
 
-func (p *TwitchProducer) addGuestStarEndListener(channel, broadcasterID, botID string) {
-	chanState := p.database.GetState(channel)
-	guestStarEndId := chanState.Subs.GuestStarEnd
-
-	if guestStarEndId != "" {
-		_, _ = p.appClient.RemoveEventSubSubscription(guestStarEndId)
-	}
-
-	resp, err := p.appClient.CreateEventSubSubscription(&helix.EventSubSubscription{
-		Type:    "channel.guest_star_session.end",
-		Version: "beta",
-		Condition: helix.EventSubCondition{
-			BroadcasterUserID: broadcasterID,
-			ModeratorUserID:   botID,
-		},
-		Transport: helix.EventSubTransport{
-			Method:   "webhook",
-			Callback: fmt.Sprintf("%s/api/webhook/guestStart/end", p.cfg.BaseURL),
-			Secret:   p.cfg.Twitch.WebHookSecret,
-		},
-	})
-	if err != nil {
-		slog.Error("Failed to create event sub for guest start end",
-			slog.String("channel", channel),
-			slog.Any("error", err),
-		)
-		return
-	}
-	if len(resp.Data.EventSubSubscriptions) == 0 {
-		slog.Error("Failed to create event sub for guest start end",
-			slog.String("channel", channel),
-			slog.String("error", resp.Error),
-			slog.String("errorMsg", resp.ErrorMessage),
-		)
-		return
-	}
-
-	sub := resp.Data.EventSubSubscriptions[0]
-	p.database.UpdateState(channel, func(state *db.ChannelState) {
-		state.Subs.GuestStarEnd = sub.ID
-	})
+	p.m.Lock()
+	defer p.m.Unlock()
+	p.websocketClients[channel] = client
 }
 
 func (p *TwitchProducer) addStreamStartListener(channel, broadcasterID string) {
@@ -191,6 +132,9 @@ func (p *TwitchProducer) addStreamStartListener(channel, broadcasterID string) {
 	p.database.UpdateState(channel, func(state *db.ChannelState) {
 		state.Subs.StreamStart = sub.ID
 	})
+	slog.Debug("Successfully created event sub for stream start",
+		slog.String("channel", channel),
+	)
 }
 
 func (p *TwitchProducer) addOutgoingRaidsListener(channel, broadcasterID string) {
@@ -233,6 +177,9 @@ func (p *TwitchProducer) addOutgoingRaidsListener(channel, broadcasterID string)
 	p.database.UpdateState(channel, func(state *db.ChannelState) {
 		state.Subs.RaidID = sub.ID
 	})
+	slog.Debug("Successfully created event sub for outgoing raids",
+		slog.String("channel", channel),
+	)
 }
 
 func (p *TwitchProducer) removeAllListeners(channel string) {
@@ -241,18 +188,9 @@ func (p *TwitchProducer) removeAllListeners(channel string) {
 	if chanState.Subs.RaidID != "" {
 		p.queue.Enqueue(func() {
 			_, _ = p.appClient.RemoveEventSubSubscription(chanState.Subs.RaidID)
-		})
-	}
-
-	if chanState.Subs.GuestStarBegin != "" {
-		p.queue.Enqueue(func() {
-			_, _ = p.appClient.RemoveEventSubSubscription(chanState.Subs.GuestStarBegin)
-		})
-	}
-
-	if chanState.Subs.GuestStarEnd != "" {
-		p.queue.Enqueue(func() {
-			_, _ = p.appClient.RemoveEventSubSubscription(chanState.Subs.GuestStarEnd)
+			slog.Debug("Removed event sub for raid subscription",
+				slog.String("channel", channel),
+			)
 		})
 	}
 
@@ -260,12 +198,22 @@ func (p *TwitchProducer) removeAllListeners(channel string) {
 		p.queue.Enqueue(func() {
 			_, _ = p.appClient.RemoveEventSubSubscription(chanState.Subs.StreamStart)
 		})
+		slog.Debug("Removed event sub for stream start subscription",
+			slog.String("channel", channel),
+		)
 	}
 
 	p.database.UpdateState(channel, func(state *db.ChannelState) {
 		state.Subs.RaidID = ""
-		state.Subs.GuestStarBegin = ""
-		state.Subs.GuestStarEnd = ""
 		state.Subs.StreamStart = ""
 	})
+
+	p.m.Lock()
+	defer p.m.Unlock()
+
+	client, ok := p.websocketClients[channel]
+	if ok {
+		client.Close()
+		delete(p.websocketClients, channel)
+	}
 }
