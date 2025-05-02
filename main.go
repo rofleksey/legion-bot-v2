@@ -32,6 +32,7 @@ import (
 )
 
 // TODO:
+// get rid of user ids
 // ascii art on stream start
 // display status
 // display problems

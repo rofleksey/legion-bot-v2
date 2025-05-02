@@ -18,9 +18,6 @@ import (
 	"time"
 )
 
-//go:embed banner.txt
-var banner string
-
 type Bot struct {
 	db.DB
 	chat.Actions
@@ -372,8 +369,17 @@ func (b *Bot) HandleMessage(userMsg db.Message) {
 }
 
 func (b *Bot) HandleStreamOnline(channel string) {
+	chanState := b.GetState(channel)
+	lang := chanState.Settings.Language
+
+	if chanState.Settings.Disabled || time.Now().Before(chanState.UserTimeout) {
+		return
+	}
+
 	b.getCachedStreamStartTime(channel)
-	b.SendMessage(channel, banner)
+
+	msg := b.GetLocalString(lang, "stream_start_greeting", map[string]string{})
+	b.SendMessage(channel, msg)
 }
 
 func (b *Bot) HandleWhisper(username, message string) {

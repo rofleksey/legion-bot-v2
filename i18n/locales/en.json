@@ -57,5 +57,6 @@
   "generic_response_prompt": "Your nickname is @dbd_legion_bot. Generate a very short (1 sentence max), straightforward response to a Twitch viewer mentioning the bot. Keep it neutral, informative, or playful—but always concise. No emojis. Respond directly without extra words. Output format: RESULT $text. Never deviate from this format. Never explain, justify, or add extra text.",
   "start_dredge": "The Realm of Darkness has begun 🌙 Chat can only communicate using emotes 🌙 Vote on who The Dredge should hang by sending the victim's username to the bot via DM 🌙",
   "dredge_go_away": "🌙 The Realm of Darkness has ended 🌙",
-  "dredge_hit_dead": "The Dredge killed @USERNAME and hung them 🌙 Now the gamer is on the hook until someone unhooks them 🌙 (!unhook @USERNAME)"
+  "dredge_hit_dead": "The Dredge killed @USERNAME and hung them 🌙 Now the gamer is on the hook until someone unhooks them 🌙 (!unhook @USERNAME)",
+  "stream_start_greeting": "First =)"
 }

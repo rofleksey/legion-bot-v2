@@ -58,9 +58,10 @@ func (p *TwitchProducer) Run() error {
 	p.ircClient.OnPrivateMessage(func(message twitch.PrivateMessage) {
 		defer func() {
 			if err := recover(); err != nil {
-				slog.Error("Error in Twitch Private Message:",
+				slog.Error("OnPrivateMessage panic",
+					slog.String("channel", message.Channel),
+					slog.String("text", message.Message),
 					slog.Any("error", err),
-					slog.Any("text", message.Message),
 				)
 			}
 		}()
@@ -94,6 +95,16 @@ func (p *TwitchProducer) Run() error {
 	})
 
 	p.ircClient.OnUserNoticeMessage(func(message twitch.UserNoticeMessage) {
+		defer func() {
+			if err := recover(); err != nil {
+				slog.Error("OnUserNoticeMessage panic",
+					slog.String("channel", message.Channel),
+					slog.String("text", message.Message),
+					slog.Any("error", err),
+				)
+			}
+		}()
+
 		if message.MsgID == "raid" {
 			channel := strings.ReplaceAll(message.Channel, "#", "")
 			otherChannel := strings.ReplaceAll(message.MsgParams["msg-param-login"], "#", "")
@@ -112,6 +123,16 @@ func (p *TwitchProducer) Run() error {
 	})
 
 	p.ircClient.OnWhisperMessage(func(message twitch.WhisperMessage) {
+		defer func() {
+			if err := recover(); err != nil {
+				slog.Error("OnWhisperMessage panic",
+					slog.String("username", message.User.Name),
+					slog.String("text", message.Message),
+					slog.Any("error", err),
+				)
+			}
+		}()
+
 		username := strings.ToLower(message.User.Name)
 		text := strings.TrimSpace(message.Message)
 

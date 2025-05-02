@@ -57,6 +57,50 @@ func (t *TwitchActions) Shutdown() {
 	}
 }
 
+func (t *TwitchActions) getIds(channel string) (string, string) {
+	botResp, err := t.helixClient.GetUsers(&helix.UsersParams{
+		Logins: []string{util.BotUsername},
+	})
+	if err != nil {
+		slog.Error("Error getting bot user",
+			slog.String("channel", channel),
+			slog.Any("error", err),
+		)
+		return "", ""
+	}
+	if botResp.StatusCode >= 400 || len(botResp.Data.Users) == 0 {
+		slog.Error("Error getting bot user",
+			slog.String("channel", channel),
+			slog.String("error", botResp.Error),
+			slog.String("errorMsg", botResp.ErrorMessage),
+		)
+		return "", ""
+	}
+	botUser := botResp.Data.Users[0]
+
+	channelResp, err := t.helixClient.GetUsers(&helix.UsersParams{
+		Logins: []string{channel},
+	})
+	if err != nil {
+		slog.Error("Error getting channel user",
+			slog.String("channel", channel),
+			slog.Any("error", err),
+		)
+		return "", ""
+	}
+	if channelResp.StatusCode >= 400 || len(channelResp.Data.Users) == 0 {
+		slog.Error("Error getting channel user",
+			slog.String("channel", channel),
+			slog.String("error", channelResp.Error),
+			slog.String("errorMsg", channelResp.ErrorMessage),
+		)
+		return "", ""
+	}
+	channelUser := channelResp.Data.Users[0]
+
+	return channelUser.ID, botUser.ID
+}
+
 func (t *TwitchActions) SetEmoteMode(channel string, enabled bool) {
 	t.getQueue(channel).Enqueue(func() {
 		slog.Info("Set emote mode",
@@ -64,33 +108,14 @@ func (t *TwitchActions) SetEmoteMode(channel string, enabled bool) {
 			slog.Bool("enabled", enabled),
 		)
 
-		botResp, err := t.helixClient.GetUsers(&helix.UsersParams{
-			Logins: []string{util.BotUsername},
-		})
-		if err != nil || len(botResp.Data.Users) == 0 {
-			slog.Error("Error getting bot user",
-				slog.String("channel", channel),
-				slog.Any("error", err),
-			)
+		channelUserID, botUserID := t.getIds(channel)
+		if channelUserID == "" {
 			return
 		}
-		botUser := botResp.Data.Users[0]
-
-		channelResp, err := t.helixClient.GetUsers(&helix.UsersParams{
-			Logins: []string{channel},
-		})
-		if err != nil || len(channelResp.Data.Users) == 0 {
-			slog.Error("Error getting channel user",
-				slog.String("channel", channel),
-				slog.Any("error", err),
-			)
-			return
-		}
-		channelUser := channelResp.Data.Users[0]
 
 		setResp, err := t.helixClient.UpdateChatSettings(&helix.UpdateChatSettingsParams{
-			BroadcasterID: channelUser.ID,
-			ModeratorID:   botUser.ID,
+			BroadcasterID: channelUserID,
+			ModeratorID:   botUserID,
 			EmoteMode:     &enabled,
 		})
 		if err != nil {
@@ -138,33 +163,14 @@ func (t *TwitchActions) DeleteMessage(channel, id string) {
 			slog.String("message_id", id),
 		)
 
-		botResp, err := t.helixClient.GetUsers(&helix.UsersParams{
-			Logins: []string{util.BotUsername},
-		})
-		if err != nil || len(botResp.Data.Users) == 0 {
-			slog.Error("Error getting bot user",
-				slog.String("channel", channel),
-				slog.Any("error", err),
-			)
+		channelUserID, botUserID := t.getIds(channel)
+		if channelUserID == "" {
 			return
 		}
-		botUser := botResp.Data.Users[0]
-
-		channelResp, err := t.helixClient.GetUsers(&helix.UsersParams{
-			Logins: []string{channel},
-		})
-		if err != nil || len(channelResp.Data.Users) == 0 {
-			slog.Error("Error getting channel user",
-				slog.String("channel", channel),
-				slog.Any("error", err),
-			)
-			return
-		}
-		channelUser := channelResp.Data.Users[0]
 
 		banResp, err := t.helixClient.DeleteChatMessage(&helix.DeleteChatMessageParams{
-			BroadcasterID: channelUser.ID,
-			ModeratorID:   botUser.ID,
+			BroadcasterID: channelUserID,
+			ModeratorID:   botUserID,
 			MessageID:     id,
 		})
 		if err != nil {
@@ -202,6 +208,14 @@ func (t *TwitchActions) GetStartTime(channel string) time.Time {
 			)
 			return time.Time{}
 		}
+		if res.StatusCode >= 400 {
+			slog.Error("Failed to get stream info",
+				slog.String("channel", channel),
+				slog.String("error", res.Error),
+				slog.String("errorMsg", res.ErrorMessage),
+			)
+			return time.Time{}
+		}
 
 		for _, s := range res.Data.Streams {
 			if strings.ToLower(s.UserLogin) == channel {
@@ -226,6 +240,14 @@ func (t *TwitchActions) GetViewerCount(channel string) int {
 			slog.Error("Failed to get stream info",
 				slog.String("channel", channel),
 				slog.Any("error", err),
+			)
+			return 0
+		}
+		if res.StatusCode >= 400 {
+			slog.Error("Failed to get stream info",
+				slog.String("channel", channel),
+				slog.String("error", res.Error),
+				slog.String("errorMsg", res.ErrorMessage),
 			)
 			return 0
 		}
@@ -258,33 +280,14 @@ func (t *TwitchActions) SendForeignMessage(channel, text string) {
 			slog.String("text", text),
 		)
 
-		botResp, err := t.helixClient.GetUsers(&helix.UsersParams{
-			Logins: []string{util.BotUsername},
-		})
-		if err != nil || len(botResp.Data.Users) == 0 {
-			slog.Error("Error getting bot user",
-				slog.String("channel", channel),
-				slog.Any("error", err),
-			)
+		channelUserID, botUserID := t.getIds(channel)
+		if channelUserID == "" {
 			return
 		}
-		botUser := botResp.Data.Users[0]
-
-		channelResp, err := t.helixClient.GetUsers(&helix.UsersParams{
-			Logins: []string{channel},
-		})
-		if err != nil || len(channelResp.Data.Users) == 0 {
-			slog.Error("Error getting channel user",
-				slog.String("channel", channel),
-				slog.Any("error", err),
-			)
-			return
-		}
-		channelUser := channelResp.Data.Users[0]
 
 		sendMsgResp, err := t.helixClient.SendChatMessage(&helix.SendChatMessageParams{
-			BroadcasterID: channelUser.ID,
-			SenderID:      botUser.ID,
+			BroadcasterID: channelUserID,
+			SenderID:      botUserID,
 			Message:       text,
 		})
 		if err != nil {
@@ -316,45 +319,34 @@ func (t *TwitchActions) TimeoutUser(channel, username string, duration time.Dura
 			slog.String("reason", reason),
 		)
 
-		botResp, err := t.helixClient.GetUsers(&helix.UsersParams{
-			Logins: []string{util.BotUsername},
-		})
-		if err != nil || len(botResp.Data.Users) == 0 {
-			slog.Error("Error getting bot user",
-				slog.String("channel", channel),
-				slog.Any("error", err),
-			)
+		channelUserID, botUserID := t.getIds(channel)
+		if channelUserID == "" {
 			return
 		}
-		botUser := botResp.Data.Users[0]
-
-		channelResp, err := t.helixClient.GetUsers(&helix.UsersParams{
-			Logins: []string{channel},
-		})
-		if err != nil || len(channelResp.Data.Users) == 0 {
-			slog.Error("Error getting channel user",
-				slog.String("channel", channel),
-				slog.Any("error", err),
-			)
-			return
-		}
-		channelUser := channelResp.Data.Users[0]
 
 		userResp, err := t.helixClient.GetUsers(&helix.UsersParams{
 			Logins: []string{username},
 		})
-		if err != nil || len(userResp.Data.Users) == 0 {
+		if err != nil {
 			slog.Error("Error getting user to ban",
 				slog.String("channel", channel),
 				slog.Any("error", err),
 			)
 			return
 		}
+		if userResp.StatusCode >= 400 || len(userResp.Data.Users) == 0 {
+			slog.Error("Error getting user to ban",
+				slog.String("channel", channel),
+				slog.String("error", userResp.Error),
+				slog.String("errorMsg", userResp.ErrorMessage),
+			)
+			return
+		}
 		banUser := userResp.Data.Users[0]
 
 		banResp, err := t.helixClient.BanUser(&helix.BanUserParams{
-			BroadcasterID: channelUser.ID,
-			ModeratorId:   botUser.ID,
+			BroadcasterID: channelUserID,
+			ModeratorId:   botUserID,
 			Body: helix.BanUserRequestBody{
 				Duration: int(duration.Seconds()),
 				Reason:   reason,
@@ -386,45 +378,34 @@ func (t *TwitchActions) UnbanUser(channel, username string) {
 			slog.String("username", username),
 		)
 
-		botResp, err := t.helixClient.GetUsers(&helix.UsersParams{
-			Logins: []string{util.BotUsername},
-		})
-		if err != nil || len(botResp.Data.Users) == 0 {
-			slog.Error("Error getting bot user",
-				slog.String("channel", channel),
-				slog.Any("error", err),
-			)
+		channelUserID, botUserID := t.getIds(channel)
+		if channelUserID == "" {
 			return
 		}
-		botUser := botResp.Data.Users[0]
-
-		channelResp, err := t.helixClient.GetUsers(&helix.UsersParams{
-			Logins: []string{channel},
-		})
-		if err != nil || len(channelResp.Data.Users) == 0 {
-			slog.Error("Error getting channel user",
-				slog.String("channel", channel),
-				slog.Any("error", err),
-			)
-			return
-		}
-		channelUser := channelResp.Data.Users[0]
 
 		userResp, err := t.helixClient.GetUsers(&helix.UsersParams{
 			Logins: []string{username},
 		})
-		if err != nil || len(userResp.Data.Users) == 0 {
+		if err != nil {
 			slog.Error("Error getting user to unban",
 				slog.String("channel", channel),
 				slog.Any("error", err),
 			)
 			return
 		}
+		if userResp.StatusCode >= 400 || len(userResp.Data.Users) == 0 {
+			slog.Error("Error getting user to unban",
+				slog.String("channel", channel),
+				slog.String("error", userResp.Error),
+				slog.String("errorMsg", userResp.ErrorMessage),
+			)
+			return
+		}
 		banUser := userResp.Data.Users[0]
 
 		unbanResp, err := t.helixClient.UnbanUser(&helix.UnbanUserParams{
-			BroadcasterID: channelUser.ID,
-			ModeratorID:   botUser.ID,
+			BroadcasterID: channelUserID,
+			ModeratorID:   botUserID,
 			UserID:        banUser.ID,
 		})
 		if err != nil {
