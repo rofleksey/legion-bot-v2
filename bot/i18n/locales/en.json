@@ -58,5 +58,6 @@
   "start_dredge": "The Realm of Darkness has begun 🌙 Chat can only communicate using emotes 🌙 Vote on who The Dredge should hang by sending the victim's username to the bot via DM 🌙",
   "dredge_go_away": "🌙 The Realm of Darkness has ended 🌙",
   "dredge_hit_dead": "The Dredge killed @USERNAME and hung them 🌙 Now the gamer is on the hook until someone unhooks them 🌙 (!unhook @USERNAME)",
-  "stream_start_greeting": "Hi =)"
+  "stream_start_greeting": "Hi =)",
+  "steam_new_comment": "@CHANNEL The streamer got a new comment on their steam profile Kappa"
 }

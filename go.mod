@@ -3,17 +3,18 @@ module legion-bot-v2
 go 1.24
 
 require (
+	github.com/PuerkitoBio/goquery v1.10.3
 	github.com/elliotchance/pie/v2 v2.9.1
 	github.com/gempir/go-twitch-irc/v4 v4.2.0
 	github.com/go-playground/assert/v2 v2.2.0
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
-	github.com/gorilla/websocket v1.5.3
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jellydator/ttlcache/v3 v3.3.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/nicklaw5/helix/v2 v2.31.1
 	github.com/robfig/cron/v3 v3.0.1
+	github.com/samber/do v1.6.0
 	github.com/samber/slog-multi v1.4.0
 	github.com/samber/slog-telegram/v2 v2.4.2
 	github.com/stretchr/testify v1.10.0
@@ -27,6 +28,7 @@ require (
 )
 
 require (
+	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.9 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
@@ -37,7 +39,6 @@ require (
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/samber/do v1.6.0 // indirect
 	github.com/samber/lo v1.49.1 // indirect
 	github.com/samber/slog-common v0.18.1 // indirect
 	golang.org/x/crypto v0.37.0 // indirect

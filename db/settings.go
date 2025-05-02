@@ -10,6 +10,13 @@ type Settings struct {
 	Language string          `json:"language"`
 	Killers  KillersSettings `json:"killers"`
 	Chat     ChatSettings    `json:"chat"`
+	Steam    SteamSettings   `json:"steam"`
+}
+
+type SteamSettings struct {
+	SteamID64         string `json:"steamId64"`
+	NotifyNewComments bool   `json:"notifyNewComments"`
+	PinnedCommentText string `json:"pinnedCommentText"`
 }
 
 type ChatSettings struct {

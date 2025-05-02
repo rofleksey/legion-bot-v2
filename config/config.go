@@ -19,6 +19,12 @@ type Config struct {
 		RedirectURL   string `yaml:"redirectUrl" validate:"required"`
 	} `yaml:"twitch" validate:"required"`
 
+	Steam struct {
+		ID64             string `yaml:"id64" validate:"required"`
+		SessionID        string `yaml:"sessionId" validate:"required"`
+		SteamLoginSecure string `yaml:"steamLoginSecure" validate:"required"`
+	} `yaml:"steam" validate:"required"`
+
 	Auth struct {
 		JwtSecret string `yaml:"jwtSecret" validate:"required"`
 	} `yaml:"auth" validate:"required"`

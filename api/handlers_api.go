@@ -182,6 +182,10 @@ func (s *Server) updateSettings(w http.ResponseWriter, r *http.Request) {
 		s.chatProducer.AddChannel(claims.TwitchUser.Login)
 	}
 
+	if oldSettings.Steam.PinnedCommentText != newSettings.Steam.PinnedCommentText {
+		s.steamClient.UpdatePinnedComment(claims.TwitchUser.Login)
+	}
+
 	w.WriteHeader(http.StatusOK)
 }
 

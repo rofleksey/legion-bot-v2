@@ -8,6 +8,7 @@ import (
 	"legion-bot-v2/config"
 	"legion-bot-v2/db"
 	"legion-bot-v2/producer"
+	"legion-bot-v2/steam"
 	"legion-bot-v2/util"
 	"log/slog"
 	"net/http"
@@ -24,6 +25,7 @@ type Server struct {
 	database      db.DB
 	chatProducer  producer.Producer
 	cheatDetector *cheatdetect.Detector
+	steamClient   steam.Steam
 	stateCache    *ttlcache.Cache[string, struct{}]
 	mux           *http.ServeMux
 }
@@ -49,6 +51,7 @@ func NewServer(di *do.Injector) *Server {
 		database:      do.MustInvoke[db.DB](di),
 		chatProducer:  do.MustInvoke[producer.Producer](di),
 		cheatDetector: do.MustInvoke[*cheatdetect.Detector](di),
+		steamClient:   do.MustInvoke[steam.Steam](di),
 		stateCache:    stateCache,
 		mux:           http.NewServeMux(),
 	}

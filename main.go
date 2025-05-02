@@ -22,6 +22,7 @@ import (
 	"legion-bot-v2/db"
 	"legion-bot-v2/gpt"
 	"legion-bot-v2/producer"
+	"legion-bot-v2/steam"
 	"legion-bot-v2/util"
 	"legion-bot-v2/util/timers"
 	"log"
@@ -36,7 +37,6 @@ import (
 // display status
 // display problems
 // add more Info icons in the settings
-// more descriptive killer powers in chat
 // greetings
 // !clip
 // improve chatbot ai
@@ -58,7 +58,7 @@ import (
 // match timestamps
 // decisive notification
 // flashlight blind
-// notes about players
+// notes about streamers?
 // steam related checks
 // fmp/dbdtools checks discord
 // played before
@@ -224,6 +224,12 @@ func main() {
 
 	cheatDetector := cheatdetect.NewDetector()
 	do.ProvideValue(di, cheatDetector)
+
+	steamClient, err := steam.NewClient(di)
+	if err != nil {
+		log.Fatalf("Failed to initialize steam client: %v", err)
+	}
+	do.ProvideValue(di, steamClient)
 
 	slog.Debug("Starting server...")
 	server := api.NewServer(di)

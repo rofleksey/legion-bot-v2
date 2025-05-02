@@ -18,6 +18,12 @@ type ChannelState struct {
 	Settings    Settings         `json:"settings"`
 	UserTimeout time.Time        `json:"userTimeout"`
 	Subs        ChannelSubs      `json:"subs"`
+	Steam       SteamState       `json:"steam"`
+}
+
+type SteamState struct {
+	LastCommentTime time.Time `json:"lastCommentTime"`
+	PinnedCommentID string    `json:"pinnedCommentId"`
 }
 
 type ChannelSubs struct {
