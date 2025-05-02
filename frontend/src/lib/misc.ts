@@ -15,3 +15,12 @@ export function errorToString(e: any) {
 
   return "error"
 }
+
+export function ymReachGoal(goal: string) {
+  try {
+    // @ts-ignore
+    window.ym(101556361, 'reachGoal', goal);
+  } catch (e) {
+    console.error(e);
+  }
+}

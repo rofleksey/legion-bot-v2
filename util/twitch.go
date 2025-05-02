@@ -143,7 +143,6 @@ func InitAppTwitchClient(cfg *config.Config, userAccessToken string) (*helix.Cli
 	}
 
 	client.SetAppAccessToken(resp.Data.AccessToken)
-	//client.SetUserAccessToken(userAccessToken)
 
 	return client, nil
 }

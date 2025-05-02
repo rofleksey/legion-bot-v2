@@ -44,4 +44,13 @@ const router = createRouter({
   ],
 })
 
+router.afterEach((to) => {
+  try {
+    // @ts-ignore
+    window?.ym?.(101556361, 'hit', to.path);
+  } catch(e) {
+    console.error(e);
+  }
+});
+
 export default router

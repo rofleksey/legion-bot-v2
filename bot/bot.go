@@ -299,8 +299,6 @@ func (b *Bot) getCachedStreamStartTime(channel string) time.Time {
 	startTime := b.GetStartTime(channel)
 	if !startTime.IsZero() {
 		b.streamStartMap.Set(channel, startTime, ttlcache.DefaultTTL)
-	} else {
-		b.streamStartMap.Set(channel, startTime, 5*time.Minute)
 	}
 
 	return startTime

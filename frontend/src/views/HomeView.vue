@@ -63,7 +63,7 @@ import {useUserStore} from "@/stores/user.ts";
 import axios from "axios";
 import {useI18n} from "vue-i18n";
 import {useNotifications} from "@/services/notifications.ts";
-import {errorToString} from "@/lib/misc.ts";
+import {errorToString, ymReachGoal} from "@/lib/misc.ts";
 
 const {t} = useI18n()
 const notifications = useNotifications()
@@ -95,6 +95,7 @@ function onStart() {
 }
 
 async function loginWithTwitch() {
+  ymReachGoal('login')
   const response = await axios.get('/api/auth/login');
   if (response.data?.authUrl) {
     localStorage.setItem('twitch_auth_state', response.data.state);
