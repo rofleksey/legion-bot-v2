@@ -110,6 +110,16 @@ func (b *Bot) HandleCommands(userMsg db.Message) bool {
 
 		b.SendMessage(userMsg.Channel, fmt.Sprintf("Timeout till %v", timeoutTime.String()))
 
+		b.UpdateState(userMsg.Channel, func(state *db.ChannelState) {
+			if state.Killer != "" {
+				state.Killer = ""
+				state.KillerState = nil
+				state.Date = time.Now()
+			}
+
+			b.StopChannelTimers(userMsg.Channel)
+		})
+
 		return true
 
 	case strings.HasPrefix(userMsg.Text, "!hp"):

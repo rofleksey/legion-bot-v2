@@ -56,11 +56,11 @@ func (tm *Manager) StopChannelTimers(channel string) {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 
-	if channelTimers, exists := tm.timers[channel]; exists {
-		for name, timer := range channelTimers {
-			timer.Stop()
-			delete(channelTimers, name)
-		}
-		delete(tm.timers, channel)
+	channelTimers := tm.timers[channel]
+	for name, timer := range channelTimers {
+		timer.Stop()
+		delete(channelTimers, name)
 	}
+
+	delete(tm.timers, channel)
 }
