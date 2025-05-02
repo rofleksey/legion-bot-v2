@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"legion-bot-v2/api/dao"
+	"legion-bot-v2/util/taskq"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -29,6 +30,7 @@ type Client struct {
 	client           *http.Client
 	sessionId        string
 	steamSecureLogin string
+	queue            *taskq.Queue
 }
 
 func NewClient(sessionId, steamSecureLogin string) (*Client, error) {
@@ -55,49 +57,52 @@ func NewClient(sessionId, steamSecureLogin string) (*Client, error) {
 		},
 		sessionId:        sessionId,
 		steamSecureLogin: steamSecureLogin,
+		queue:            taskq.New(1, 1.0/3.0, 1), // 1 request per 3 seconds
 	}, nil
 }
 
 func (c *Client) GetLatestComments(steamID string) ([]dao.Comment, error) {
-	url := fmt.Sprintf("https://steamcommunity.com/comment/Profile/render/%s/-1/", steamID)
+	return taskq.ComputeWithError(c.queue, func() ([]dao.Comment, error) {
+		url := fmt.Sprintf("https://steamcommunity.com/comment/Profile/render/%s/-1/", steamID)
 
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrRequestFailed, err)
-	}
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %v", ErrRequestFailed, err)
+		}
 
-	req.Header.Set("User-Agent", userAgent)
-	req.Header.Set("Accept", "application/json")
+		req.Header.Set("User-Agent", userAgent)
+		req.Header.Set("Accept", "application/json")
 
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrRequestFailed, err)
-	}
-	defer resp.Body.Close()
+		resp, err := c.client.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %v", ErrRequestFailed, err)
+		}
+		defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: %d", ErrInvalidStatusCode, resp.StatusCode)
-	}
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("%w: %d", ErrInvalidStatusCode, resp.StatusCode)
+		}
 
-	var apiResponse CommentsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrRequestFailed, err)
-	}
+		var apiResponse CommentsResponse
+		if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
+			return nil, fmt.Errorf("%w: %v", ErrRequestFailed, err)
+		}
 
-	if !apiResponse.Success {
-		return nil, ErrAPIRequestFailure
-	}
+		if !apiResponse.Success {
+			return nil, ErrAPIRequestFailure
+		}
 
-	if apiResponse.CommentsHTML == "" {
-		return nil, ErrNoCommentsFound
-	}
+		if apiResponse.CommentsHTML == "" {
+			return nil, ErrNoCommentsFound
+		}
 
-	comments, err := parseCommentsHTML(apiResponse.CommentsHTML)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrHTMLParsingFailed, err)
-	}
+		comments, err := parseCommentsHTML(apiResponse.CommentsHTML)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %v", ErrHTMLParsingFailed, err)
+		}
 
-	return comments, nil
+		return comments, nil
+	})
 }
 
 func parseCommentsHTML(html string) ([]dao.Comment, error) {
@@ -140,78 +145,97 @@ func parseCommentsHTML(html string) ([]dao.Comment, error) {
 }
 
 func (c *Client) DeleteComment(steamID string, commentID string) error {
-	formData := url.Values{
-		"sessionid":  {c.sessionId},
-		"gidcomment": {commentID},
-		"start":      {"0"},
-		"count":      {"6"},
-		"feature2": {"-1"},
-	}
+	return taskq.Compute(c.queue, func() error {
+		formData := url.Values{
+			"sessionid":  {c.sessionId},
+			"gidcomment": {commentID},
+			"start":      {"0"},
+			"count":      {"6"},
+			"feature2":   {"-1"},
+		}
 
-	req, err := http.NewRequest("POST", "https://steamcommunity.com/comment/Profile/delete/"+steamID+"/", bytes.NewBufferString(formData.Encode()))
-	if err != nil {
-		return err
-	}
+		req, err := http.NewRequest("POST", "https://steamcommunity.com/comment/Profile/delete/"+steamID+"/", bytes.NewBufferString(formData.Encode()))
+		if err != nil {
+			return err
+		}
 
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Referer", "https://steamcommunity.com/profiles/"+steamID+"/")
-	req.Header.Set("User-Agent", userAgent)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req.Header.Set("Referer", "https://steamcommunity.com/profiles/"+steamID+"/")
+		req.Header.Set("User-Agent", userAgent)
 
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
+		resp, err := c.client.Do(req)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to delete comment, status code: %d", resp.StatusCode)
-	}
+		if resp.StatusCode != http.StatusOK {
+			return fmt.Errorf("failed to delete comment, status code: %d", resp.StatusCode)
+		}
 
-	return nil
+		return nil
+	})
 }
 
 func (c *Client) PostComment(steamID, comment string) (string, error) {
-	formData := url.Values{
-		"sessionid":   {c.sessionId},
-		"comment":     {comment},
-		"feature2":    {"-1"},
-		"count":       {"6"},
-		"publishedfp": {"0"},
-	}
+	return taskq.ComputeWithError(c.queue, func() (string, error) {
+		formData := url.Values{
+			"sessionid":   {c.sessionId},
+			"comment":     {comment},
+			"feature2":    {"-1"},
+			"count":       {"6"},
+			"publishedfp": {"0"},
+		}
 
-	req, err := http.NewRequest("POST", "https://steamcommunity.com/comment/Profile/post/"+steamID+"/-1/", bytes.NewBufferString(formData.Encode()))
-	if err != nil {
-		return "", err
-	}
+		req, err := http.NewRequest("POST", "https://steamcommunity.com/comment/Profile/post/"+steamID+"/-1/", bytes.NewBufferString(formData.Encode()))
+		if err != nil {
+			return "", err
+		}
 
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Referer", "https://steamcommunity.com/profiles/"+steamID+"/")
-	req.Header.Set("User-Agent", userAgent)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req.Header.Set("Referer", "https://steamcommunity.com/profiles/"+steamID+"/")
+		req.Header.Set("User-Agent", userAgent)
 
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
+		resp, err := c.client.Do(req)
+		if err != nil {
+			return "", err
+		}
+		defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("failed to post comment, status code: %d", resp.StatusCode)
-	}
+		if resp.StatusCode != http.StatusOK {
+			return "", fmt.Errorf("failed to post comment, status code: %d", resp.StatusCode)
+		}
 
-	// Parse the response to get the comment ID
-	var response struct {
-		Success   bool   `json:"success"`
-		CommentID string `json:"commentid"`
-		// Other fields might be present in the response
-	}
+		// Parse the response to get the comment ID
+		var response struct {
+			Success      bool   `json:"success"`
+			CommentsHTML string `json:"comments_html"`
+		}
 
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		return "", fmt.Errorf("failed to decode response: %v", err)
-	}
+		if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+			return "", fmt.Errorf("failed to decode response: %v", err)
+		}
 
-	if !response.Success {
-		return "", fmt.Errorf("steam returned unsuccessful response")
-	}
+		if !response.Success {
+			return "", fmt.Errorf("steam returned unsuccessful response")
+		}
 
-	return response.CommentID, nil
+		// Parse the HTML to extract the comment ID
+		doc, err := goquery.NewDocumentFromReader(strings.NewReader(response.CommentsHTML))
+		if err != nil {
+			return "", fmt.Errorf("failed to parse comments HTML: %v", err)
+		}
+
+		commentDiv := doc.Find(".commentthread_comment").First()
+		if commentDiv.Length() == 0 {
+			return "", fmt.Errorf("no comment found in response")
+		}
+
+		commentID, exists := commentDiv.Attr("id")
+		if !exists {
+			return "", fmt.Errorf("comment ID not found in response")
+		}
+
+		return strings.TrimPrefix(commentID, "comment_"), nil
+	})
 }

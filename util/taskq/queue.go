@@ -2,20 +2,14 @@ package taskq
 
 import (
 	"context"
-	"log/slog"
-	"sync"
-
+	"github.com/alitto/pond/v2"
 	"golang.org/x/time/rate"
+	"log/slog"
 )
 
 type Queue struct {
-	taskChan     chan any
-	workerSem    chan struct{}
-	limiter      *rate.Limiter
-	wg           sync.WaitGroup
-	shutdownOnce sync.Once
-	ctx          context.Context
-	cancel       context.CancelFunc
+	pool    pond.ResultPool[any]
+	limiter *rate.Limiter
 }
 
 type TaskWithResult struct {
@@ -24,113 +18,91 @@ type TaskWithResult struct {
 }
 
 func New(maxConcurrent int, rateLimit float64, burst int) *Queue {
-	ctx, cancel := context.WithCancel(context.Background())
-
-	q := &Queue{
-		taskChan:  make(chan any, 64),
-		ctx:       ctx,
-		cancel:    cancel,
-		workerSem: make(chan struct{}, maxConcurrent),
-		limiter:   rate.NewLimiter(rate.Limit(rateLimit), burst),
+	if maxConcurrent < 1 {
+		panic("maxConcurrent must be at least 1")
+	}
+	if rateLimit <= 0 {
+		panic("rateLimit must be positive")
+	}
+	if burst < 1 {
+		panic("burst must be at least 1")
 	}
 
-	q.wg.Add(maxConcurrent)
-	for i := 0; i < maxConcurrent; i++ {
-		go q.worker()
+	q := &Queue{
+		pool:    pond.NewResultPool[any](maxConcurrent),
+		limiter: rate.NewLimiter(rate.Limit(rateLimit), burst),
 	}
 
 	return q
 }
 
-func (q *Queue) worker() {
-	defer q.wg.Done()
-	for {
-		select {
-		case <-q.ctx.Done():
-			return
-		case task, ok := <-q.taskChan:
-			if !ok {
-				return
-			}
-
-			select {
-			case q.workerSem <- struct{}{}:
-			case <-q.ctx.Done():
-				return
-			}
-
-			func() {
-				defer func() { <-q.workerSem }()
-
-				if err := q.limiter.Wait(q.ctx); err != nil {
-					if twr, ok := task.(TaskWithResult); ok {
-						close(twr.resp)
-					}
-					return
-				}
-
-				defer func() {
-					if err := recover(); err != nil {
-						slog.Error("Error executing task", slog.Any("error", err))
-					}
-				}()
-
-				switch t := task.(type) {
-				case func():
-					t()
-				case TaskWithResult:
-					t.resp <- t.f()
-					close(t.resp)
-				}
-			}()
+func (q *Queue) Enqueue(f func()) {
+	q.pool.Submit(func() any {
+		if err := q.limiter.Wait(context.Background()); err != nil {
+			return nil
 		}
-	}
-}
 
-func (q *Queue) Enqueue(task func()) {
-	if task == nil {
-		panic("task cannot be nil")
-	}
-
-	select {
-	case q.taskChan <- task:
-	case <-q.ctx.Done():
-	}
+		f()
+		return nil
+	})
 }
 
 func Compute[T any](q *Queue, f func() T) T {
-	if f == nil {
-		panic("function cannot be nil")
-	}
-
-	wrapper := func() any {
-		return f()
-	}
-
-	task := TaskWithResult{
-		f:    wrapper,
-		resp: make(chan any, 1),
-	}
-
-	select {
-	case q.taskChan <- task:
-		select {
-		case res := <-task.resp:
-			return res.(T)
-		case <-q.ctx.Done():
-			var zero T
-			return zero
+	task := q.pool.Submit(func() any {
+		if err := q.limiter.Wait(context.Background()); err != nil {
+			return nil
 		}
-	case <-q.ctx.Done():
+
+		var anyRes any
+		anyRes = f()
+		return anyRes
+	})
+
+	result, err := task.Wait()
+	if err != nil {
+		slog.Error("Compute error",
+			slog.Any("error", err),
+		)
+
 		var zero T
 		return zero
 	}
+
+	return result.(T)
+}
+
+type ResWithErr struct {
+	Res any
+	Err error
+}
+
+func ComputeWithError[T any](q *Queue, f func() (T, error)) (T, error) {
+	task := q.pool.Submit(func() any {
+		if err := q.limiter.Wait(context.Background()); err != nil {
+			return nil
+		}
+
+		res, err := f()
+
+		return ResWithErr{res, err}
+	})
+
+	result, err := task.Wait()
+	if err != nil {
+		slog.Error("Compute error",
+			slog.Any("error", err),
+		)
+
+		var zero T
+
+		return zero, err
+	}
+
+	resWithErr := result.(ResWithErr)
+
+	return resWithErr.Res.(T), resWithErr.Err
 }
 
 func (q *Queue) Shutdown() {
-	q.shutdownOnce.Do(func() {
-		q.cancel()
-		q.wg.Wait()
-		close(q.taskChan)
-	})
+	q.pool.StopAndWait()
 }

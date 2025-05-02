@@ -28,6 +28,7 @@ require (
 )
 
 require (
+	github.com/alitto/pond/v2 v2.3.4 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.9 // indirect
