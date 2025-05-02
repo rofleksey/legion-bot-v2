@@ -39,6 +39,9 @@ func DefaultSettings() Settings {
 			Pinhead:   DefaultPinheadSettings(),
 			Dredge:    DefaultDredgeSettings(),
 		},
+		Chat: ChatSettings{
+			FollowRaidsMessage: "+250",
+		},
 	}
 }
 

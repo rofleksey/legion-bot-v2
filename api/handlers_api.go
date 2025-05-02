@@ -129,6 +129,30 @@ func (s *Server) getSettings(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(state.Settings)
 }
 
+func (s *Server) handleChannelState(w http.ResponseWriter, r *http.Request) {
+	claims, err := s.authenticateRequest(r)
+	if err != nil {
+		http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	if claims.TwitchUser.Login != util.BotOwner {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	var reqBody dao.UsernameRequest
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	state := s.database.GetState(reqBody.Username)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(state)
+}
+
 func (s *Server) updateSettings(w http.ResponseWriter, r *http.Request) {
 	claims, err := s.authenticateRequest(r)
 	if err != nil {
@@ -162,7 +186,7 @@ func (s *Server) updateSettings(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleCheatDetect(w http.ResponseWriter, r *http.Request) {
-	var reqBody dao.CheatDetectRequest
+	var reqBody dao.UsernameRequest
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		http.Error(w, "Invalid settings data", http.StatusBadRequest)
 		return

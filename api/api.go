@@ -60,6 +60,7 @@ func NewServer(
 	server.mux.HandleFunc("/api/validate", server.handleValidateToken)
 
 	server.mux.HandleFunc("/api/settings", server.handleSettings)
+	server.mux.HandleFunc("/api/channelState", server.handleChannelState)
 
 	server.mux.HandleFunc("/api/stats/{channel}", server.handleChannelStats)
 	server.mux.HandleFunc("/api/stats/{channel}/{username}", server.handleUserStats)

@@ -16,7 +16,7 @@ type AdminTwitchUser struct {
 	Login string `json:"login"`
 }
 
-type CheatDetectRequest struct {
+type UsernameRequest struct {
 	Username string `json:"username"`
 }
 
