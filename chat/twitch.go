@@ -2,6 +2,7 @@ package chat
 
 import (
 	"github.com/gempir/go-twitch-irc/v4"
+	"github.com/jellydator/ttlcache/v3"
 	"github.com/nicklaw5/helix/v2"
 	"legion-bot-v2/config"
 	"legion-bot-v2/taskq"
@@ -19,8 +20,11 @@ type TwitchActions struct {
 	accessToken string
 	ircClient   *twitch.Client
 	helixClient *helix.Client
-	queues      map[string]*taskq.Queue
-	mu          sync.Mutex
+
+	queueMutex sync.Mutex
+	queues     map[string]*taskq.Queue
+
+	userIdCache *ttlcache.Cache[string, string] // username -> userId
 }
 
 func NewTwitchActions(
@@ -29,18 +33,25 @@ func NewTwitchActions(
 	ircClient *twitch.Client,
 	helixClient *helix.Client,
 ) *TwitchActions {
+	userIdCache := ttlcache.New(
+		ttlcache.WithTTL[string, string](24 * time.Hour),
+	)
+
+	go userIdCache.Start()
+
 	return &TwitchActions{
 		cfg:         cfg,
 		accessToken: accessToken,
 		ircClient:   ircClient,
 		helixClient: helixClient,
 		queues:      make(map[string]*taskq.Queue),
+		userIdCache: userIdCache,
 	}
 }
 
 func (t *TwitchActions) getQueue(channel string) *taskq.Queue {
-	t.mu.Lock()
-	defer t.mu.Unlock()
+	t.queueMutex.Lock()
+	defer t.queueMutex.Unlock()
 
 	if _, exists := t.queues[channel]; !exists {
 		t.queues[channel] = taskq.New(1, 1, 1)
@@ -49,56 +60,43 @@ func (t *TwitchActions) getQueue(channel string) *taskq.Queue {
 }
 
 func (t *TwitchActions) Shutdown() {
-	t.mu.Lock()
-	defer t.mu.Unlock()
+	t.queueMutex.Lock()
+	defer t.queueMutex.Unlock()
 
 	for _, q := range t.queues {
 		q.Shutdown()
 	}
 }
 
-func (t *TwitchActions) getIds(channel string) (string, string) {
-	botResp, err := t.helixClient.GetUsers(&helix.UsersParams{
-		Logins: []string{util.BotUsername},
+func (t *TwitchActions) GetUserIDByUsername(username string) string {
+	cacheItem := t.userIdCache.Get(username)
+	if cacheItem != nil {
+		return cacheItem.Value()
+	}
+
+	res, err := t.helixClient.GetUsers(&helix.UsersParams{
+		Logins: []string{username},
 	})
 	if err != nil {
-		slog.Error("Error getting bot user",
-			slog.String("channel", channel),
+		slog.Error("Error getting user",
+			slog.String("username", username),
 			slog.Any("error", err),
 		)
-		return "", ""
+		return ""
 	}
-	if botResp.StatusCode >= 400 || len(botResp.Data.Users) == 0 {
-		slog.Error("Error getting bot user",
-			slog.String("channel", channel),
-			slog.String("error", botResp.Error),
-			slog.String("errorMsg", botResp.ErrorMessage),
+	if res.StatusCode >= 400 || len(res.Data.Users) == 0 {
+		slog.Error("Error getting user",
+			slog.String("username", username),
+			slog.String("error", res.Error),
+			slog.String("errorMsg", res.ErrorMessage),
 		)
-		return "", ""
+		return ""
 	}
-	botUser := botResp.Data.Users[0]
+	user := res.Data.Users[0]
 
-	channelResp, err := t.helixClient.GetUsers(&helix.UsersParams{
-		Logins: []string{channel},
-	})
-	if err != nil {
-		slog.Error("Error getting channel user",
-			slog.String("channel", channel),
-			slog.Any("error", err),
-		)
-		return "", ""
-	}
-	if channelResp.StatusCode >= 400 || len(channelResp.Data.Users) == 0 {
-		slog.Error("Error getting channel user",
-			slog.String("channel", channel),
-			slog.String("error", channelResp.Error),
-			slog.String("errorMsg", channelResp.ErrorMessage),
-		)
-		return "", ""
-	}
-	channelUser := channelResp.Data.Users[0]
+	t.userIdCache.Set(username, user.ID, ttlcache.DefaultTTL)
 
-	return channelUser.ID, botUser.ID
+	return user.ID
 }
 
 func (t *TwitchActions) SetEmoteMode(channel string, enabled bool) {
@@ -108,14 +106,14 @@ func (t *TwitchActions) SetEmoteMode(channel string, enabled bool) {
 			slog.Bool("enabled", enabled),
 		)
 
-		channelUserID, botUserID := t.getIds(channel)
+		channelUserID := t.GetUserIDByUsername(channel)
 		if channelUserID == "" {
 			return
 		}
 
 		setResp, err := t.helixClient.UpdateChatSettings(&helix.UpdateChatSettingsParams{
 			BroadcasterID: channelUserID,
-			ModeratorID:   botUserID,
+			ModeratorID:   util.BotUserID,
 			EmoteMode:     &enabled,
 		})
 		if err != nil {
@@ -163,14 +161,14 @@ func (t *TwitchActions) DeleteMessage(channel, id string) {
 			slog.String("message_id", id),
 		)
 
-		channelUserID, botUserID := t.getIds(channel)
+		channelUserID := t.GetUserIDByUsername(channel)
 		if channelUserID == "" {
 			return
 		}
 
 		banResp, err := t.helixClient.DeleteChatMessage(&helix.DeleteChatMessageParams{
 			BroadcasterID: channelUserID,
-			ModeratorID:   botUserID,
+			ModeratorID:   util.BotUserID,
 			MessageID:     id,
 		})
 		if err != nil {
@@ -284,14 +282,14 @@ func (t *TwitchActions) SendForeignMessage(channel, text string) {
 			slog.String("text", text),
 		)
 
-		channelUserID, botUserID := t.getIds(channel)
+		channelUserID := t.GetUserIDByUsername(channel)
 		if channelUserID == "" {
 			return
 		}
 
 		sendMsgResp, err := t.helixClient.SendChatMessage(&helix.SendChatMessageParams{
 			BroadcasterID: channelUserID,
-			SenderID:      botUserID,
+			SenderID:      util.BotUserID,
 			Message:       text,
 		})
 		if err != nil {
@@ -323,38 +321,23 @@ func (t *TwitchActions) TimeoutUser(channel, username string, duration time.Dura
 			slog.String("reason", reason),
 		)
 
-		channelUserID, botUserID := t.getIds(channel)
+		channelUserID := t.GetUserIDByUsername(channel)
 		if channelUserID == "" {
 			return
 		}
 
-		userResp, err := t.helixClient.GetUsers(&helix.UsersParams{
-			Logins: []string{username},
-		})
-		if err != nil {
-			slog.Error("Error getting user to ban",
-				slog.String("channel", channel),
-				slog.Any("error", err),
-			)
+		banUserID := t.GetUserIDByUsername(username)
+		if banUserID == "" {
 			return
 		}
-		if userResp.StatusCode >= 400 || len(userResp.Data.Users) == 0 {
-			slog.Error("Error getting user to ban",
-				slog.String("channel", channel),
-				slog.String("error", userResp.Error),
-				slog.String("errorMsg", userResp.ErrorMessage),
-			)
-			return
-		}
-		banUser := userResp.Data.Users[0]
 
 		banResp, err := t.helixClient.BanUser(&helix.BanUserParams{
 			BroadcasterID: channelUserID,
-			ModeratorId:   botUserID,
+			ModeratorId:   util.BotUserID,
 			Body: helix.BanUserRequestBody{
 				Duration: int(duration.Seconds()),
 				Reason:   reason,
-				UserId:   banUser.ID,
+				UserId:   banUserID,
 			},
 		})
 		if err != nil {
@@ -382,35 +365,20 @@ func (t *TwitchActions) UnbanUser(channel, username string) {
 			slog.String("username", username),
 		)
 
-		channelUserID, botUserID := t.getIds(channel)
+		channelUserID := t.GetUserIDByUsername(channel)
 		if channelUserID == "" {
 			return
 		}
 
-		userResp, err := t.helixClient.GetUsers(&helix.UsersParams{
-			Logins: []string{username},
-		})
-		if err != nil {
-			slog.Error("Error getting user to unban",
-				slog.String("channel", channel),
-				slog.Any("error", err),
-			)
+		unbanUserID := t.GetUserIDByUsername(username)
+		if unbanUserID == "" {
 			return
 		}
-		if userResp.StatusCode >= 400 || len(userResp.Data.Users) == 0 {
-			slog.Error("Error getting user to unban",
-				slog.String("channel", channel),
-				slog.String("error", userResp.Error),
-				slog.String("errorMsg", userResp.ErrorMessage),
-			)
-			return
-		}
-		banUser := userResp.Data.Users[0]
 
 		unbanResp, err := t.helixClient.UnbanUser(&helix.UnbanUserParams{
 			BroadcasterID: channelUserID,
-			ModeratorID:   botUserID,
-			UserID:        banUser.ID,
+			ModeratorID:   util.BotUserID,
+			UserID:        unbanUserID,
 		})
 		if err != nil {
 			slog.Error("Error unbanning user",

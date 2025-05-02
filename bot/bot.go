@@ -37,20 +37,26 @@ func NewBot(
 	gptInstance gpt.Gpt,
 	killerMap map[string]killer.Killer,
 ) *Bot {
+	streamStartMap := ttlcache.New[string, time.Time](
+		ttlcache.WithTTL[string, time.Time](30 * time.Minute),
+	)
+	go streamStartMap.Start()
+
+	viewerCountMap := ttlcache.New[string, int](
+		ttlcache.WithTTL[string, int](5*time.Minute),
+		ttlcache.WithDisableTouchOnHit[string, int](),
+	)
+	go viewerCountMap.Start()
+
 	bot := &Bot{
-		DB:        db,
-		Actions:   actions,
-		Timers:    timers,
-		Localiser: localiser,
-		Gpt:       gptInstance,
-		killerMap: killerMap,
-		streamStartMap: ttlcache.New[string, time.Time](
-			ttlcache.WithTTL[string, time.Time](30 * time.Minute),
-		),
-		viewerCountMap: ttlcache.New[string, int](
-			ttlcache.WithTTL[string, int](5*time.Minute),
-			ttlcache.WithDisableTouchOnHit[string, int](),
-		),
+		DB:             db,
+		Actions:        actions,
+		Timers:         timers,
+		Localiser:      localiser,
+		Gpt:            gptInstance,
+		killerMap:      killerMap,
+		streamStartMap: streamStartMap,
+		viewerCountMap: viewerCountMap,
 	}
 
 	return bot

@@ -5,6 +5,7 @@ import (
 )
 
 type Actions interface {
+	GetUserIDByUsername(username string) string
 	DeleteMessage(channel, id string)
 	SendMessage(channel, text string)
 	SendForeignMessage(channel, text string)

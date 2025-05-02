@@ -32,14 +32,10 @@ import (
 )
 
 // TODO:
-// get rid of user ids
-// ascii art on stream start
 // display status
 // display problems
 // add more Info icons in the settings
 // more descriptive killer powers in chat
-// change restart cron
-// gf 99
 // use di
 // greetings
 // !clip
@@ -76,14 +72,12 @@ import (
 
 // TODO: killer ideas:
 // trapper - user gets into a trap by saying a word from a blacklist, others need to !untrap them or they get hooked
-// dredge - enables emoji-only mode, you can whisper the bot whom to kill, if there is a leader - they get hooked
 // dracula - reacts on caps keys, they get a hit
 // pig - player with the most chat lines gets a headtrap - chat votes whether they explode or not
 // pyramid head
 // myers
 
 // TODO: these are very minor but require a lot of pain:
-// stop all functions on stop
 // privacy policy
 // terms
 // !spin

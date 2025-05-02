@@ -11,6 +11,10 @@ var _ Actions = (*ConsoleActions)(nil)
 type ConsoleActions struct {
 }
 
+func (a *ConsoleActions) GetUserIDByUsername(username string) string {
+	return username
+}
+
 func (a *ConsoleActions) Shutdown() {
 
 }

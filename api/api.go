@@ -37,6 +37,7 @@ func NewServer(
 	stateCache := ttlcache.New[string, struct{}](
 		ttlcache.WithTTL[string, struct{}](30 * time.Minute),
 	)
+	go stateCache.Start()
 
 	server := Server{
 		cfg: cfg,
