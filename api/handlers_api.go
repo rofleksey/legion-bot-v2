@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jellydator/ttlcache/v3"
-	"legion-bot-v2/dao"
+	"legion-bot-v2/api/dao"
 	"legion-bot-v2/db"
 	"legion-bot-v2/util"
 	"log/slog"

@@ -302,6 +302,17 @@
           </div>
         </div>
       </div>
+
+      <div class="settings-section">
+        <h2 class="settings-section-title">{{ t('settings.misc_title') }}</h2>
+        <div class="settings-subsection">
+          <div class="settings-grid">
+            <AppButton @click="onLogout">
+              {{ t('logout')}}
+            </AppButton>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -336,6 +347,10 @@ const postLoading = ref(false);
 function updateDisabled(val: boolean) {
   if (!settings.value) return;
   settings.value.disabled = !val;
+}
+
+function onLogout() {
+  userStore.logout()
 }
 
 async function fetchSettings() {
@@ -426,7 +441,7 @@ onMounted(fetchSettings);
 }
 
 .settings-subsection {
-  margin-top: 24px;
+  margin-top: 30px;
 }
 
 .settings-subsection-title {

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"github.com/nicklaw5/helix/v2"
 	"io"
-	"legion-bot-v2/dao"
+	"legion-bot-v2/api/dao"
 	"log/slog"
 	"net/http"
 	"strings"

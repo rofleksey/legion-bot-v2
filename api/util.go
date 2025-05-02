@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
-	"legion-bot-v2/dao"
+	"legion-bot-v2/api/dao"
 	"net/http"
 	"strings"
 	"time"
