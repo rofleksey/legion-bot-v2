@@ -323,6 +323,10 @@ func (b *Bot) HandleMessage(userMsg db.Message) {
 	generalKillerSettings := chanState.Settings.Killers.General
 
 	if chanState.Settings.Disabled || time.Now().Before(chanState.UserTimeout) {
+		slog.Debug("HandleMessage ignored",
+			slog.String("channel", userMsg.Channel),
+			slog.String("cause", "bot disabled"),
+		)
 		return
 	}
 
@@ -349,6 +353,10 @@ func (b *Bot) HandleMessage(userMsg db.Message) {
 
 	if chanState.Killer == "" {
 		if diff <= generalKillerSettings.DelayBetweenKillers || streamLength <= generalKillerSettings.DelayAtTheStreamStart {
+			slog.Debug("startRandomKiller ignored",
+				slog.String("channel", userMsg.Channel),
+				slog.String("cause", "ongoing delay"),
+			)
 			return
 		}
 
@@ -373,6 +381,10 @@ func (b *Bot) HandleStreamOnline(channel string) {
 	lang := chanState.Settings.Language
 
 	if chanState.Settings.Disabled || time.Now().Before(chanState.UserTimeout) {
+		slog.Debug("HandleStreamOnline ignored",
+			slog.String("channel", channel),
+			slog.String("cause", "bot is disabled"),
+		)
 		return
 	}
 
@@ -445,10 +457,18 @@ func (b *Bot) HandleOutgoingRaid(channel, otherChannel string) {
 }
 
 func (b *Bot) startRandomKiller(userMsg db.Message) {
+	slog.Debug("Starting random killer",
+		slog.String("channel", userMsg.Channel),
+	)
+
 	chanState := b.GetState(userMsg.Channel)
 	generalKillerSettings := chanState.Settings.Killers.General
 
 	if chanState.Killer != "" {
+		slog.Debug("Failed to start random killer",
+			slog.String("channel", userMsg.Channel),
+			slog.String("cause", "killer is already running"),
+		)
 		return
 	}
 
@@ -457,15 +477,31 @@ func (b *Bot) startRandomKiller(userMsg db.Message) {
 	})
 
 	if len(killerList) == 0 {
+		slog.Debug("Failed to start random killer",
+			slog.String("channel", userMsg.Channel),
+			slog.String("cause", "no killers are enabled"),
+		)
 		return
 	}
 
 	viewerCount := b.getCachedViewerCount(userMsg.Channel)
 	if viewerCount < generalKillerSettings.MinNumberOfViewers {
+		slog.Debug("Failed to start random killer",
+			slog.String("channel", userMsg.Channel),
+			slog.String("cause", "viewer count is too small"),
+			slog.Int("cur_count", viewerCount),
+			slog.Int("required_count", generalKillerSettings.MinNumberOfViewers),
+		)
 		return
 	}
 
 	nextKiller := selectKillerWeighted(killerList, userMsg.Channel)
+
+	slog.Debug("Starting killer",
+		slog.String("channel", userMsg.Channel),
+		slog.String("name", nextKiller.Name()),
+	)
+
 	nextKiller.Start(userMsg)
 }
 
@@ -488,6 +524,11 @@ func (b *Bot) StartSpecificKiller(channel, name string) error {
 		)
 		return fmt.Errorf("killer not found")
 	}
+
+	slog.Debug("Starting killer",
+		slog.String("channel", channel),
+		slog.String("name", name),
+	)
 
 	nextKiller.Start(db.Message{
 		Channel:  chanState.Channel,
