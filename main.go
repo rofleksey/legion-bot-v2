@@ -189,7 +189,7 @@ func main() {
 	botInstance := bot.NewBot(database, chatActions, timerManager, localiser, gptInstance, killerMap)
 	botInstance.Init()
 
-	chatProducer := producer.NewTwitchProducer(cfg, userAccessToken, ircClient, helixClient, appClient, database, botInstance)
+	chatProducer := producer.NewTwitchProducer(cfg, ircClient, helixClient, appClient, database, botInstance)
 	defer chatProducer.Shutdown()
 
 	if os.Getenv("ENVIRONMENT") != "production" {

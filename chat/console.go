@@ -15,10 +15,6 @@ func (a *ConsoleActions) Shutdown() {
 
 }
 
-func (a *ConsoleActions) IsGuestStarSessionActive(channel string) bool {
-	return false
-}
-
 func (a *ConsoleActions) SetEmoteMode(channel string, enabled bool) {
 	slog.Debug("Set emote mode",
 		slog.String("channel", channel),

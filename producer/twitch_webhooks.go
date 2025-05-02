@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/nicklaw5/helix/v2"
 	"legion-bot-v2/db"
-	"legion-bot-v2/util"
 	"log/slog"
 )
 
@@ -30,66 +29,12 @@ func (p *TwitchProducer) registerAllListeners(channel string) {
 
 	broadcasterID := broadcasterResp.Data.Users[0].ID
 
-	botResp, err := p.helixClient.GetUsers(&helix.UsersParams{
-		Logins: []string{util.BotUsername},
-	})
-	if err != nil {
-		slog.Error("Failed to get bot user info for listeners",
-			slog.String("channel", channel),
-			slog.Any("error", err),
-		)
-		return
-	}
-	if len(botResp.Data.Users) == 0 {
-		slog.Error("Failed to get bot user info for listeners",
-			slog.String("channel", channel),
-			slog.String("error", botResp.Error),
-			slog.String("errorMsg", botResp.ErrorMessage),
-		)
-		return
-	}
-
-	botID := botResp.Data.Users[0].ID
-
 	p.queue.Enqueue(func() {
 		p.addOutgoingRaidsListener(channel, broadcasterID)
 	})
 	p.queue.Enqueue(func() {
 		p.addStreamStartListener(channel, broadcasterID)
 	})
-
-	client, err := StartWebsocketClient(
-		broadcasterID,
-		botID,
-		p.cfg.Twitch.ClientID,
-		p.userAccessToken,
-		func(event, eventChannel string) {
-			if channel != eventChannel {
-				return
-			}
-
-			switch event {
-			case "channel.guest_star_session.begin":
-				go p.botInstance.HandleGuestStarBegin(channel)
-			case "channel.guest_star_session.end":
-				go p.botInstance.HandleGuestStarEnd(channel)
-			}
-		})
-	if err != nil {
-		slog.Error("Failed to start websocket client",
-			slog.String("channel", channel),
-			slog.Any("error", err),
-		)
-		return
-	}
-
-	slog.Debug("Successfully created web socket client",
-		slog.String("channel", channel),
-	)
-
-	p.m.Lock()
-	defer p.m.Unlock()
-	p.websocketClients[channel] = client
 }
 
 func (p *TwitchProducer) addStreamStartListener(channel, broadcasterID string) {
@@ -207,13 +152,4 @@ func (p *TwitchProducer) removeAllListeners(channel string) {
 		state.Subs.RaidID = ""
 		state.Subs.StreamStart = ""
 	})
-
-	p.m.Lock()
-	defer p.m.Unlock()
-
-	client, ok := p.websocketClients[channel]
-	if ok {
-		client.Close()
-		delete(p.websocketClients, channel)
-	}
 }

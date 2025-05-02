@@ -63,8 +63,6 @@ func (b *Bot) Init() {
 	channels := b.GetAllChannelNames()
 
 	for _, channel := range channels {
-		guestStarSessionActive := b.IsGuestStarSessionActive(channel)
-
 		b.UpdateState(channel, func(chanState *db.ChannelState) {
 			if chanState.Killer != "" {
 				chanState.Killer = ""
@@ -85,9 +83,6 @@ func (b *Bot) Init() {
 					chanState.UserMap[username].Health = "injured"
 				}
 			}
-
-			chanState.GuestStar.Active = guestStarSessionActive
-			chanState.GuestStar.Date = time.Now()
 		})
 	}
 }
@@ -98,6 +93,25 @@ func (b *Bot) HandleCommands(userMsg db.Message) bool {
 	user := chanState.UserMap[userMsg.Username]
 
 	switch {
+	case strings.HasPrefix(userMsg.Text, "!legiontimeout") && userMsg.Username == userMsg.Channel:
+		timeStr := strings.ToLower(strings.TrimSpace(strings.TrimPrefix(userMsg.Text, "!legiontimeout")))
+
+		duration, err := time.ParseDuration(timeStr)
+		if err != nil {
+			b.SendMessage(userMsg.Channel, fmt.Sprintf("Error: %v", err))
+			return true
+		}
+
+		timeoutTime := time.Now().Add(duration)
+
+		b.UpdateState(userMsg.Channel, func(chanState *db.ChannelState) {
+			chanState.UserTimeout = timeoutTime
+		})
+
+		b.SendMessage(userMsg.Channel, fmt.Sprintf("Timeout till %v", timeoutTime.String()))
+
+		return true
+
 	case strings.HasPrefix(userMsg.Text, "!hp"):
 		otherUsername := strings.ToLower(strings.TrimSpace(strings.TrimPrefix(strings.ReplaceAll(userMsg.Text, "@", ""), "!hp")))
 		if otherUsername == "" {
@@ -301,7 +315,7 @@ func (b *Bot) HandleMessage(userMsg db.Message) {
 	chanState := b.GetState(userMsg.Channel)
 	generalKillerSettings := chanState.Settings.Killers.General
 
-	if chanState.Settings.Disabled || chanState.GuestStar.Active {
+	if chanState.Settings.Disabled || time.Now().Before(chanState.UserTimeout) {
 		return
 	}
 
@@ -347,20 +361,6 @@ func (b *Bot) HandleMessage(userMsg db.Message) {
 	curKiller.HandleMessage(userMsg)
 }
 
-func (b *Bot) HandleGuestStarBegin(channel string) {
-	b.UpdateState(channel, func(chanState *db.ChannelState) {
-		chanState.GuestStar.Active = true
-		chanState.GuestStar.Date = time.Now()
-	})
-}
-
-func (b *Bot) HandleGuestStarEnd(channel string) {
-	b.UpdateState(channel, func(chanState *db.ChannelState) {
-		chanState.GuestStar.Active = false
-		chanState.GuestStar.Date = time.Now()
-	})
-}
-
 func (b *Bot) HandleStreamOnline(channel string) {
 	b.getCachedStreamStartTime(channel)
 	b.SendMessage(channel, banner)
@@ -373,7 +373,7 @@ func (b *Bot) HandleWhisper(username, message string) {
 		chanState := b.GetState(channel)
 
 		if chanState.Settings.Disabled ||
-			chanState.GuestStar.Active ||
+			time.Now().Before(chanState.UserTimeout) ||
 			chanState.Killer == "" {
 			return
 		}
@@ -419,7 +419,7 @@ func (b *Bot) HandleOutgoingRaid(channel, otherChannel string) {
 	followRaidsMessage := strings.TrimSpace(chatSettings.FollowRaidsMessage)
 
 	if chanState.Settings.Disabled ||
-		chanState.GuestStar.Active ||
+		time.Now().Before(chanState.UserTimeout) ||
 		!followRaids ||
 		followRaidsMessage == "" {
 		return
@@ -460,12 +460,8 @@ func (b *Bot) StartSpecificKiller(channel, name string) error {
 		return fmt.Errorf("killer is already running")
 	}
 
-	if chanState.Settings.Disabled || chanState.GuestStar.Active {
+	if chanState.Settings.Disabled || time.Now().Before(chanState.UserTimeout) {
 		return fmt.Errorf("bot is disabled")
-	}
-
-	if chanState.GuestStar.Active {
-		return fmt.Errorf("guest star session is active")
 	}
 
 	nextKiller, ok := b.killerMap[name]

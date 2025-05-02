@@ -14,6 +14,5 @@ type Actions interface {
 	UnbanUser(channel, username string)
 	GetViewerList(channel string) []string
 	SetEmoteMode(channel string, enabled bool)
-	IsGuestStarSessionActive(channel string) bool
 	Shutdown()
 }

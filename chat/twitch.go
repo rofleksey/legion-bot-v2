@@ -1,17 +1,12 @@
 package chat
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
 	"github.com/gempir/go-twitch-irc/v4"
 	"github.com/nicklaw5/helix/v2"
-	"io"
 	"legion-bot-v2/config"
 	"legion-bot-v2/taskq"
 	"legion-bot-v2/util"
 	"log/slog"
-	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -60,96 +55,6 @@ func (t *TwitchActions) Shutdown() {
 	for _, q := range t.queues {
 		q.Shutdown()
 	}
-}
-
-func (t *TwitchActions) getGuestStarSessionIsActive(broadcasterID, moderatorID string) (bool, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	url := "https://api.twitch.tv/helix/guest_star/session?broadcaster_id=" + broadcasterID + "&moderator_id=" + moderatorID
-
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-	if err != nil {
-		return false, fmt.Errorf("failed to create guest star session request: %w", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+t.accessToken)
-	req.Header.Set("Client-Id", t.cfg.Twitch.ClientID)
-
-	client := &http.Client{
-		Timeout: time.Second * 10,
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return false, fmt.Errorf("failed to send guest star session request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		return false, fmt.Errorf("guest star session request failed with status code: %d", resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return false, fmt.Errorf("failed to read guest star session response: %w", err)
-	}
-
-	var sessionData struct {
-		Data []struct {
-			Guests []interface{} `json:"guests"`
-		} `json:"data"`
-	}
-
-	err = json.Unmarshal(body, &sessionData)
-	if err != nil {
-		return false, fmt.Errorf("failed to parse guest star session response: %w", err)
-	}
-
-	if len(sessionData.Data) == 0 || len(sessionData.Data[0].Guests) == 0 {
-		return false, nil
-	}
-
-	return true, nil
-}
-
-func (t *TwitchActions) IsGuestStarSessionActive(channel string) bool {
-	return taskq.Compute(t.getQueue(channel), func() bool {
-		botResp, err := t.helixClient.GetUsers(&helix.UsersParams{
-			Logins: []string{util.BotUsername},
-		})
-		if err != nil || len(botResp.Data.Users) == 0 {
-			slog.Error("Error getting bot user",
-				slog.String("channel", channel),
-				slog.Any("error", err),
-			)
-			return false
-		}
-
-		botUser := botResp.Data.Users[0]
-
-		channelResp, err := t.helixClient.GetUsers(&helix.UsersParams{
-			Logins: []string{channel},
-		})
-		if err != nil || len(channelResp.Data.Users) == 0 {
-			slog.Error("Error getting channel user",
-				slog.String("channel", channel),
-				slog.Any("error", err),
-			)
-			return false
-		}
-		channelUser := channelResp.Data.Users[0]
-
-		isSessionActive, err := t.getGuestStarSessionIsActive(channelUser.ID, botUser.ID)
-		if err != nil {
-			slog.Error("Error getting guest star session status",
-				slog.String("channel", channel),
-				slog.Any("error", err),
-			)
-			return false
-		}
-
-		return isSessionActive
-	})
 }
 
 func (t *TwitchActions) SetEmoteMode(channel string, enabled bool) {

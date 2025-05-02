@@ -11,29 +11,23 @@ import (
 	"log/slog"
 	"os"
 	"strings"
-	"sync"
 	"time"
 )
 
 var _ Producer = (*TwitchProducer)(nil)
 
 type TwitchProducer struct {
-	cfg             *config.Config
-	userAccessToken string
-	ircClient       *twitch.Client
-	helixClient     *helix.Client
-	appClient       *helix.Client
-	database        db.DB
-	botInstance     *bot.Bot
-	queue           *taskq.Queue
-
-	m                sync.Mutex
-	websocketClients map[string]*TwitchWebSocketClient
+	cfg         *config.Config
+	ircClient   *twitch.Client
+	helixClient *helix.Client
+	appClient   *helix.Client
+	database    db.DB
+	botInstance *bot.Bot
+	queue       *taskq.Queue
 }
 
 func NewTwitchProducer(
 	cfg *config.Config,
-	userAccessToken string,
 	ircClient *twitch.Client,
 	helixClient *helix.Client,
 	appClient *helix.Client,
@@ -41,15 +35,13 @@ func NewTwitchProducer(
 	botInstance *bot.Bot,
 ) *TwitchProducer {
 	return &TwitchProducer{
-		cfg:              cfg,
-		userAccessToken:  userAccessToken,
-		ircClient:        ircClient,
-		helixClient:      helixClient,
-		appClient:        appClient,
-		database:         database,
-		botInstance:      botInstance,
-		queue:            taskq.New(1, 1, 1),
-		websocketClients: make(map[string]*TwitchWebSocketClient),
+		cfg:         cfg,
+		ircClient:   ircClient,
+		helixClient: helixClient,
+		appClient:   appClient,
+		database:    database,
+		botInstance: botInstance,
+		queue:       taskq.New(1, 1, 1),
 	}
 }
 
