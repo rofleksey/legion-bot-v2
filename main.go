@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"github.com/robfig/cron/v3"
+	"github.com/samber/do"
 	slogmulti "github.com/samber/slog-multi"
 	slogtelegram "github.com/samber/slog-telegram/v2"
 	"legion-bot-v2/api"
@@ -36,7 +37,6 @@ import (
 // display problems
 // add more Info icons in the settings
 // more descriptive killer powers in chat
-// use di
 // greetings
 // !clip
 // improve chatbot ai
@@ -94,10 +94,14 @@ func main() {
 
 	os.MkdirAll("data", 0750)
 
+	di := do.New()
+
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("Config error: %v", err)
 	}
+
+	do.ProvideValue(di, cfg)
 
 	logHandlers := []slog.Handler{
 		slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
@@ -139,24 +143,32 @@ func main() {
 		)
 	}
 
+	do.ProvideNamedValue(di, "userAccessToken", userAccessToken)
+
 	ircClient, helixClient, err := util.InitTwitchClients(cfg, userAccessToken)
 	if err != nil {
 		log.Fatalf("Failed to init twitch clients: %v", err)
 	}
 
+	do.ProvideValue(di, ircClient)
+	do.ProvideNamedValue(di, "helixClient", helixClient)
+
 	appClient, err := util.InitAppTwitchClient(cfg, userAccessToken)
 	if err != nil {
 		log.Fatalf("Failed to init app twitch client: %v", err)
 	}
+	do.ProvideNamedValue(di, "appClient", appClient)
 
 	var chatActions chat.Actions
 	if os.Getenv("ENVIRONMENT") == "production" {
-		chatActions = chat.NewTwitchActions(cfg, userAccessToken, ircClient, helixClient)
+		chatActions = chat.NewTwitchActions(di)
 	} else {
 		slog.Debug("!!! Using debug chat actions")
 		chatActions = &chat.ConsoleActions{}
 	}
 	defer chatActions.Shutdown()
+
+	do.ProvideValue(di, chatActions)
 
 	database, err := db.NewDatabase("data/database.db")
 	if err != nil {
@@ -164,29 +176,36 @@ func main() {
 	}
 	defer database.Close()
 
+	do.ProvideValue(di, database)
+
 	timerManager := timers.NewManager()
+	do.ProvideValue(di, timerManager)
 
 	localiser, err := i18n.NewLocaliser()
 	if err != nil {
 		log.Fatalf("Failed to initialize i18n: %v", err)
 	}
+	do.ProvideValue(di, localiser)
 
 	gptInstance := gpt.NewYandexGpt(cfg)
+	do.ProvideValue(di, gptInstance)
 
 	killerMap := map[string]killer.Killer{
-		"legion":    legion.New(database, chatActions, timerManager, localiser, gptInstance),
-		"ghostface": ghostface.New(database, chatActions, timerManager, localiser, gptInstance),
-		"doctor":    doctor.New(database, chatActions, timerManager, localiser, gptInstance),
-		"pinhead":   pinhead.New(database, chatActions, timerManager, localiser, gptInstance),
-		"dredge":    dredge.New(database, chatActions, timerManager, localiser, gptInstance),
+		"legion":    legion.New(di),
+		"ghostface": ghostface.New(di),
+		"doctor":    doctor.New(di),
+		"pinhead":   pinhead.New(di),
+		"dredge":    dredge.New(di),
 	}
+	do.ProvideValue(di, killerMap)
 
-	botInstance := bot.NewBot(database, chatActions, timerManager, localiser, gptInstance, killerMap)
+	botInstance := bot.NewBot(di)
 	botInstance.Init()
+	do.ProvideValue(di, botInstance)
 
-	chatProducer := producer.NewTwitchProducer(cfg, timerManager, ircClient, helixClient, appClient, database,
-		botInstance)
+	chatProducer := producer.NewTwitchProducer(di)
 	defer chatProducer.Shutdown()
+	do.ProvideValue(di, chatProducer)
 
 	if os.Getenv("ENVIRONMENT") != "production" {
 		chatProducer.AddChannel("dbdleague")
@@ -204,9 +223,11 @@ func main() {
 	}()
 
 	cheatDetector := cheatdetect.NewDetector()
+	do.ProvideValue(di, cheatDetector)
 
 	slog.Debug("Starting server...")
-	server := api.NewServer(cfg, botInstance, database, chatProducer, cheatDetector)
+	server := api.NewServer(di)
+	do.ProvideValue(di, server)
 	go func() {
 		if err := server.Run(); err != nil {
 			slog.Error("Server error",

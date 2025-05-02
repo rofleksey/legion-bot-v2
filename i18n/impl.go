@@ -13,7 +13,7 @@ type LocaliserImpl struct {
 	translations map[string]map[string]string
 }
 
-func NewLocaliser() (*LocaliserImpl, error) {
+func NewLocaliser() (Localiser, error) {
 	l := &LocaliserImpl{
 		translations: make(map[string]map[string]string),
 	}

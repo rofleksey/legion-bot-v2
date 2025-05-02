@@ -4,6 +4,7 @@ import (
 	"github.com/gempir/go-twitch-irc/v4"
 	"github.com/jellydator/ttlcache/v3"
 	"github.com/nicklaw5/helix/v2"
+	"github.com/samber/do"
 	"legion-bot-v2/config"
 	"legion-bot-v2/taskq"
 	"legion-bot-v2/util"
@@ -27,12 +28,7 @@ type TwitchActions struct {
 	userIdCache *ttlcache.Cache[string, string] // username -> userId
 }
 
-func NewTwitchActions(
-	cfg *config.Config,
-	accessToken string,
-	ircClient *twitch.Client,
-	helixClient *helix.Client,
-) *TwitchActions {
+func NewTwitchActions(di *do.Injector) Actions {
 	userIdCache := ttlcache.New(
 		ttlcache.WithTTL[string, string](24 * time.Hour),
 	)
@@ -40,10 +36,10 @@ func NewTwitchActions(
 	go userIdCache.Start()
 
 	return &TwitchActions{
-		cfg:         cfg,
-		accessToken: accessToken,
-		ircClient:   ircClient,
-		helixClient: helixClient,
+		cfg:         do.MustInvoke[*config.Config](di),
+		accessToken: do.MustInvokeNamed[string](di, "userAccessToken"),
+		ircClient:   do.MustInvoke[*twitch.Client](di),
+		helixClient: do.MustInvokeNamed[*helix.Client](di, "helixClient"),
 		queues:      make(map[string]*taskq.Queue),
 		userIdCache: userIdCache,
 	}

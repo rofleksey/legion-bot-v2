@@ -10,7 +10,7 @@ type Manager struct {
 	mu     sync.Mutex
 }
 
-func NewManager() *Manager {
+func NewManager() Timers {
 	return &Manager{
 		timers: make(map[string]map[string]*time.Timer),
 	}

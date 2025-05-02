@@ -6,4 +6,5 @@ type DB interface {
 	GetAllStates() []ChannelState
 	GetAllChannelNames() []string
 	ReadAllStates(callback func(state *ChannelState))
+	Close()
 }

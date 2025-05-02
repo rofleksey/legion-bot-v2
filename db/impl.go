@@ -13,7 +13,7 @@ type Impl struct {
 	db *bbolt.DB
 }
 
-func NewDatabase(filePath string) (*Impl, error) {
+func NewDatabase(filePath string) (DB, error) {
 	db, err := bbolt.Open(filePath, 0600, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
@@ -30,8 +30,8 @@ func NewDatabase(filePath string) (*Impl, error) {
 	return &Impl{db: db}, nil
 }
 
-func (db *Impl) Close() error {
-	return db.db.Close()
+func (db *Impl) Close() {
+	db.db.Close()
 }
 
 func (db *Impl) UpdateState(channel string, callback func(state *ChannelState)) {

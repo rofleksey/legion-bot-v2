@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/jellydator/ttlcache/v3"
+	"github.com/samber/do"
 	"legion-bot-v2/bot"
 	"legion-bot-v2/cheatdetect"
 	"legion-bot-v2/config"
@@ -27,21 +28,17 @@ type Server struct {
 	mux           *http.ServeMux
 }
 
-func NewServer(
-	cfg *config.Config,
-	bot *bot.Bot,
-	database db.DB,
-	chatProducer producer.Producer,
-	cheatDetector *cheatdetect.Detector,
-) *Server {
+func NewServer(di *do.Injector) *Server {
 	stateCache := ttlcache.New[string, struct{}](
 		ttlcache.WithTTL[string, struct{}](30 * time.Minute),
 	)
 	go stateCache.Start()
 
+	cfg := do.MustInvoke[*config.Config](di)
+
 	server := Server{
 		cfg: cfg,
-		bot: bot,
+		bot: do.MustInvoke[*bot.Bot](di),
 		oauth2Config: oauth2.Config{
 			ClientID:     cfg.Twitch.ClientID,
 			ClientSecret: cfg.Twitch.ClientSecret,
@@ -49,9 +46,9 @@ func NewServer(
 			RedirectURL:  cfg.Twitch.RedirectURL,
 			Scopes:       []string{},
 		},
-		database:      database,
-		chatProducer:  chatProducer,
-		cheatDetector: cheatDetector,
+		database:      do.MustInvoke[db.DB](di),
+		chatProducer:  do.MustInvoke[producer.Producer](di),
+		cheatDetector: do.MustInvoke[*cheatdetect.Detector](di),
 		stateCache:    stateCache,
 		mux:           http.NewServeMux(),
 	}

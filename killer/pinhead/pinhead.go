@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/elliotchance/pie/v2"
 	"github.com/mitchellh/mapstructure"
+	"github.com/samber/do"
 	"legion-bot-v2/chat"
 	"legion-bot-v2/db"
 	"legion-bot-v2/gpt"
@@ -31,16 +32,14 @@ type Pinhead struct {
 	gpt.Gpt
 }
 
-func New(db db.DB, actions chat.Actions, timers timers.Timers, localiser i18n.Localiser, g gpt.Gpt) *Pinhead {
-	k := &Pinhead{
-		DB:        db,
-		Actions:   actions,
-		Timers:    timers,
-		Localiser: localiser,
-		Gpt:       g,
+func New(di *do.Injector) *Pinhead {
+	return &Pinhead{
+		DB:        do.MustInvoke[db.DB](di),
+		Actions:   do.MustInvoke[chat.Actions](di),
+		Timers:    do.MustInvoke[timers.Timers](di),
+		Localiser: do.MustInvoke[i18n.Localiser](di),
+		Gpt:       do.MustInvoke[gpt.Gpt](di),
 	}
-
-	return k
 }
 
 func (p *Pinhead) Name() string {

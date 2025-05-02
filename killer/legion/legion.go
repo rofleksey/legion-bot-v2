@@ -3,6 +3,7 @@ package legion
 import (
 	"fmt"
 	"github.com/mitchellh/mapstructure"
+	"github.com/samber/do"
 	"legion-bot-v2/chat"
 	"legion-bot-v2/db"
 	"legion-bot-v2/gpt"
@@ -58,16 +59,14 @@ func (l *Legion) Enabled(channel string) bool {
 	return chanState.Settings.Killers.Legion.Enabled
 }
 
-func New(db db.DB, actions chat.Actions, timers timers.Timers, localiser i18n.Localiser, g gpt.Gpt) *Legion {
-	k := &Legion{
-		DB:        db,
-		Actions:   actions,
-		Timers:    timers,
-		Localiser: localiser,
-		Gpt:       g,
+func New(di *do.Injector) *Legion {
+	return &Legion{
+		DB:        do.MustInvoke[db.DB](di),
+		Actions:   do.MustInvoke[chat.Actions](di),
+		Timers:    do.MustInvoke[timers.Timers](di),
+		Localiser: do.MustInvoke[i18n.Localiser](di),
+		Gpt:       do.MustInvoke[gpt.Gpt](di),
 	}
-
-	return k
 }
 
 func (l *Legion) handleCommands(userMsg db.Message) bool {

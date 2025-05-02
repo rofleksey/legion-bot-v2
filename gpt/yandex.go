@@ -25,7 +25,7 @@ type YandexGpt struct {
 	iamToken string
 }
 
-func NewYandexGpt(cfg *config.Config) *YandexGpt {
+func NewYandexGpt(cfg *config.Config) Gpt {
 	return &YandexGpt{
 		cfg: cfg,
 		client: &http.Client{

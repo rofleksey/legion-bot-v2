@@ -37,6 +37,7 @@ require (
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/samber/do v1.6.0 // indirect
 	github.com/samber/lo v1.49.1 // indirect
 	github.com/samber/slog-common v0.18.1 // indirect
 	golang.org/x/crypto v0.37.0 // indirect

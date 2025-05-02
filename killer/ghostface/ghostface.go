@@ -3,6 +3,7 @@ package ghostface
 import (
 	"fmt"
 	"github.com/mitchellh/mapstructure"
+	"github.com/samber/do"
 	"legion-bot-v2/chat"
 	"legion-bot-v2/db"
 	"legion-bot-v2/gpt"
@@ -30,16 +31,14 @@ type GhostFace struct {
 	gpt.Gpt
 }
 
-func New(db db.DB, actions chat.Actions, timers timers.Timers, localiser i18n.Localiser, g gpt.Gpt) *GhostFace {
-	k := &GhostFace{
-		DB:        db,
-		Actions:   actions,
-		Timers:    timers,
-		Localiser: localiser,
-		Gpt:       g,
+func New(di *do.Injector) *GhostFace {
+	return &GhostFace{
+		DB:        do.MustInvoke[db.DB](di),
+		Actions:   do.MustInvoke[chat.Actions](di),
+		Timers:    do.MustInvoke[timers.Timers](di),
+		Localiser: do.MustInvoke[i18n.Localiser](di),
+		Gpt:       do.MustInvoke[gpt.Gpt](di),
 	}
-
-	return k
 }
 
 func (g *GhostFace) HandleWhisper(userMsg db.PartialMessage) {

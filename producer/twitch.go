@@ -3,6 +3,7 @@ package producer
 import (
 	"github.com/gempir/go-twitch-irc/v4"
 	"github.com/nicklaw5/helix/v2"
+	"github.com/samber/do"
 	"legion-bot-v2/bot"
 	"legion-bot-v2/config"
 	"legion-bot-v2/db"
@@ -28,23 +29,15 @@ type TwitchProducer struct {
 	queue          *taskq.Queue
 }
 
-func NewTwitchProducer(
-	cfg *config.Config,
-	timersInstance timers.Timers,
-	ircClient *twitch.Client,
-	helixClient *helix.Client,
-	appClient *helix.Client,
-	database db.DB,
-	botInstance *bot.Bot,
-) *TwitchProducer {
+func NewTwitchProducer(di *do.Injector) Producer {
 	return &TwitchProducer{
-		cfg:            cfg,
-		timersInstance: timersInstance,
-		ircClient:      ircClient,
-		helixClient:    helixClient,
-		appClient:      appClient,
-		database:       database,
-		botInstance:    botInstance,
+		cfg:            do.MustInvoke[*config.Config](di),
+		timersInstance: do.MustInvoke[timers.Timers](di),
+		ircClient:      do.MustInvoke[*twitch.Client](di),
+		helixClient:    do.MustInvokeNamed[*helix.Client](di, "helixClient"),
+		appClient:      do.MustInvokeNamed[*helix.Client](di, "appClient"),
+		database:       do.MustInvoke[db.DB](di),
+		botInstance:    do.MustInvoke[*bot.Bot](di),
 		queue:          taskq.New(1, 1, 1),
 	}
 }

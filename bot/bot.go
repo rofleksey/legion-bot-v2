@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/elliotchance/pie/v2"
 	"github.com/jellydator/ttlcache/v3"
+	"github.com/samber/do"
 	"legion-bot-v2/chat"
 	"legion-bot-v2/db"
 	"legion-bot-v2/gpt"
@@ -29,14 +30,7 @@ type Bot struct {
 	viewerCountMap *ttlcache.Cache[string, int]
 }
 
-func NewBot(
-	db db.DB,
-	actions chat.Actions,
-	timers timers.Timers,
-	localiser i18n.Localiser,
-	gptInstance gpt.Gpt,
-	killerMap map[string]killer.Killer,
-) *Bot {
+func NewBot(di *do.Injector) *Bot {
 	streamStartMap := ttlcache.New[string, time.Time](
 		ttlcache.WithTTL[string, time.Time](30 * time.Minute),
 	)
@@ -49,12 +43,12 @@ func NewBot(
 	go viewerCountMap.Start()
 
 	bot := &Bot{
-		DB:             db,
-		Actions:        actions,
-		Timers:         timers,
-		Localiser:      localiser,
-		Gpt:            gptInstance,
-		killerMap:      killerMap,
+		DB:             do.MustInvoke[db.DB](di),
+		Actions:        do.MustInvoke[chat.Actions](di),
+		Timers:         do.MustInvoke[timers.Timers](di),
+		Localiser:      do.MustInvoke[i18n.Localiser](di),
+		Gpt:            do.MustInvoke[gpt.Gpt](di),
+		killerMap:      do.MustInvoke[map[string]killer.Killer](di),
 		streamStartMap: streamStartMap,
 		viewerCountMap: viewerCountMap,
 	}
