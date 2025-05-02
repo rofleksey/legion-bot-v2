@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"sync"
 	"time"
@@ -129,9 +130,6 @@ func (t *TwitchWebSocketClient) waitForSessionID() (string, error) {
 }
 
 func (t *TwitchWebSocketClient) registerSubscriptions() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
 	events := []struct {
 		Type    string
 		Version string
@@ -159,7 +157,7 @@ func (t *TwitchWebSocketClient) registerSubscriptions() error {
 			return fmt.Errorf("failed to marshal request: %w", err)
 		}
 
-		req, err := http.NewRequestWithContext(ctx, "POST", "https://api.twitch.tv/helix/eventsub/subscriptions", bytes.NewBuffer(jsonBody))
+		req, err := http.NewRequest("POST", "https://api.twitch.tv/helix/eventsub/subscriptions", bytes.NewBuffer(jsonBody))
 		if err != nil {
 			return fmt.Errorf("failed to create request: %w", err)
 		}
@@ -168,15 +166,16 @@ func (t *TwitchWebSocketClient) registerSubscriptions() error {
 		req.Header.Set("Client-Id", t.clientID)
 		req.Header.Set("Content-Type", "application/json")
 
-		client := &http.Client{Timeout: 10 * time.Second}
+		client := &http.Client{Timeout: 30 * time.Second}
 		resp, err := client.Do(req)
 		if err != nil {
 			return fmt.Errorf("failed to send request: %w", err)
 		}
 		defer resp.Body.Close()
 
-		if resp.StatusCode != http.StatusAccepted {
-			return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		if resp.StatusCode >= 400 {
+			body, _ := io.ReadAll(resp.Body)
+			return fmt.Errorf("unexpected status code %d: %s", resp.StatusCode, string(body))
 		}
 
 		slog.Debug("Registered Twitch EventSub subscription",
