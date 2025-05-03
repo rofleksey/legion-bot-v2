@@ -201,8 +201,6 @@ func (c *Client) doPeriodicJobs() {
 			continue
 		}
 
-		time.Sleep(10 * time.Second)
-
 		if steamSettings.NotifyNewComments || strings.TrimSpace(steamSettings.PinnedCommentText) != "" {
 			c.handleComments(channel)
 		}
