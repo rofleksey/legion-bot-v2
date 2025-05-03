@@ -2,6 +2,7 @@ package killer
 
 import (
 	"legion-bot-v2/db"
+	"time"
 )
 
 type Killer interface {
@@ -12,4 +13,5 @@ type Killer interface {
 	Start(userMsg db.Message)
 	HandleMessage(userMsg db.Message)
 	HandleWhisper(userMsg db.PartialMessage)
+	TimeRemaining(channel string) time.Duration
 }

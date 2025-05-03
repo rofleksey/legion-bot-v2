@@ -204,6 +204,10 @@ func (l *Legion) Start(userMsg db.Message) {
 	l.startFrenzy(userMsg.Channel)
 }
 
+func (l *Legion) TimeRemaining(channel string) time.Duration {
+	return l.GetRemainingTime(channel, FrenzyTimerName)
+}
+
 func (l *Legion) HandleMessage(userMsg db.Message) {
 	chanState := l.GetState(userMsg.Channel)
 	legionSettings := chanState.Settings.Killers.Legion

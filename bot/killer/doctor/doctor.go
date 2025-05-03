@@ -153,6 +153,10 @@ func (d *Doctor) HandleWhisper(userMsg db.PartialMessage) {
 
 }
 
+func (d *Doctor) TimeRemaining(channel string) time.Duration {
+	return d.GetRemainingTime(channel, MadnessTimerName)
+}
+
 func (d *Doctor) handleCommands(userMsg db.Message) bool {
 	chanState := d.GetState(userMsg.Channel)
 	lang := chanState.Settings.Language

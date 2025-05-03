@@ -90,3 +90,10 @@ export interface DredgeSettings {
   hookBanTime: number;
   timeout: number;
 }
+
+export interface ChannelStatus {
+  status: 'error' | 'success' | 'idle' | 'loading'
+  title: string;
+  subtitle: string;
+  timeRemaining: number;
+}

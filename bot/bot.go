@@ -85,7 +85,7 @@ func (b *Bot) Init() {
 	}
 }
 
-func (b *Bot) getCachedStreamStartTime(channel string) time.Time {
+func (b *Bot) GetCachedStreamStartTime(channel string) time.Time {
 	item := b.streamStartMap.Get(channel)
 	if item != nil {
 		return item.Value()
@@ -99,7 +99,7 @@ func (b *Bot) getCachedStreamStartTime(channel string) time.Time {
 	return startTime
 }
 
-func (b *Bot) getCachedViewerCount(channel string) int {
+func (b *Bot) GetCachedViewerCount(channel string) int {
 	item := b.viewerCountMap.Get(channel)
 	if item != nil {
 		return item.Value()
@@ -123,7 +123,7 @@ func (b *Bot) HandleMessage(userMsg db.Message) {
 		return
 	}
 
-	streamStartTime := b.getCachedStreamStartTime(userMsg.Channel)
+	streamStartTime := b.GetCachedStreamStartTime(userMsg.Channel)
 
 	var streamLength time.Duration
 	if !streamStartTime.IsZero() {
@@ -181,7 +181,7 @@ func (b *Bot) HandleStreamOnline(channel string) {
 		return
 	}
 
-	b.getCachedStreamStartTime(channel)
+	b.GetCachedStreamStartTime(channel)
 
 	msg := b.GetLocalString(lang, "stream_start_greeting", map[string]string{})
 	b.SendMessage(channel, msg)
@@ -292,7 +292,7 @@ func (b *Bot) startRandomKiller(userMsg db.Message) {
 		return
 	}
 
-	viewerCount := b.getCachedViewerCount(userMsg.Channel)
+	viewerCount := b.GetCachedViewerCount(userMsg.Channel)
 	if viewerCount < generalKillerSettings.MinNumberOfViewers {
 		slog.Debug("Failed to start random killer",
 			slog.String("channel", userMsg.Channel),

@@ -153,6 +153,20 @@ func (s *Server) handleChannelState(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(state)
 }
 
+func (s *Server) handleChannelStatus(w http.ResponseWriter, r *http.Request) {
+	claims, err := s.authenticateRequest(r)
+	if err != nil {
+		http.Error(w, "Unauthorized: "+err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	state := s.database.GetState(claims.TwitchUser.Login)
+	status := s.formatChannelStatus(state)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(status)
+}
+
 func (s *Server) updateSettings(w http.ResponseWriter, r *http.Request) {
 	claims, err := s.authenticateRequest(r)
 	if err != nil {

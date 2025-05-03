@@ -212,3 +212,7 @@ func (d *Dredge) HandleWhisper(userMsg db.PartialMessage) {
 		chanState.KillerState = dredgeState
 	})
 }
+
+func (d *Dredge) TimeRemaining(channel string) time.Duration {
+	return d.GetRemainingTime(channel, NightfallTimer)
+}

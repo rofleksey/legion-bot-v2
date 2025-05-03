@@ -212,6 +212,10 @@ func (p *Pinhead) HandleMessage(userMsg db.Message) {
 	}
 }
 
+func (p *Pinhead) TimeRemaining(channel string) time.Duration {
+	return p.GetRemainingTime(channel, BoxTimerName)
+}
+
 func (p *Pinhead) handleCommands(userMsg db.Message) bool {
 	chanState := p.GetState(userMsg.Channel)
 	lang := chanState.Settings.Language

@@ -10,6 +10,13 @@
     </div>
 
     <div class="settings-content" v-if="settings">
+      <AppBigStatus
+        class="settings-status"
+        :status="status.status"
+        :title="status.title"
+        :subtitle="actualSubtitle"
+      />
+
       <div class="settings-section">
         <h2 class="settings-section-title">{{ t('settings.general_title') }}</h2>
         <div class="settings-grid">
@@ -344,10 +351,10 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted, computed} from 'vue';
+import {computed, onMounted, onUnmounted, ref} from 'vue';
 import axios from 'axios';
 import {useUserStore} from "@/stores/user";
-import type {Settings} from "@/lib/types";
+import type {ChannelStatus, Settings} from "@/lib/types";
 import AppSwitch from "@/components/AppSwitch.vue";
 import AppSelect from "@/components/AppSelect.vue";
 import AppDurationInput from "@/components/AppDurationInput.vue";
@@ -359,7 +366,8 @@ import AppQuotation from "@/components/AppQuotation.vue";
 import AppStringInput from "@/components/AppStringInput.vue";
 import {Dialog} from "@/services/dialog.ts";
 import AppButton from "@/components/AppButton.vue";
-import {errorToString} from "@/lib/misc.ts";
+import {errorToString, formatDuration} from "@/lib/misc.ts";
+import AppBigStatus from "@/components/AppBigStatus.vue";
 
 const {t} = useI18n()
 const notifications = useNotifications()
@@ -368,7 +376,19 @@ const userStore = useUserStore()
 const token = computed(() => userStore.token)
 
 const settings = ref<Settings | null>(null);
+const status = ref<ChannelStatus>({
+  status: 'loading',
+  title: '...',
+  subtitle: '',
+  timeRemaining: 0,
+})
+
 const postLoading = ref(false);
+
+const actualSubtitle = computed(() => {
+  const timeRemaining = formatDuration(status.value.timeRemaining)
+  return status.value.subtitle.replace("%timeRemaining%", timeRemaining)
+})
 
 function updateDisabled(val: boolean) {
   if (!settings.value) return;
@@ -397,6 +417,7 @@ async function saveSettings() {
       headers: {Authorization: `Bearer ${token.value}`}
     });
     notifications.info(t('settings.save_success'), 'OK')
+    updateStatus()
   } catch (e) {
     notifications.error(t('settings.save_failed'), errorToString(e));
   } finally {
@@ -411,6 +432,7 @@ async function summonKiller(name: string) {
       headers: {Authorization: `Bearer ${token.value}`}
     });
     notifications.info(t('settings.summoned'), 'OK')
+    updateStatus()
   } catch (e) {
     notifications.error(t('settings.summon_failed'), errorToString(e));
   } finally {
@@ -418,7 +440,37 @@ async function summonKiller(name: string) {
   }
 }
 
-onMounted(fetchSettings);
+async function updateStatus() {
+  try {
+    const res = await axios.get<ChannelStatus>('/api/channelStatus', {
+      headers: {Authorization: `Bearer ${token.value}`}
+    });
+
+    status.value = res.data
+  } catch (e) {
+    notifications.error("Failed to update status", errorToString(e));
+  }
+}
+
+function updateTimeRemaining() {
+  status.value.timeRemaining -= 1e9;
+}
+
+let statusInterval: any
+let timeRemainingInterval: any
+
+onMounted(() => {
+  fetchSettings()
+  updateStatus()
+
+  statusInterval = setInterval(updateStatus, 10000)
+  timeRemainingInterval = setInterval(updateTimeRemaining, 1000)
+});
+
+onUnmounted(() => {
+  clearInterval(statusInterval)
+  clearInterval(timeRemainingInterval)
+})
 </script>
 
 <style scoped>
@@ -426,6 +478,10 @@ onMounted(fetchSettings);
   max-width: 1000px;
   margin: 0 auto;
   padding: 24px;
+}
+
+.settings-status {
+  width: 100%;
 }
 
 .settings-header {

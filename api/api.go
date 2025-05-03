@@ -4,6 +4,8 @@ import (
 	"github.com/jellydator/ttlcache/v3"
 	"github.com/samber/do"
 	"legion-bot-v2/bot"
+	"legion-bot-v2/bot/i18n"
+	"legion-bot-v2/bot/killer"
 	"legion-bot-v2/cheatdetect"
 	"legion-bot-v2/config"
 	"legion-bot-v2/db"
@@ -23,9 +25,11 @@ type Server struct {
 	oauth2Config  oauth2.Config
 	bot           *bot.Bot
 	database      db.DB
+	localiser     i18n.Localiser
 	chatProducer  producer.Producer
 	cheatDetector *cheatdetect.Detector
 	steamClient   steam.Steam
+	killerMap     map[string]killer.Killer
 	stateCache    *ttlcache.Cache[string, struct{}]
 	mux           *http.ServeMux
 }
@@ -49,9 +53,11 @@ func NewServer(di *do.Injector) *Server {
 			Scopes:       []string{},
 		},
 		database:      do.MustInvoke[db.DB](di),
+		localiser:     do.MustInvoke[i18n.Localiser](di),
 		chatProducer:  do.MustInvoke[producer.Producer](di),
 		cheatDetector: do.MustInvoke[*cheatdetect.Detector](di),
 		steamClient:   do.MustInvoke[steam.Steam](di),
+		killerMap:     do.MustInvoke[map[string]killer.Killer](di),
 		stateCache:    stateCache,
 		mux:           http.NewServeMux(),
 	}
@@ -61,7 +67,7 @@ func NewServer(di *do.Injector) *Server {
 	server.mux.HandleFunc("/api/validate", server.handleValidateToken)
 
 	server.mux.HandleFunc("/api/settings", server.handleSettings)
-	server.mux.HandleFunc("/api/channelState", server.handleChannelState)
+	server.mux.HandleFunc("/api/channelStatus", server.handleChannelStatus)
 
 	server.mux.HandleFunc("/api/stats/{channel}", server.handleChannelStats)
 	server.mux.HandleFunc("/api/stats/{channel}/{username}", server.handleUserStats)
@@ -69,6 +75,7 @@ func NewServer(di *do.Injector) *Server {
 
 	server.mux.HandleFunc("/api/admin/users", server.handleUserList)
 	server.mux.HandleFunc("/api/admin/loginAs", server.handleLoginAs)
+	server.mux.HandleFunc("/api/admin/channelState", server.handleChannelState)
 
 	server.mux.HandleFunc("/api/webhook/raids", server.handleOutgoingRaid)
 	server.mux.HandleFunc("/api/webhook/stream/start", server.handleStreamStart)

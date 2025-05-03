@@ -167,6 +167,10 @@ func (g *GhostFace) HandleMessage(userMsg db.Message) {
 	g.handleHit(userMsg.Channel, userMsg.Username)
 }
 
+func (g *GhostFace) TimeRemaining(channel string) time.Duration {
+	return g.GetRemainingTime(channel, StalkTimerName)
+}
+
 func (g *GhostFace) handleCommands(userMsg db.Message) bool {
 	chanState := g.GetState(userMsg.Channel)
 	gfSettings := chanState.Settings.Killers.GhostFace
