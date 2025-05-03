@@ -79,6 +79,7 @@ func NewServer(di *do.Injector) *Server {
 
 	server.mux.HandleFunc("/api/webhook/raids", server.handleOutgoingRaid)
 	server.mux.HandleFunc("/api/webhook/stream/start", server.handleStreamStart)
+	server.mux.HandleFunc("/api/webhook/stream/end", server.handleStreamEnd)
 
 	server.mux.HandleFunc("/api/cheatDetect", server.handleCheatDetect)
 

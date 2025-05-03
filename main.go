@@ -35,7 +35,6 @@ import (
 )
 
 // TODO:
-// display status
 // display problems
 // add more Info icons in the settings
 // greetings

@@ -35,6 +35,9 @@ func (p *TwitchProducer) registerAllListeners(channel string) {
 	p.queue.Enqueue(func() {
 		p.addStreamStartListener(channel, broadcasterID)
 	})
+	p.queue.Enqueue(func() {
+		p.addStreamEndListener(channel, broadcasterID)
+	})
 }
 
 func (p *TwitchProducer) addStreamStartListener(channel, broadcasterID string) {
@@ -78,6 +81,51 @@ func (p *TwitchProducer) addStreamStartListener(channel, broadcasterID string) {
 		state.Subs.StreamStart = sub.ID
 	})
 	slog.Debug("Successfully created event sub for stream start",
+		slog.String("channel", channel),
+	)
+}
+
+func (p *TwitchProducer) addStreamEndListener(channel, broadcasterID string) {
+	chanState := p.database.GetState(channel)
+	streamEndId := chanState.Subs.StreamStart
+
+	if streamEndId != "" {
+		_, _ = p.appClient.RemoveEventSubSubscription(streamEndId)
+	}
+
+	resp, err := p.appClient.CreateEventSubSubscription(&helix.EventSubSubscription{
+		Type:    "stream.offline",
+		Version: "1",
+		Condition: helix.EventSubCondition{
+			BroadcasterUserID: broadcasterID,
+		},
+		Transport: helix.EventSubTransport{
+			Method:   "webhook",
+			Callback: fmt.Sprintf("%s/api/webhook/stream/end", p.cfg.BaseURL),
+			Secret:   p.cfg.Twitch.WebHookSecret,
+		},
+	})
+	if err != nil {
+		slog.Error("Failed to create event sub for stream end",
+			slog.String("channel", channel),
+			slog.Any("error", err),
+		)
+		return
+	}
+	if len(resp.Data.EventSubSubscriptions) == 0 {
+		slog.Error("Failed to create event sub for stream end",
+			slog.String("channel", channel),
+			slog.String("error", resp.Error),
+			slog.String("errorMsg", resp.ErrorMessage),
+		)
+		return
+	}
+
+	sub := resp.Data.EventSubSubscriptions[0]
+	p.database.UpdateState(channel, func(state *db.ChannelState) {
+		state.Subs.StreamEnd = sub.ID
+	})
+	slog.Debug("Successfully created event sub for stream end",
 		slog.String("channel", channel),
 	)
 }
@@ -148,8 +196,18 @@ func (p *TwitchProducer) removeAllListeners(channel string) {
 		)
 	}
 
+	if chanState.Subs.StreamEnd != "" {
+		p.queue.Enqueue(func() {
+			_, _ = p.appClient.RemoveEventSubSubscription(chanState.Subs.StreamEnd)
+		})
+		slog.Debug("Removed event sub for stream end subscription",
+			slog.String("channel", channel),
+		)
+	}
+
 	p.database.UpdateState(channel, func(state *db.ChannelState) {
 		state.Subs.RaidID = ""
 		state.Subs.StreamStart = ""
+		state.Subs.StreamEnd = ""
 	})
 }

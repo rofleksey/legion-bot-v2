@@ -1,5 +1,16 @@
 <template>
   <div class="settings-container">
+    <div class="settings-content">
+      <AppBigStatus
+        class="settings-status"
+        :status="status.status"
+        :title="status.title"
+        :subtitle="actualSubtitle"
+      />
+    </div>
+  </div>
+
+  <div class="settings-container">
     <div class="settings-header">
       <h1 class="settings-title">{{ t('settings.title') }}</h1>
       <div class="settings-actions">
@@ -10,13 +21,6 @@
     </div>
 
     <div class="settings-content" v-if="settings">
-      <AppBigStatus
-        class="settings-status"
-        :status="status.status"
-        :title="status.title"
-        :subtitle="actualSubtitle"
-      />
-
       <div class="settings-section">
         <h2 class="settings-section-title">{{ t('settings.general_title') }}</h2>
         <div class="settings-grid">

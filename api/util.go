@@ -117,7 +117,7 @@ func (s *Server) formatChannelStatus(chanState db.ChannelState) dao.ChannelStatu
 		return dao.ChannelStatusResponse{
 			Status:   dao.ChannelStatusError,
 			Title:    s.localiser.GetLocalString(lang, "channel_status_all_killers_disabled", nil),
-			Subtitle: s.localiser.GetLocalString(lang, "channel_status_all_killers_disabled_title", nil),
+			Subtitle: s.localiser.GetLocalString(lang, "channel_status_all_killers_disabled_subtitle", nil),
 		}
 	}
 
@@ -139,7 +139,7 @@ func (s *Server) formatChannelStatus(chanState db.ChannelState) dao.ChannelStatu
 
 	if streamLength == 0 {
 		return dao.ChannelStatusResponse{
-			Status:   dao.ChannelStatusIdle,
+			Status:   dao.ChannelStatusSuccess,
 			Title:    s.localiser.GetLocalString(lang, "channel_status_awaiting_stream_start", nil),
 			Subtitle: s.localiser.GetLocalString(lang, "channel_status_awaiting_stream_start_subtitle", nil),
 		}

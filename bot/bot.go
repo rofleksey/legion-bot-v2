@@ -187,6 +187,24 @@ func (b *Bot) HandleStreamOnline(channel string) {
 	b.SendMessage(channel, msg)
 }
 
+func (b *Bot) HandleStreamOffline(channel string) {
+	chanState := b.GetState(channel)
+	lang := chanState.Settings.Language
+
+	if chanState.Settings.Disabled || time.Now().Before(chanState.UserTimeout) {
+		slog.Debug("HandleStreamOffline ignored",
+			slog.String("channel", channel),
+			slog.String("cause", "bot is disabled"),
+		)
+		return
+	}
+
+	b.streamStartMap.Delete(channel)
+
+	msg := b.GetLocalString(lang, "stream_end_greeting", map[string]string{})
+	b.SendMessage(channel, msg)
+}
+
 func (b *Bot) HandleWhisper(username, message string) {
 	channels := b.GetAllChannelNames()
 

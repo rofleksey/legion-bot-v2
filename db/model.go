@@ -29,6 +29,7 @@ type SteamState struct {
 type ChannelSubs struct {
 	RaidID      string `json:"raidId"`
 	StreamStart string `json:"streamStart"`
+	StreamEnd   string `json:"streamEnd"`
 }
 
 type Message struct {
