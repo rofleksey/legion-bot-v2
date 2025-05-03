@@ -137,6 +137,14 @@ func (s *Server) formatChannelStatus(chanState db.ChannelState) dao.ChannelStatu
 		streamLength = time.Now().Sub(streamStartTime)
 	}
 
+	if streamLength == 0 {
+		return dao.ChannelStatusResponse{
+			Status:   dao.ChannelStatusIdle,
+			Title:    s.localiser.GetLocalString(lang, "channel_status_awaiting_stream_start", nil),
+			Subtitle: s.localiser.GetLocalString(lang, "channel_status_awaiting_stream_start_subtitle", nil),
+		}
+	}
+
 	if streamLength <= generalKillerSettings.DelayAtTheStreamStart {
 		return dao.ChannelStatusResponse{
 			Status:        dao.ChannelStatusIdle,

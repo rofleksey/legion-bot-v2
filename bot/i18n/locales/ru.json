@@ -71,6 +71,8 @@
   "channel_status_not_enough_viewers_subtitle": "Необходимо еще COUNT зрителей",
   "channel_status_success": "Убийца готов к выходу",
   "channel_status_success_subtitle": "Ждем любого сообщения в чате",
+  "channel_status_awaiting_stream_start": "Ожидаем начала стрима",
+  "channel_status_awaiting_stream_start_subtitle": "Готов к запуску",
   "time_remaining_subtitle": "Оставшееся время: %timeRemaining%",
   "killer_legion": "Легион",
   "killer_doctor": "Доктор",

@@ -72,6 +72,8 @@
   "channel_status_not_enough_viewers_subtitle": "COUNT more viewers needed",
   "channel_status_success": "Killer is ready to appear",
   "channel_status_success_subtitle": "Waiting for any chat message",
+  "channel_status_awaiting_stream_start": "Awaiting stream start",
+  "channel_status_awaiting_stream_start_subtitle": "Ready to launch",
   "time_remaining_subtitle": "Time remaining: %timeRemaining%",
   "killer_legion": "Legion",
   "killer_doctor": "Doctor",
