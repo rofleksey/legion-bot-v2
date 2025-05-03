@@ -217,10 +217,6 @@ func (t *TwitchActions) GetStartTime(channel string) time.Time {
 			}
 		}
 
-		slog.Warn("Stream start time not found",
-			slog.String("channel", channel),
-		)
-
 		return time.Time{}
 	})
 }
