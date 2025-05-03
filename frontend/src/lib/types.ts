@@ -9,6 +9,13 @@ export interface Settings {
   language: string;
   killers: KillersSettings;
   chat: ChatSettings;
+  steam: SteamSettings;
+}
+
+export interface SteamSettings {
+  steamId64: string;
+  notifyNewComments: boolean;
+  pinnedCommentText: string;
 }
 
 export interface ChatSettings {

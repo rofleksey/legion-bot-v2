@@ -108,6 +108,13 @@ const i18n = createI18n({
         "dredge": "🌙 The Dredge",
         "dredge_description": "Activates the Realm of Darkness (emote-only mode) for the entire duration. Users can vote on who to hang by sending the victim's username to the bot via DM. If the vote has a clear winner, that user will be killed and hooked at the end of the Realm of Darkness. Otherwise, The Dredge simply leaves.",
         "misc_title": "Misc",
+        "steam_title": "🎮 Steam",
+        "steam_id": "SteamID64",
+        "steam_notify_new_comments": "New comments notification",
+        "steam_pinned_comment_text": "Pinned comment text",
+        "steam_id64_info": "Your Steam profile ID64. You can find it using this website: https://steamid.pro/ (SteamID)",
+        "steam_notify_new_comments_info": "Send a message to the chat if new comments appear on the specified profile. Sends messages only during the stream. Notifies only about the fact that a new comment has appeared, the comment itself will not be written to the chat.",
+        "steam_pinned_comment_text_info": "The bot's Steam account will write you a comment with this text. If new comments appear over it, it will delete it and write it again (pinned message effect)."
       },
       "cheat_detection": {
         "title": "Cheater Database",
@@ -212,6 +219,13 @@ const i18n = createI18n({
         "dredge": "🌙 Грязь",
         "dredge_description": "Включает Царство Мрака (режим только для эмоутов) на все время действия. Пользователи могут голосовать кого повесить, отправляя юзернейм жертвы боту в лс. Если голование имеет явного победителя, в конце Царства Мрака этот пользователь будет убит и повешен на крюк. Иначе, Грязь просто уходит.",
         "misc_title": "Прочее",
+        "steam_title": "🎮 Steam",
+        "steam_id": "SteamID64",
+        "steam_notify_new_comments": "Уведомления о новых комментах",
+        "steam_pinned_comment_text": "Текст закрепленного комментария",
+        "steam_id64_info": "ID64 вашего профиля Steam. Можно узнать на этом сайте: https://steamid.pro/ (SteamID)",
+        "steam_notify_new_comments_info": "Присылать сообщение в чат если на указаном профиле появлявятся новые комментарии. Присылает сообщения только во время стрима. Уведомляет только о самом факте появления нового комментария, сам комментарий в чат писаться не будет.",
+        "steam_pinned_comment_text_info": "Steam-аккаунт бота напишет вам комментарий с данным текстом. Если поверх него появятся новые комментарии, он удалит и напишет его заново (эффект закрепленного сообщения)."
       },
       "cheat_detection": {
         "title": "База данных читеров",

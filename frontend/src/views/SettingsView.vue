@@ -304,6 +304,32 @@
       </div>
 
       <div class="settings-section">
+        <h2 class="settings-section-title">{{ t('settings.steam_title') }}</h2>
+        <div class="settings-subsection">
+          <div class="settings-grid">
+            <AppStringInput
+              v-model="settings.steam.steamId64"
+              :label="t('settings.steam_id')"
+              show-help-icon
+              @help-click="Dialog.show(t('settings.steam_id64_info'))"
+            />
+            <AppSwitch
+              v-model="settings.steam.notifyNewComments"
+              :label="t('settings.steam_notify_new_comments')"
+              show-help-icon
+              @help-click="Dialog.show(t('settings.steam_notify_new_comments_info'))"
+            />
+            <AppStringInput
+              v-model="settings.steam.pinnedCommentText"
+              :label="t('settings.steam_pinned_comment_text')"
+              show-help-icon
+              @help-click="Dialog.show(t('settings.steam_pinned_comment_text_info'))"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
         <h2 class="settings-section-title">{{ t('settings.misc_title') }}</h2>
         <div class="settings-subsection">
           <div class="settings-grid">

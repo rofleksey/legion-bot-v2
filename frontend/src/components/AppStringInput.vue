@@ -1,6 +1,20 @@
 <template>
   <div class="text-input">
-    <label v-if="label" class="text-input__label">{{ label }}</label>
+    <div v-if="label" class="text-input__label-container">
+      <label class="text-input__label">{{ label }}</label>
+      <button
+        v-if="showHelpIcon"
+        class="text-input__help-icon"
+        @click="emitHelpClick"
+        aria-label="Help"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 16V12" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 8H12.01" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
     <div class="text-input__container">
       <input
         ref="inputRef"
@@ -31,6 +45,7 @@ const props = withDefaults(
     minLength?: number
     pattern?: RegExp
     required?: boolean
+    showHelpIcon?: boolean // whether to show the help icon
   }>(),
   {
     label: '',
@@ -38,12 +53,14 @@ const props = withDefaults(
     maxLength: undefined,
     minLength: undefined,
     pattern: undefined,
-    required: false
+    required: false,
+    showHelpIcon: false
   }
 )
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
+  (e: 'help-click'): void // new custom event for help icon click
 }>()
 
 const inputRef = ref<HTMLInputElement | null>(null)
@@ -60,6 +77,10 @@ watch(
     }
   }
 )
+
+function emitHelpClick() {
+  emit('help-click')
+}
 
 function handleFocus() {
   isFocused.value = true
@@ -109,12 +130,33 @@ function validateInput(value: string) {
   width: 275px;
 }
 
-.text-input__label {
-  display: block;
+.text-input__label-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 8px;
+}
+
+.text-input__label {
   font-size: 0.875rem;
   font-weight: 500;
   color: #e2e8f0;
+}
+
+.text-input__help-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #94A3B8;
+  transition: color 0.2s;
+}
+
+.text-input__help-icon:hover {
+  color: #CBD5E1;
 }
 
 .text-input__container {

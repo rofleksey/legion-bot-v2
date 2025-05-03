@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	_ "embed"
 	"fmt"
 	"github.com/robfig/cron/v3"
@@ -229,6 +230,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize steam client: %v", err)
 	}
+	go steamClient.Run(context.Background())
 	do.ProvideValue(di, steamClient)
 
 	slog.Debug("Starting server...")

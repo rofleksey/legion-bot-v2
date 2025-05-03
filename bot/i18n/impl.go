@@ -18,7 +18,7 @@ func NewLocaliser() (Localiser, error) {
 		translations: make(map[string]map[string]string),
 	}
 
-	files, err := filepath.Glob("i18n/locales/*.json")
+	files, err := filepath.Glob("bot/i18n/locales/*.json")
 	if err != nil {
 		return nil, fmt.Errorf("error finding language files: %v", err)
 	}

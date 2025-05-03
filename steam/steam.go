@@ -48,6 +48,8 @@ func NewClient(di *do.Injector) (Steam, error) {
 func (c *Client) Run(ctx context.Context) {
 	ticker := time.NewTicker(checkInterval)
 
+	c.doPeriodicJobs()
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -64,6 +66,12 @@ func (c *Client) UpdatePinnedComment(channel string) {
 	steamState := chanState.Steam
 	steamId64 := strings.TrimSpace(steamSettings.SteamID64)
 	pinnedCommentText := strings.TrimSpace(steamSettings.PinnedCommentText)
+
+	if chanState.Settings.Disabled ||
+		time.Now().Before(chanState.UserTimeout) ||
+		steamId64 == "" {
+		return
+	}
 
 	if steamState.PinnedCommentID != "" {
 		if err := c.DeleteComment(steamId64, steamState.PinnedCommentID); err != nil {
@@ -143,20 +151,20 @@ func (c *Client) handleComments(channel string) {
 		}
 	}
 
-	if lastComment.Timestamp.After(steamState.LastCommentTime) && !c.GetStartTime(channel).IsZero() {
+	if lastComment.Timestamp.After(steamState.LastCommentTime) && lastComment.ID != steamState.PinnedCommentID {
 		slog.Debug("Got a new comment on steam",
 			slog.String("channel", channel),
 		)
 
 		if !steamState.LastCommentTime.IsZero() {
 			c.botInstance.HandleNewSteamComment(channel, lastComment)
-
-			c.UpdatePinnedComment(channel)
 		}
 
 		c.UpdateState(channel, func(chanState *db.ChannelState) {
 			chanState.Steam.LastCommentTime = lastComment.Timestamp
 		})
+
+		c.UpdatePinnedComment(channel)
 	} else {
 		slog.Debug("Comments not changed since last time",
 			slog.String("channel", channel),
@@ -166,12 +174,11 @@ func (c *Client) handleComments(channel string) {
 
 func (c *Client) doPeriodicJobs() {
 	slog.Debug("Starting steam periodic jobs")
+	defer slog.Debug("Steam periodic jobs finished")
 
 	channels := c.GetAllChannelNames()
 
 	for _, channel := range channels {
-		time.Sleep(10 * time.Second)
-
 		slog.Debug("Processing steam jobs for channel",
 			slog.String("channel", channel),
 		)
@@ -180,12 +187,21 @@ func (c *Client) doPeriodicJobs() {
 		steamSettings := chanState.Settings.Steam
 		steamId64 := strings.TrimSpace(steamSettings.SteamID64)
 
+		if chanState.Settings.Disabled || time.Now().Before(chanState.UserTimeout) {
+			slog.Debug("Bot is disabled, skipping steam stuff",
+				slog.String("channel", channel),
+			)
+			continue
+		}
+
 		if steamId64 == "" {
 			slog.Debug("No steam id found in steam settings",
 				slog.String("channel", channel),
 			)
 			continue
 		}
+
+		time.Sleep(10 * time.Second)
 
 		if steamSettings.NotifyNewComments || strings.TrimSpace(steamSettings.PinnedCommentText) != "" {
 			c.handleComments(channel)
