@@ -93,7 +93,7 @@ func (c *Client) UpdatePinnedComment(channel string) {
 		)
 	}
 
-	if steamSettings.PinnedCommentText != "" {
+	if pinnedCommentText != "" {
 		newId, err := c.PostComment(steamId64, pinnedCommentText)
 		if err != nil {
 			slog.Error("Failed to post comment",
