@@ -196,6 +196,7 @@ func (b *Bot) HandleCommands(userMsg db.Message) bool {
 	case strings.Contains(userMsg.Text, util.BotUsername) ||
 		strings.Contains(userMsg.Text, "легион") ||
 		strings.Contains(userMsg.Text, "лиджн") ||
+		strings.Contains(userMsg.Text, "лиджен") ||
 		strings.Contains(userMsg.Text, "legion"):
 		responseText, err := b.GenericResponse(lang, userMsg.Text)
 		if err != nil {

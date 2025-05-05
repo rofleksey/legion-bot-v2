@@ -87,7 +87,7 @@ func (p *TwitchProducer) addStreamStartListener(channel, broadcasterID string) {
 
 func (p *TwitchProducer) addStreamEndListener(channel, broadcasterID string) {
 	chanState := p.database.GetState(channel)
-	streamEndId := chanState.Subs.StreamStart
+	streamEndId := chanState.Subs.StreamEnd
 
 	if streamEndId != "" {
 		_, _ = p.api.AppClient().RemoveEventSubSubscription(streamEndId)
