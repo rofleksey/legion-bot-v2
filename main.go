@@ -17,13 +17,14 @@ import (
 	"legion-bot-v2/bot/killer/ghostface"
 	"legion-bot-v2/bot/killer/legion"
 	"legion-bot-v2/bot/killer/pinhead"
-	"legion-bot-v2/chat"
 	"legion-bot-v2/cheatdetect"
 	"legion-bot-v2/config"
 	"legion-bot-v2/db"
 	"legion-bot-v2/gpt"
-	"legion-bot-v2/producer"
 	"legion-bot-v2/steam"
+	"legion-bot-v2/twitch/chat"
+	"legion-bot-v2/twitch/producer"
+	"legion-bot-v2/twitch/twitch_api"
 	"legion-bot-v2/util"
 	"legion-bot-v2/util/timers"
 	"log"
@@ -132,32 +133,8 @@ func main() {
 	}
 	c.Start()
 
-	userAccessToken, err := util.FetchTwitchUserAccessToken(cfg)
-	if err != nil {
-		log.Fatalf("Failed to get Twitch access token: %v", err)
-	}
-	if os.Getenv("ENVIRONMENT") != "production" {
-		slog.Debug("Got access token",
-			slog.String("token", userAccessToken),
-			slog.String("clientId", cfg.Twitch.ClientID),
-		)
-	}
-
-	do.ProvideNamedValue(di, "userAccessToken", userAccessToken)
-
-	ircClient, helixClient, err := util.InitTwitchClients(cfg, userAccessToken)
-	if err != nil {
-		log.Fatalf("Failed to init twitch clients: %v", err)
-	}
-
-	do.ProvideValue(di, ircClient)
-	do.ProvideNamedValue(di, "helixClient", helixClient)
-
-	appClient, err := util.InitAppTwitchClient(cfg, userAccessToken)
-	if err != nil {
-		log.Fatalf("Failed to init app twitch client: %v", err)
-	}
-	do.ProvideNamedValue(di, "appClient", appClient)
+	do.Provide(di, twitch_api.NewTwitchApi)
+	go do.MustInvoke[*twitch_api.TwitchApi](di).Run(context.Background())
 
 	var chatActions chat.Actions
 	if os.Getenv("ENVIRONMENT") == "production" {

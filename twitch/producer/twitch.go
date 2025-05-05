@@ -2,11 +2,11 @@ package producer
 
 import (
 	"github.com/gempir/go-twitch-irc/v4"
-	"github.com/nicklaw5/helix/v2"
 	"github.com/samber/do"
 	"legion-bot-v2/bot"
 	"legion-bot-v2/config"
 	"legion-bot-v2/db"
+	"legion-bot-v2/twitch/twitch_api"
 	"legion-bot-v2/util"
 	"legion-bot-v2/util/taskq"
 	"legion-bot-v2/util/timers"
@@ -21,9 +21,7 @@ var _ Producer = (*TwitchProducer)(nil)
 type TwitchProducer struct {
 	cfg            *config.Config
 	timersInstance timers.Timers
-	ircClient      *twitch.Client
-	helixClient    *helix.Client
-	appClient      *helix.Client
+	api            *twitch_api.TwitchApi
 	database       db.DB
 	botInstance    *bot.Bot
 	queue          *taskq.Queue
@@ -33,9 +31,7 @@ func NewTwitchProducer(di *do.Injector) Producer {
 	return &TwitchProducer{
 		cfg:            do.MustInvoke[*config.Config](di),
 		timersInstance: do.MustInvoke[timers.Timers](di),
-		ircClient:      do.MustInvoke[*twitch.Client](di),
-		helixClient:    do.MustInvokeNamed[*helix.Client](di, "helixClient"),
-		appClient:      do.MustInvokeNamed[*helix.Client](di, "appClient"),
+		api:            do.MustInvoke[*twitch_api.TwitchApi](di),
 		database:       do.MustInvoke[db.DB](di),
 		botInstance:    do.MustInvoke[*bot.Bot](di),
 		queue:          taskq.New(1, 1, 1),
@@ -43,12 +39,12 @@ func NewTwitchProducer(di *do.Injector) Producer {
 }
 
 func (p *TwitchProducer) Shutdown() {
-	p.ircClient.Disconnect()
+	p.api.IrcClient().Disconnect()
 	p.queue.Shutdown()
 }
 
 func (p *TwitchProducer) Run() error {
-	p.ircClient.OnPrivateMessage(func(message twitch.PrivateMessage) {
+	p.api.IrcClient().OnPrivateMessage(func(message twitch.PrivateMessage) {
 		defer func() {
 			if err := recover(); err != nil {
 				slog.Error("OnPrivateMessage panic",
@@ -87,7 +83,7 @@ func (p *TwitchProducer) Run() error {
 		})
 	})
 
-	p.ircClient.OnUserNoticeMessage(func(message twitch.UserNoticeMessage) {
+	p.api.IrcClient().OnUserNoticeMessage(func(message twitch.UserNoticeMessage) {
 		defer func() {
 			if err := recover(); err != nil {
 				slog.Error("OnUserNoticeMessage panic",
@@ -111,11 +107,11 @@ func (p *TwitchProducer) Run() error {
 		}
 	})
 
-	p.ircClient.OnConnect(func() {
+	p.api.IrcClient().OnConnect(func() {
 		slog.Info("Connected to IRC")
 	})
 
-	p.ircClient.OnWhisperMessage(func(message twitch.WhisperMessage) {
+	p.api.IrcClient().OnWhisperMessage(func(message twitch.WhisperMessage) {
 		defer func() {
 			if err := recover(); err != nil {
 				slog.Error("OnWhisperMessage panic",
@@ -155,12 +151,12 @@ func (p *TwitchProducer) Run() error {
 		}
 	}
 
-	return p.ircClient.Connect()
+	return p.api.IrcClient().Connect()
 }
 
 func (p *TwitchProducer) AddChannel(channel string) {
 	p.queue.Enqueue(func() {
-		p.ircClient.Join(channel)
+		p.api.IrcClient().Join(channel)
 	})
 
 	p.queue.Enqueue(func() {
@@ -170,7 +166,7 @@ func (p *TwitchProducer) AddChannel(channel string) {
 
 func (p *TwitchProducer) RemoveChannel(channel string) {
 	p.queue.Enqueue(func() {
-		p.ircClient.Depart(channel)
+		p.api.IrcClient().Depart(channel)
 	})
 
 	p.queue.Enqueue(func() {

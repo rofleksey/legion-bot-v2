@@ -8,7 +8,7 @@ import (
 )
 
 func (p *TwitchProducer) registerAllListeners(channel string) {
-	broadcasterResp, err := p.helixClient.GetUsers(&helix.UsersParams{
+	broadcasterResp, err := p.api.UserClient().GetUsers(&helix.UsersParams{
 		Logins: []string{channel},
 	})
 	if err != nil {
@@ -45,10 +45,10 @@ func (p *TwitchProducer) addStreamStartListener(channel, broadcasterID string) {
 	streamStartId := chanState.Subs.StreamStart
 
 	if streamStartId != "" {
-		_, _ = p.appClient.RemoveEventSubSubscription(streamStartId)
+		_, _ = p.api.AppClient().RemoveEventSubSubscription(streamStartId)
 	}
 
-	resp, err := p.appClient.CreateEventSubSubscription(&helix.EventSubSubscription{
+	resp, err := p.api.AppClient().CreateEventSubSubscription(&helix.EventSubSubscription{
 		Type:    "stream.online",
 		Version: "1",
 		Condition: helix.EventSubCondition{
@@ -90,10 +90,10 @@ func (p *TwitchProducer) addStreamEndListener(channel, broadcasterID string) {
 	streamEndId := chanState.Subs.StreamStart
 
 	if streamEndId != "" {
-		_, _ = p.appClient.RemoveEventSubSubscription(streamEndId)
+		_, _ = p.api.AppClient().RemoveEventSubSubscription(streamEndId)
 	}
 
-	resp, err := p.appClient.CreateEventSubSubscription(&helix.EventSubSubscription{
+	resp, err := p.api.AppClient().CreateEventSubSubscription(&helix.EventSubSubscription{
 		Type:    "stream.offline",
 		Version: "1",
 		Condition: helix.EventSubCondition{
@@ -135,10 +135,10 @@ func (p *TwitchProducer) addOutgoingRaidsListener(channel, broadcasterID string)
 	raidSubId := chanState.Subs.RaidID
 
 	if raidSubId != "" {
-		_, _ = p.appClient.RemoveEventSubSubscription(raidSubId)
+		_, _ = p.api.AppClient().RemoveEventSubSubscription(raidSubId)
 	}
 
-	resp, err := p.appClient.CreateEventSubSubscription(&helix.EventSubSubscription{
+	resp, err := p.api.AppClient().CreateEventSubSubscription(&helix.EventSubSubscription{
 		Type:    helix.EventSubTypeChannelRaid,
 		Version: "1",
 		Condition: helix.EventSubCondition{
@@ -180,7 +180,7 @@ func (p *TwitchProducer) removeAllListeners(channel string) {
 
 	if chanState.Subs.RaidID != "" {
 		p.queue.Enqueue(func() {
-			_, _ = p.appClient.RemoveEventSubSubscription(chanState.Subs.RaidID)
+			_, _ = p.api.AppClient().RemoveEventSubSubscription(chanState.Subs.RaidID)
 			slog.Debug("Removed event sub for raid subscription",
 				slog.String("channel", channel),
 			)
@@ -189,7 +189,7 @@ func (p *TwitchProducer) removeAllListeners(channel string) {
 
 	if chanState.Subs.StreamStart != "" {
 		p.queue.Enqueue(func() {
-			_, _ = p.appClient.RemoveEventSubSubscription(chanState.Subs.StreamStart)
+			_, _ = p.api.AppClient().RemoveEventSubSubscription(chanState.Subs.StreamStart)
 		})
 		slog.Debug("Removed event sub for stream start subscription",
 			slog.String("channel", channel),
@@ -198,7 +198,7 @@ func (p *TwitchProducer) removeAllListeners(channel string) {
 
 	if chanState.Subs.StreamEnd != "" {
 		p.queue.Enqueue(func() {
-			_, _ = p.appClient.RemoveEventSubSubscription(chanState.Subs.StreamEnd)
+			_, _ = p.api.AppClient().RemoveEventSubSubscription(chanState.Subs.StreamEnd)
 		})
 		slog.Debug("Removed event sub for stream end subscription",
 			slog.String("channel", channel),

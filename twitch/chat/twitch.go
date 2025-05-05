@@ -1,11 +1,11 @@
 package chat
 
 import (
-	"github.com/gempir/go-twitch-irc/v4"
 	"github.com/jellydator/ttlcache/v3"
 	"github.com/nicklaw5/helix/v2"
 	"github.com/samber/do"
 	"legion-bot-v2/config"
+	"legion-bot-v2/twitch/twitch_api"
 	"legion-bot-v2/util"
 	"legion-bot-v2/util/taskq"
 	"log/slog"
@@ -19,8 +19,7 @@ var _ Actions = (*TwitchActions)(nil)
 type TwitchActions struct {
 	cfg         *config.Config
 	accessToken string
-	ircClient   *twitch.Client
-	helixClient *helix.Client
+	api         *twitch_api.TwitchApi
 
 	queueMutex sync.Mutex
 	queues     map[string]*taskq.Queue
@@ -37,9 +36,7 @@ func NewTwitchActions(di *do.Injector) Actions {
 
 	return &TwitchActions{
 		cfg:         do.MustInvoke[*config.Config](di),
-		accessToken: do.MustInvokeNamed[string](di, "userAccessToken"),
-		ircClient:   do.MustInvoke[*twitch.Client](di),
-		helixClient: do.MustInvokeNamed[*helix.Client](di, "helixClient"),
+		api:         do.MustInvoke[*twitch_api.TwitchApi](di),
 		queues:      make(map[string]*taskq.Queue),
 		userIdCache: userIdCache,
 	}
@@ -70,7 +67,7 @@ func (t *TwitchActions) GetUserIDByUsername(username string) string {
 		return cacheItem.Value()
 	}
 
-	res, err := t.helixClient.GetUsers(&helix.UsersParams{
+	res, err := t.api.UserClient().GetUsers(&helix.UsersParams{
 		Logins: []string{username},
 	})
 	if err != nil {
@@ -107,7 +104,7 @@ func (t *TwitchActions) SetEmoteMode(channel string, enabled bool) {
 			return
 		}
 
-		setResp, err := t.helixClient.UpdateChatSettings(&helix.UpdateChatSettingsParams{
+		setResp, err := t.api.UserClient().UpdateChatSettings(&helix.UpdateChatSettingsParams{
 			BroadcasterID: channelUserID,
 			ModeratorID:   util.BotUserID,
 			EmoteMode:     &enabled,
@@ -133,7 +130,7 @@ func (t *TwitchActions) SetEmoteMode(channel string, enabled bool) {
 }
 
 func (t *TwitchActions) GetViewerList(channel string) []string {
-	result, err := t.ircClient.Userlist(channel)
+	result, err := t.api.IrcClient().Userlist(channel)
 	if err != nil {
 		slog.Error("Error getting viewer list",
 			slog.String("channel", channel),
@@ -162,7 +159,7 @@ func (t *TwitchActions) DeleteMessage(channel, id string) {
 			return
 		}
 
-		banResp, err := t.helixClient.DeleteChatMessage(&helix.DeleteChatMessageParams{
+		banResp, err := t.api.UserClient().DeleteChatMessage(&helix.DeleteChatMessageParams{
 			BroadcasterID: channelUserID,
 			ModeratorID:   util.BotUserID,
 			MessageID:     id,
@@ -192,7 +189,7 @@ func (t *TwitchActions) GetStartTime(channel string) time.Time {
 			slog.String("channel", channel),
 		)
 
-		res, err := t.helixClient.GetStreams(&helix.StreamsParams{
+		res, err := t.api.UserClient().GetStreams(&helix.StreamsParams{
 			UserLogins: []string{channel},
 		})
 		if err != nil {
@@ -227,7 +224,7 @@ func (t *TwitchActions) GetViewerCount(channel string) int {
 			slog.String("channel", channel),
 		)
 
-		res, err := t.helixClient.GetStreams(&helix.StreamsParams{
+		res, err := t.api.UserClient().GetStreams(&helix.StreamsParams{
 			UserLogins: []string{channel},
 		})
 		if err != nil {
@@ -263,7 +260,7 @@ func (t *TwitchActions) SendMessage(channel, text string) {
 			slog.String("text", text),
 		)
 
-		t.ircClient.Say(channel, text)
+		t.api.IrcClient().Say(channel, text)
 	})
 }
 
@@ -279,7 +276,7 @@ func (t *TwitchActions) SendForeignMessage(channel, text string) {
 			return
 		}
 
-		sendMsgResp, err := t.helixClient.SendChatMessage(&helix.SendChatMessageParams{
+		sendMsgResp, err := t.api.UserClient().SendChatMessage(&helix.SendChatMessageParams{
 			BroadcasterID: channelUserID,
 			SenderID:      util.BotUserID,
 			Message:       text,
@@ -323,7 +320,7 @@ func (t *TwitchActions) TimeoutUser(channel, username string, duration time.Dura
 			return
 		}
 
-		banResp, err := t.helixClient.BanUser(&helix.BanUserParams{
+		banResp, err := t.api.UserClient().BanUser(&helix.BanUserParams{
 			BroadcasterID: channelUserID,
 			ModeratorId:   util.BotUserID,
 			Body: helix.BanUserRequestBody{
@@ -367,7 +364,7 @@ func (t *TwitchActions) UnbanUser(channel, username string) {
 			return
 		}
 
-		unbanResp, err := t.helixClient.UnbanUser(&helix.UnbanUserParams{
+		unbanResp, err := t.api.UserClient().UnbanUser(&helix.UnbanUserParams{
 			BroadcasterID: channelUserID,
 			ModeratorID:   util.BotUserID,
 			UserID:        unbanUserID,
