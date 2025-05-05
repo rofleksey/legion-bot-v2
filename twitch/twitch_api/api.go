@@ -109,10 +109,7 @@ func NewTwitchApi(di *do.Injector) (*TwitchApi, error) {
 		return nil, fmt.Errorf("error getting app client: %v", err)
 	}
 
-	ircClient, err := newIrcClient(cfg, userClient.GetUserAccessToken())
-	if err != nil {
-		return nil, fmt.Errorf("error getting IRC client: %v", err)
-	}
+	ircClient := newIrcClient(cfg, userClient.GetUserAccessToken())
 
 	return &TwitchApi{
 		cfg:        cfg,
@@ -270,8 +267,6 @@ func newAppClient(cfg *config.Config) (*helix.Client, error) {
 	return client, nil
 }
 
-func newIrcClient(cfg *config.Config, userAccessToken string) (*twitch.Client, error) {
-	ircClient := twitch.NewClient(cfg.Twitch.ClientID, "oauth:"+userAccessToken)
-
-	return ircClient, nil
+func newIrcClient(cfg *config.Config, userAccessToken string) *twitch.Client {
+	return twitch.NewClient(cfg.Twitch.ClientID, "oauth:"+userAccessToken)
 }

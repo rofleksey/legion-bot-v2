@@ -4,7 +4,6 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"github.com/robfig/cron/v3"
 	"github.com/samber/do"
 	slogmulti "github.com/samber/slog-multi"
 	slogtelegram "github.com/samber/slog-telegram/v2"
@@ -25,7 +24,6 @@ import (
 	"legion-bot-v2/twitch/chat"
 	"legion-bot-v2/twitch/producer"
 	"legion-bot-v2/twitch/twitch_api"
-	"legion-bot-v2/util"
 	"legion-bot-v2/util/timers"
 	"log"
 	"log/slog"
@@ -122,16 +120,6 @@ func main() {
 	slog.SetDefault(slog.New(multiHandler))
 
 	slog.Info("Starting service...")
-
-	c := cron.New()
-	if _, err := c.AddFunc(util.DailyRestartCron, func() {
-		log.Println("Executing daily restart")
-		time.Sleep(time.Second * 1)
-		os.Exit(1)
-	}); err != nil {
-		log.Fatalf("Failed to schedule daily restart: %v", err)
-	}
-	c.Start()
 
 	do.Provide(di, twitch_api.NewTwitchApi)
 	go do.MustInvoke[*twitch_api.TwitchApi](di).Run(context.Background())

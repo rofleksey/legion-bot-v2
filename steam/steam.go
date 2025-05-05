@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-const checkInterval = 30 * time.Minute
+const checkInterval = 20 * time.Minute
 
 type Steam interface {
 	Run(ctx context.Context)
