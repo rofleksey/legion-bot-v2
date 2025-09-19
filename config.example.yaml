@@ -1,0 +1,34 @@
+baseUrl: "https://your-app.example.com"
+
+twitch:
+  clientId: "your_twitch_client_id_here"
+  clientSecret: "your_twitch_client_secret_here"
+  refreshToken: "your_twitch_refresh_token_here"
+  webhookSecret: "your_webhook_secret_here"
+  redirectUrl: "https://your-app.example.com/auth/twitch/callback"
+
+steam:
+  id64: "7656119xxxxxxxxxx"
+  sessionId: "your_steam_session_id_here"
+  steamLoginSecure: "your_steam_login_secure_cookie_here"
+
+auth:
+  jwtSecret: "your_super_secure_jwt_secret_key_here"
+
+telegram:
+  token: "1234567890:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi"
+  chatId: 1001234567890
+
+yandex:
+  serviceAccountId: "ajexxxxxxxxxxxxxxxxxxxx"
+  folderId: "b1gxxxxxxxxxxxxxx"
+  keyId: "ajexxxxxxxxxxxxxxxxxxxx"
+  key: >
+    {
+      "id": "wergregrewgreg",
+      "service_account_id": "regrewgrewgregregerw",
+      "created_at": "2024-08-09T17:41:30.68068436Z",
+      "key_algorithm": "RSA_2048",
+      "public_key": "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----\n",
+      "private_key": "PLEASE DO NOT REMOVE THIS LINE! Yandex.Cloud SA Key ID <ewfegfrewgrewgrew>\n-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+    }
