@@ -1,8 +1,6 @@
 # DBD Legion Bot
 
-A Twitch chatbot that brings Dead by Daylight killer mechanics to your stream's chat experience.
-Legion Bot transforms your chat into an interactive game where viewers can be chased, injured, and rescued by various
-DbD killers.
+```text
 
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣦⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⢾⣿⣿⣷⣦⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -23,6 +21,11 @@ DbD killers.
 | \| _ )   \ | |   ___ __ _(_)___ _ _   | _ ) ___| |_
 | |) | _ \ |) | | |__/ -_) _` | / _ \ ' \ | _ \/ _ \  _|
 |___/|___/___/ |____\___\__, |_\___/_||_| |___/\___/\__|
+```
+
+A Twitch chatbot that brings Dead by Daylight killer mechanics to your stream's chat experience.
+Legion Bot transforms your chat into an interactive game where viewers can be chased, injured, and rescued by various
+DbD killers.
 
 # ✨ Features
 
