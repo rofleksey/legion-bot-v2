@@ -96,7 +96,7 @@ Chat Commands
 | `!killer` | Show current killer commands | `!killer` |
 | `!legiontimeout [duration]` | Temporarily disable bot (streamer only) | `!legiontimeout 1h` |
 
-Killer-Specific Features
+# Killer-Specific Features
 
 Each killer has unique mechanics:
 
